@@ -26,7 +26,7 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
           useNativeDriver: true,
         }),
       ]).start();
-    }, 150); // delay animation start (e.g. 150ms)
+    }, 150);
 
     const finishTimer = setTimeout(() => {
       Animated.timing(fadeAnim, {

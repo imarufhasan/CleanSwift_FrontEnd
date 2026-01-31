@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Stack } from "expo-router";
-import SplashScreen from "@/components/shared/Splashscreen";
+import SplashScreen from "@/components/initial/Splashscreen";
+import "../global.css";
 
 export default function RootLayout() {
   const [ready, setReady] = useState(false);
@@ -17,7 +18,7 @@ export default function RootLayout() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="(onboarding)" />
     </Stack>
   );
 }

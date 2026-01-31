@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, TouchableOpacity, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import OnboardingIllustration from "@/components/shared/OnboardingIllustration";
-import { OnboardingText } from "@/components/shared/OnboardingText";
-import { PaginationDots } from "@/components/shared/PaginationDots";
+import OnboardingIllustration from "@/components/onboarding/OnboardingIllustration";
+import { OnboardingText } from "@/components/onboarding/OnboardingText";
+import { PaginationDots } from "@/components/onboarding/PaginationDots";
 import { PrimaryButton } from "@/components/shared/PrimaryButton";
 import { ONBOARDING_DATA } from "@/constants/onboarding";
+import { router } from "expo-router";
 
 const OnboardingScreen: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<number>(0);
@@ -18,8 +19,8 @@ const OnboardingScreen: React.FC = () => {
     fadeAnim.setValue(0);
     Animated.timing(fadeAnim, {
       toValue: 1,
-      duration: 500, 
-      useNativeDriver: true, 
+      duration: 500,
+      useNativeDriver: true,
     }).start();
   }, [currentStep]);
 
@@ -27,15 +28,13 @@ const OnboardingScreen: React.FC = () => {
     if (currentStep < totalSteps - 1) {
       setCurrentStep((prev) => prev + 1);
     } else {
-      console.log("Onboarding complete");
+      router.push("/login");
     }
   };
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-
       <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
-
         <View className="flex-[5] justify-center items-center">
           <OnboardingIllustration SvgComponent={content.Svg} />
         </View>
@@ -54,7 +53,12 @@ const OnboardingScreen: React.FC = () => {
               onPress={handleNext}
             />
 
-            <TouchableOpacity onPress={() => {}} className="mt-5">
+            <TouchableOpacity
+              onPress={() => {
+                router.push("/login");
+              }}
+              className="mt-5"
+            >
               <Text className="text-[#7d848d] text-sm font-medium">Skip</Text>
             </TouchableOpacity>
           </View>

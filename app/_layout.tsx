@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import SplashScreen from "@/components/initial/Splashscreen";
 import "../global.css";
 
@@ -12,13 +13,21 @@ export default function RootLayout() {
     return () => clearTimeout(timer);
   }, []);
 
-  if (!ready || showSplash) {
-    return <SplashScreen onFinish={() => setShowSplash(false)} />;
-  }
+  // if (!ready || showSplash) {
+  //   return (
+  //     <>
+  //       <StatusBar style="light" />
+  //       <SplashScreen onFinish={() => setShowSplash(false)} />
+  //     </>
+  //   );
+  // }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(onboarding)" />
-    </Stack>
+    <>
+      <StatusBar style="dark" />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" />
+      </Stack>
+    </>
   );
 }

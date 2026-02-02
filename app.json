@@ -5,6 +5,11 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/AppIcon.png",
+    "statusBar": {
+      "barStyle": "dark-content",
+      "backgroundColor": "transparent",
+      "translucent": true
+    },
     "splash": {
       "image": "./assets/images/transparent.png",
       "resizeMode": "contain",

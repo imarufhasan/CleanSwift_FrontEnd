@@ -1,8 +1,9 @@
+import googleSvg from "@/assets/images/auth/google-button.svg";
 export const AUTH_DATA = [
+  { googleIcon: googleSvg },
   {
     title: "Login",
-    description:
-      "Welcome Back To Your Laundry Is Just A Pickup Away",
+    description: "Welcome Back To Your Laundry Is Just A Pickup Away",
   },
   {
     title: "Simple Bag-Based Pricing",

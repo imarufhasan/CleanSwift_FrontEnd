@@ -1,7 +1,7 @@
 import { View, Text } from 'react-native'
 import React from 'react'
 
-const deriverLicense2 = () => {
+const driverLicense2 = () => {
   return (
     <View>
       <Text>deriverLicense2</Text>
@@ -9,4 +9,4 @@ const deriverLicense2 = () => {
   )
 }
 
-export default deriverLicense2
+export default driverLicense2

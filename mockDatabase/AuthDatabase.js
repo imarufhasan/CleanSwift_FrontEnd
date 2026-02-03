@@ -1,4 +1,3 @@
-// Simulate a temporary database with some mock users
 export const usersDatabase = [
   {
     email: "aliamin@gmail.com",

@@ -7,12 +7,14 @@ interface ShowToastProps {
   message?: string | null;
   type?: "success" | "error" | "info"; // Can be expanded if needed
   autoHide?: boolean; // If the toast should auto-hide after a timeout
+  paddingTop?: number; // Optional custom padding from top
 }
 
 const ShowToast: React.FC<ShowToastProps> = ({
   message,
   type = "info",
   autoHide = true,
+  paddingTop = 70, // Default paddingTop value
 }) => {
   useEffect(() => {
     if (message) {
@@ -20,10 +22,11 @@ const ShowToast: React.FC<ShowToastProps> = ({
         type,
         text1: message,
         visibilityTime: autoHide ? 3000 : 0, // Auto-hide after 3 seconds
-        position: "top",
+        position: "top", // Position the toast at the top
+        topOffset: paddingTop, // Add custom padding from top
       });
     }
-  }, [message, type, autoHide]);
+  }, [message, type, autoHide, paddingTop]);
 
   return (
     <View>

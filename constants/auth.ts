@@ -1,6 +1,8 @@
 import googleSvg from "@/assets/images/auth/google-button.svg";
+import enableLocationSvg from "@/assets/images/auth/enable-location.svg";
 export const AUTH_DATA = [
   { googleIcon: googleSvg },
+  { enableLocaitonIcon: enableLocationSvg },
   {
     title: "Login",
     description: "Welcome Back To Your Laundry Is Just A Pickup Away",

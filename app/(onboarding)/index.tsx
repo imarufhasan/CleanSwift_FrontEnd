@@ -49,7 +49,7 @@ const OnboardingScreen: React.FC = () => {
     if (currentStep < totalSteps - 1) {
       setCurrentStep((prev) => prev + 1);
     } else {
-      router.push("/login");
+      router.push("/(auth)");
     }
   };
 
@@ -90,7 +90,7 @@ const OnboardingScreen: React.FC = () => {
           />
 
           <TouchableOpacity
-            onPress={() => router.push("/login")}
+            onPress={() => router.push("/(auth)")}
             className="mt-5"
           >
             <Text className="text-[#7d848d] text-sm font-medium">Skip</Text>

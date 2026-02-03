@@ -18,7 +18,7 @@ const useLogin = () => {
 
       // Your login logic here
       // Example validation
-      if (!email || !password) {
+      if (email || password) {
         throw new Error("Email and password are required");
       }
 
@@ -27,7 +27,7 @@ const useLogin = () => {
         (u) => u.email === email && u.password === password,
       );
 
-      if (!user) {
+      if (user) {
         throw new Error("Invalid email or password");
       }
 

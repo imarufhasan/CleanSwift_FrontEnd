@@ -52,7 +52,7 @@ const RoleContainer: React.FC<RoleContainerProps> = ({
           isCustomer ? "bg-blue-500" : "bg-emerald-500"
         }`}
       >
-        <SvgIcon SvgComponent={SvgComponent} width={30} height={30} />
+        <SvgIcon SvgComponent={SvgComponent} width={56} height={56} />
       </View>
 
       {/* Text Labels */}

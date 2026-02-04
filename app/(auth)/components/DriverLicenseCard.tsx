@@ -1,12 +1,12 @@
 import { View, Text } from 'react-native'
 import React from 'react'
 
-const driverLicense1 = () => {
+const DriverLicenseCard = () => {
   return (
     <View>
-      <Text>driverLicense1</Text>
+      <Text>DriverLicenseCard</Text>
     </View>
   )
 }
 
-export default driverLicense1
+export default DriverLicenseCard

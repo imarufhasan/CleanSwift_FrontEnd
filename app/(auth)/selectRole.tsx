@@ -1,15 +1,22 @@
 import React, { useState } from "react";
 import { View } from "react-native";
-import BaseContainer from "@/components/shared/BaseContainer";
 import { Button } from "@/components/shared/Button";
+import BaseContainer from "@/components/shared/BaseContainer";
 import AuthText from "./components/AuthText";
 import RoleContainer from "./components/RoleContainer";
 import CustomerIcon from "@/assets/images/auth/Customer.svg";
 import DriverIcon from "@/assets/images/auth/Driver.svg";
+import { useRouter } from "expo-router";  // Import useRouter from expo-router
+
 const SelectRole = () => {
-  const [selectedRole, setSelectedRole] = useState<"customer" | "driver">(
-    "customer",
-  );
+  const [selectedRole, setSelectedRole] = useState<"customer" | "driver">("customer");
+  const router = useRouter();  // Get router instance
+
+  const handleContinue = () => {
+  
+router.push("./driverRegistration")
+    console.log("Proceeding as:", selectedRole); 
+  };
 
   return (
     <BaseContainer>
@@ -43,7 +50,7 @@ const SelectRole = () => {
 
         <Button
           label="Continue"
-          onPress={() => console.log("Proceeding as:", selectedRole)}
+          onPress={handleContinue}  // Trigger navigation with router.push
         />
       </View>
     </BaseContainer>

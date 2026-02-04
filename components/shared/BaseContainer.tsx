@@ -31,7 +31,6 @@ const BaseContainer: React.FC<BaseContainerProps> = ({
           <ScrollView
             className="flex-1"
             contentContainerStyle={{
-              paddingVertical: 32,
               paddingHorizontal: padding ? 16 : 0,
               ...additionalStyles, // Merge any custom styles passed
             }}

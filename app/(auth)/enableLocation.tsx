@@ -16,7 +16,6 @@ import { Dimensions } from "react-native";
 import { useRouter } from "expo-router";
 
 const EnableLocation: React.FC = () => {
-
   const router = useRouter();
 
   const { width } = Dimensions.get("window");
@@ -35,7 +34,9 @@ const EnableLocation: React.FC = () => {
       const result = await check(LOCATION_PERMISSION);
       if (result === RESULTS.GRANTED) {
         setButtonLabel("Permission Already Granted ✓");
-        // Navigate to the next screen if needed
+        setTimeout(() => {
+          router.replace("./HomeScreen");
+        }, 300);
       } else if (result === RESULTS.BLOCKED) {
         setButtonLabel("Open Settings");
       } else {
@@ -80,7 +81,6 @@ const EnableLocation: React.FC = () => {
 
       if (result === RESULTS.GRANTED) {
         setButtonLabel("Permission Already Granted ✓");
-
       } else if (result === RESULTS.DENIED) {
         setButtonLabel("Give Permissions");
         Alert.alert(

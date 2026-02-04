@@ -13,8 +13,12 @@ import {
   openSettings,
 } from "react-native-permissions";
 import { Dimensions } from "react-native";
+import { useRouter } from "expo-router";
 
 const EnableLocation: React.FC = () => {
+
+  const router = useRouter();
+
   const { width } = Dimensions.get("window");
   const { height } = Dimensions.get("window");
   const [buttonLabel, setButtonLabel] = useState("Give Permissions");
@@ -68,8 +72,7 @@ const EnableLocation: React.FC = () => {
       }
 
       if (currentStatus === RESULTS.GRANTED) {
-        Alert.alert("Success", "Location permission is already granted!");
-        // Navigate to next screen
+        router.push("./HomeScreen");
         return;
       }
 
@@ -77,8 +80,7 @@ const EnableLocation: React.FC = () => {
 
       if (result === RESULTS.GRANTED) {
         setButtonLabel("Permission Already Granted ✓");
-        Alert.alert("Success", "Location permission granted successfully!");
-        // Navigate to next screen
+
       } else if (result === RESULTS.DENIED) {
         setButtonLabel("Give Permissions");
         Alert.alert(
@@ -109,7 +111,7 @@ const EnableLocation: React.FC = () => {
         <View className="justify-center items-center mb-8">
           <SvgIcon
             SvgComponent={enableLocationSvg}
-            width={width } // 60% of screen width for better sizing
+            width={width} // 60% of screen width for better sizing
             height={width * 0.6}
           />
         </View>

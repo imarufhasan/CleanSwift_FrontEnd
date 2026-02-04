@@ -16,6 +16,9 @@ const Colors = {
   success: "#16A34A",
   warning: "#F59E0B",
   danger: "#DC2626",
+  green: "#22C55E",     // success green
+  red: "#EF4444",       // error
+  orange: "#F97316",    // warning
 };
 
 export default Colors;

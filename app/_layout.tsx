@@ -76,7 +76,8 @@ export default function RootLayout() {
           },
         ]}
       >
-        <Redirect href="/(auth)/driverRegistration" />
+        {/* <Redirect href="/(auth)/register" /> */}
+         <Redirect href="/(driver)/(home)/HomeScreen" />
         <Stack
           screenOptions={{
             headerShown: false,

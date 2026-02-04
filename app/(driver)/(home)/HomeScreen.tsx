@@ -6,11 +6,14 @@ import {
   TouchableOpacity,
   RefreshControl,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { AntDesign, Ionicons } from "@expo/vector-icons";
 import Colors from "@/constants/color";
 import Toast from "@/constants/toast";
+import { useRouter } from "expo-router";
 
 export default function HomeScreen() {
+
+  const router = useRouter();
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -120,16 +123,24 @@ export default function HomeScreen() {
         }}
         className=" rounded-b-[40px] pb-20">
         <View className="flex-row px-5 pt-12 justify-between items-center">
-          <View>
+          <View className="flex-1">
             <Text className="text-sm text-white/80">Welcome back,</Text>
             <Text className="text-2xl font-bold text-white">
               {data.user.name}
             </Text>
           </View>
 
-          <TouchableOpacity onPress={() => Toast.show("notification")} className="bg-white/20 p-3 rounded-full">
+
+        <View className="flex-row gap-4">
+          {/* message icon */}
+          <TouchableOpacity onPress={() => router.push("./MessagesScreen")} className="bg-white/20 p-3 rounded-full">
+            <AntDesign name="message" size={22} color="#fff" />
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => router.push("./NotificationScreen")} className="bg-white/20 p-3 rounded-full">
             <Ionicons name="notifications-outline" size={22} color="#fff" />
           </TouchableOpacity>
+          </View>
         </View>
 
         {/* Location */}
@@ -261,16 +272,17 @@ export default function HomeScreen() {
         <Text className="text-lg font-bold mb-3">Recent Orders</Text>
 
         {data.recentOrders.map((order) => (
-          <View
+          <TouchableOpacity
             key={order.id}
             className="bg-white flex-row items-safe justify-center rounded-2xl p-4 mb-4 border border-gray-100"
+            onPress={() => router.push("./OrderDetails")}
           >
-             <View
-                className="w-9 h-9 rounded-full justify-center items-center"
-                style={{ backgroundColor: "rgba(161, 162, 167, 0.2)" }}
-              >
-                <Ionicons name="cube-outline" size={20} color={"black"} />
-              </View>
+            <View
+              className="w-9 h-9 rounded-full justify-center items-center"
+              style={{ backgroundColor: "rgba(161, 162, 167, 0.2)" }}
+            >
+              <Ionicons name="cube-outline" size={20} color={"black"} />
+            </View>
             <View className="justify-between flex-1 mb-1 ml-2">
               <Text className="font-semibold">
                 Order #{order.id}
@@ -300,6 +312,7 @@ export default function HomeScreen() {
 
               <TouchableOpacity onPress={() => {
                 console.log("recet_item: ", order);
+                router.push("./OrderDetails");
 
               }} className="my-2">
                 <Text style={{ color: Colors.primary }} className="font-semibold">View Details</Text>
@@ -310,7 +323,7 @@ export default function HomeScreen() {
               </Text>
 
             </View>
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
 

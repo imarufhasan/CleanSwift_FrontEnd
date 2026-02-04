@@ -3,7 +3,7 @@ import { View } from "react-native";
 import BottomModal from "@/components/shared/Modal/ButtomModal";
 import OTPInput, { OTPInputHandle } from "@/components/shared/OtpInput";
 import { Button } from "@/components/shared/Button";
-import { GeneralText } from "@/components/shared/Text";
+import { GeneralText } from "@/components/shared/GeneralText";
 import ResendCode from "@/components/shared/ResentCode";
 
 interface OTPVerificationModalProps {

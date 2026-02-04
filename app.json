@@ -7,7 +7,7 @@
     "icon": "./assets/images/AppIcon.png",
     "statusBar": {
       "barStyle": "dark-content",
-      "backgroundColor": "transparent",
+      "backgroundColor": "transparent", 
       "translucent": true
     },
     "splash": {
@@ -22,17 +22,27 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "CleanSwift needs your location to find nearby cleaning services.",
-        "NSLocationAlwaysUsageDescription": "CleanSwift needs your location to provide location-based services."
+        "NSLocationAlwaysUsageDescription": "CleanSwift needs your location to provide location-based services.",
+        "UIStatusBarStyle": "UIStatusBarStyleLightContent", 
+        "UIViewControllerBasedStatusBarAppearance": false 
       }
     },
     "android": {
+      "navigationBar": {
+        "backgroundColor": "transparent", 
+        "translucent": true 
+      },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.ayonghosh.CleanSwift",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"
-      ]
+      ],
+      "statusBar": {
+        "backgroundColor": "transparent", 
+        "translucent": true 
+      }
     },
     "web": {
       "bundler": "metro",

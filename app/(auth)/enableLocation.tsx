@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Alert, AppState, Platform } from "react-native";
 import BaseContainer from "@/components/shared/BaseContainer";
 import { Button } from "@/components/shared/Button";
-import { GeneralText } from "@/components/shared/Text";
+import { GeneralText } from "@/components/shared/GeneralText";
 import SvgIcon from "@/components/shared/svgIcon";
 import enableLocationSvg from "@/assets/images/auth/enable-location.svg";
 import {

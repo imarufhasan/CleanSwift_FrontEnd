@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
-
+import SvgIcon from "./svgIcon";
+import { Upload } from "lucide-react-native";
 interface PickedFile {
   uri: string;
   name: string;
@@ -11,14 +12,13 @@ interface PickedFile {
 
 const DriverLicenseCard = () => {
   const [selectedFile, setSelectedFile] = useState<PickedFile | null>(null);
-  const [showPicker, setShowPicker] = useState(false);
 
   // Handle the file selection from the document picker
   const handleFileSelected = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: "image/*", // Limit file selection to images
-        copyToCacheDirectory: false,
+        copyToCacheDirectory: true,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
@@ -29,41 +29,36 @@ const DriverLicenseCard = () => {
           mimeType: file.mimeType ?? null,
           size: file.size,
         });
-        setShowPicker(false); // Close the picker after selecting the file
       }
     } catch (error) {
       console.log("Error selecting file:", error);
     }
   };
 
-  // Show the file picker
-  const handleUploadPress = () => {
-    setShowPicker(true);
-  };
-
-  // Handle opening the camera (not implemented here)
+  // Handle opening the camera (use expo-image-picker for this)
   const handleCameraPress = () => {
-    console.log("Open camera");
+    console.log("Open camera - implement with expo-image-picker");
   };
 
   return (
-    <View className="bg-white rounded-2xl p-6 mx-4 my-2  shadow-sm border border-gray-100">
+    <View className="bg-white rounded-2xl p-6 mx-4 my-2 shadow-sm border border-gray-100">
       {/* Header */}
+      
       <Text className="text-gray-800 text-lg font-semibold mb-6">
         Driver's License
       </Text>
 
       {/* Initial State - Upload Section */}
-      {!showPicker && !selectedFile && (
+      {!selectedFile && (
         <>
           {/* Upload Icon */}
           <View className="items-center mb-4">
             <TouchableOpacity
-              onPress={handleUploadPress}
+              onPress={handleFileSelected}
               className="w-16 h-16 bg-gray-100 rounded-full items-center justify-center mb-3"
               activeOpacity={0.7}
             >
-              <Text className="text-2xl text-gray-600">↑</Text>
+              <SvgIcon SvgComponent={Upload} height={24} width={24}></SvgIcon>
             </TouchableOpacity>
           </View>
 
@@ -93,28 +88,6 @@ const DriverLicenseCard = () => {
         </>
       )}
 
-      {/* File Picker State */}
-      {showPicker && (
-        <View className="mt-4">
-          <TouchableOpacity
-            onPress={handleFileSelected}
-            className="bg-blue-500 py-3 rounded-lg mb-3"
-            activeOpacity={0.7}
-          >
-            <Text className="text-center text-white">
-              Select Driver's License Photo
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setShowPicker(false)}
-            className="mt-3"
-            activeOpacity={0.7}
-          >
-            <Text className="text-center text-gray-500">Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
       {/* Selected File Preview State */}
       {selectedFile && (
         <View className="mt-4">
@@ -139,10 +112,7 @@ const DriverLicenseCard = () => {
 
           {/* Change Document Button */}
           <TouchableOpacity
-            onPress={() => {
-              setSelectedFile(null);
-              setShowPicker(false);
-            }}
+            onPress={() => setSelectedFile(null)}
             className="mt-4 bg-gray-100 py-3 rounded-lg"
             activeOpacity={0.7}
           >

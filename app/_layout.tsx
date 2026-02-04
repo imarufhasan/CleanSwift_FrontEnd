@@ -76,7 +76,7 @@ export default function RootLayout() {
           },
         ]}
       >
-        <Redirect href="/(auth)/selectRole" />
+        <Redirect href="/(auth)/driverRegistration" />
         <Stack
           screenOptions={{
             headerShown: false,

@@ -8,19 +8,16 @@ export default function RootLayout() {
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: "#fff" },
-          animation: "slide_from_right", 
+          animation: "slide_from_right",
         }}
       >
-        <Stack.Screen name="index" /> 
+        <Stack.Screen name="index" />
         <Stack.Screen name="register" />
         <Stack.Screen name="otpVerification" />
         <Stack.Screen name="resetPassword" />
         <Stack.Screen name="enableLocation" />
         <Stack.Screen name="selectRole" />
-        <Stack.Screen name="driverLicense1" />
-        <Stack.Screen name="driverLicense2" />
-        <Stack.Screen name="carInsurance" />
-        <Stack.Screen name="vehicleDetails" />
+        <Stack.Screen name="driverRegistration" />
         <Stack.Screen name="HomeScreen" />
       </Stack>
     </SafeAreaProvider>

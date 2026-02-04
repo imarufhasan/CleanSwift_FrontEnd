@@ -76,7 +76,7 @@ export default function RootLayout() {
           },
         ]}
       >
-        <Redirect href="/(auth)/register" />
+        <Redirect href="/(auth)/selectRole" />
         <Stack
           screenOptions={{
             headerShown: false,

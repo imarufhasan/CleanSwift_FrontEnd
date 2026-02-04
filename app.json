@@ -19,12 +19,20 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "CleanSwift needs your location to find nearby cleaning services.",
+        "NSLocationAlwaysUsageDescription": "CleanSwift needs your location to provide location-based services."
+      }
     },
     "android": {
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.ayonghosh.CleanSwift"
+      "package": "com.ayonghosh.CleanSwift",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -32,7 +40,16 @@
       "favicon": "./assets/images/AppIcon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow CleanSwift to use your location to find nearby cleaning services.",
+          "locationAlwaysPermission": "Allow CleanSwift to use your location.",
+          "locationWhenInUsePermission": "Allow CleanSwift to use your location to find nearby cleaning services.",
+          "isAndroidBackgroundLocationEnabled": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

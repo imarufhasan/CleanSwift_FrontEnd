@@ -1,38 +1,86 @@
 import React, { useEffect } from "react";
-import Toast from "react-native-toast-message";
-import { View, Text } from "react-native";
+import { View } from "react-native";
+import { Toast, ALERT_TYPE } from "react-native-alert-notification";
 
 // A generic Toast message component
 interface ShowToastProps {
   message?: string | null;
-  type?: "success" | "error" | "info"; // Can be expanded if needed
-  autoHide?: boolean; // If the toast should auto-hide after a timeout
-  paddingTop?: number; // Optional custom padding from top
+  type?: "success" | "error" | "warning" | "info"; // Expanded types
+  position?: "top" | "bottom";
+  autoClose?: boolean | number; // Can be boolean or milliseconds
+  paddingTop?: number;
+  width?: number | string;
+  height?: number | string;
+  onPress?: () => void;
+  onShow?: () => void;
+  onHide?: () => void;
 }
 
 const ShowToast: React.FC<ShowToastProps> = ({
   message,
   type = "info",
-  autoHide = true,
-  paddingTop = 70, // Default paddingTop value
+  autoClose = 4000, // 4 seconds default
+  paddingTop = 70,
+  position = "top",
+  width = "92%",
+  height = 60,
+  onPress,
+  onShow,
+  onHide,
 }) => {
   useEffect(() => {
-    if (message) {
-      Toast.show({
-        type,
-        text1: message,
-        visibilityTime: autoHide ? 3000 : 0, // Auto-hide after 3 seconds
-        position: "top", // Position the toast at the top
-        topOffset: paddingTop, // Add custom padding from top
-      });
-    }
-  }, [message, type, autoHide, paddingTop]);
+    if (!message) return;
 
-  return (
-    <View>
-      {/* The Toast will be shown automatically, no need for any rendering here */}
-    </View>
-  );
+    // Map type to ALERT_TYPE
+    const alertTypeMap = {
+      success: ALERT_TYPE.SUCCESS,
+      error: ALERT_TYPE.DANGER,
+      warning: ALERT_TYPE.WARNING,
+      info: ALERT_TYPE.SUCCESS, // Use SUCCESS styling for info
+    };
+
+    // Map type to titles
+    const titleMap = {
+      success: "Success",
+      error: "Error",
+      warning: "Warning",
+      info: "Info",
+    };
+
+    const toastConfig = {
+      type: alertTypeMap[type],
+      title: titleMap[type],
+      textBody: message,
+      autoClose: autoClose,
+      onPress: onPress,
+      onShow: onShow,
+      onHide: onHide,
+      // Custom styling for title and text
+      titleStyle: {
+        fontSize: 16,
+        fontWeight: "600" as const,
+      },
+      textBodyStyle: {
+        fontSize: 14,
+        fontWeight: "400" as const,
+      },
+    };
+
+    Toast.show(toastConfig);
+  }, [
+    message,
+    type,
+    autoClose,
+    paddingTop,
+    position,
+    width,
+    height,
+    onPress,
+    onShow,
+    onHide,
+  ]);
+
+  return <View />;
 };
 
 export default ShowToast;

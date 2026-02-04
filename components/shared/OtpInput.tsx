@@ -118,7 +118,12 @@ const OTPInput = forwardRef<OTPInputHandle, OTPInputProps>(
               ref={(r) => {
                 inputRefs.current[i] = r;
               }}
-              className={`w-14 h-16 rounded-lg border-[1.5px] ${borderColor} ${bg} text-center text-3xl font-bold text-[#1a1c1e]`}
+              className={`w-12 h-14 rounded-lg border-[1.5px] ${borderColor} ${bg} text-center text-3xl font-bold text-[#1a1c1e] sm:w-16 sm:h-20 md:w-20 md:h-24`}
+              style={{
+                textAlignVertical: "center", // Vertically center on Android
+                includeFontPadding: false, // Remove extra padding on Android
+                padding: 0, // Remove default padding
+              }}
               value={digit}
               onChangeText={(val) => handleChangeText(val, i)}
               onKeyPress={(e) => handleKeyPress(e, i)}

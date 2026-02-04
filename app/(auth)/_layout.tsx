@@ -21,6 +21,7 @@ export default function RootLayout() {
         <Stack.Screen name="driverLicense2" />
         <Stack.Screen name="carInsurance" />
         <Stack.Screen name="vehicleDetails" />
+        <Stack.Screen name="HomeScreen" />
       </Stack>
     </SafeAreaProvider>
   );

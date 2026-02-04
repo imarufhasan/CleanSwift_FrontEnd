@@ -33,7 +33,7 @@ const Index: React.FC = () => {
   useEffect(() => {
     if (successMessage) {
      
-       router.push("/HomeScreen"); 
+       router.push("./enableLocation"); 
 
     }
   }, [successMessage, router]);

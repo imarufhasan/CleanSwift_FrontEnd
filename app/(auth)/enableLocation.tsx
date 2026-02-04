@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Dimensions, Alert, AppState } from "react-native";
+import { View, Alert, AppState, Platform } from "react-native";
 import BaseContainer from "@/components/shared/BaseContainer";
 import { Button } from "@/components/shared/Button";
 import { GeneralText } from "@/components/shared/Text";
@@ -12,16 +12,18 @@ import {
   RESULTS,
   openSettings,
 } from "react-native-permissions";
-import { Platform } from "react-native";
+import { Dimensions } from "react-native";
 
 const EnableLocation: React.FC = () => {
   const { width } = Dimensions.get("window");
+  const { height } = Dimensions.get("window");
   const [buttonLabel, setButtonLabel] = useState("Give Permissions");
 
+  // FIXED: Platform check was reversed!
   const LOCATION_PERMISSION =
-    Platform.OS === "ios"
-      ? PERMISSIONS.IOS.LOCATION_WHEN_IN_USE
-      : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION;
+    Platform.OS === "android"
+      ? PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION
+      : PERMISSIONS.IOS.LOCATION_WHEN_IN_USE;
 
   // Check current permission status on mount and when app comes back to foreground
   useEffect(() => {
@@ -29,15 +31,17 @@ const EnableLocation: React.FC = () => {
       const result = await check(LOCATION_PERMISSION);
       if (result === RESULTS.GRANTED) {
         setButtonLabel("Permission Already Granted ✓");
-        // navigate to next screen here if needed
+        // Navigate to the next screen if needed
       } else if (result === RESULTS.BLOCKED) {
         setButtonLabel("Open Settings");
+      } else {
+        setButtonLabel("Give Permissions");
       }
     };
 
     checkPermission();
 
-    // Re-check when app comes back to foreground (e.g. after user enables it in Settings)
+    // Re-check when app comes back to foreground
     const subscription = AppState.addEventListener("change", (state) => {
       if (state === "active") {
         checkPermission();
@@ -52,20 +56,31 @@ const EnableLocation: React.FC = () => {
       const currentStatus = await check(LOCATION_PERMISSION);
 
       if (currentStatus === RESULTS.BLOCKED) {
-        openSettings();
+        Alert.alert(
+          "Permission Blocked",
+          "Location access has been permanently denied. Please enable it manually in your device settings.",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Open Settings", onPress: () => openSettings() },
+          ],
+        );
         return;
       }
 
       if (currentStatus === RESULTS.GRANTED) {
-
+        Alert.alert("Success", "Location permission is already granted!");
+        // Navigate to next screen
         return;
       }
+
       const result = await request(LOCATION_PERMISSION);
 
       if (result === RESULTS.GRANTED) {
-        console.log("Location permission granted");
+        setButtonLabel("Permission Already Granted ✓");
+        Alert.alert("Success", "Location permission granted successfully!");
+        // Navigate to next screen
       } else if (result === RESULTS.DENIED) {
-
+        setButtonLabel("Give Permissions");
         Alert.alert(
           "Permission Denied",
           "Location permission is required. Please tap the button again to grant it.",
@@ -83,30 +98,30 @@ const EnableLocation: React.FC = () => {
       }
     } catch (error) {
       console.error("Permission request failed", error);
+      Alert.alert("Error", "Failed to request location permission");
     }
   };
 
   return (
     <BaseContainer>
-      <View className="flex-1 justify-between items-center px-5 py-10">
-        <View className="flex justify-center items-center mt-5">
+      <View className="flex-1 justify-center items-center px-5 py-10 h-full">
+        {/* Location Icon */}
+        <View className="justify-center items-center mb-8">
           <SvgIcon
             SvgComponent={enableLocationSvg}
-            width={width}
-            height={width}
+            width={width } // 60% of screen width for better sizing
+            height={width * 0.6}
           />
         </View>
 
-        <View className="flex-1 justify-center items-center mt-10 mb-10">
-          <GeneralText
-            title="Enable Location Permission"
-            description="Allow location access to find nearby drivers and ensure accurate pickup and delivery for a smooth laundry experience"
-          />
-        </View>
+        {/* Title and Description */}
+        <GeneralText
+          title="Enable Location Permission"
+          description="Allow location access to find nearby drivers and ensure accurate pickup and delivery for a smooth laundry experience"
+        />
 
-        <View className="w-full">
-          <Button label={buttonLabel} onPress={requestPermission} />
-        </View>
+        {/* Button */}
+        <Button label={buttonLabel} onPress={requestPermission} />
       </View>
     </BaseContainer>
   );

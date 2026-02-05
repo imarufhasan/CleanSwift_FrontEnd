@@ -12,7 +12,6 @@ import Toast from "@/constants/toast";
 import { useRouter } from "expo-router";
 
 export default function HomeScreen() {
-
   const router = useRouter();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -64,7 +63,7 @@ export default function HomeScreen() {
         rating: 5.0,
         status: "Delivered",
         date: "Today",
-      }
+      },
     ],
   });
 
@@ -115,13 +114,15 @@ export default function HomeScreen() {
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
-      className="flex-1 bg-white">
+      className="flex-1 bg-white"
+    >
       {/* Header */}
       <View
         style={{
-          backgroundColor: Colors.primary
+          backgroundColor: Colors.primary,
         }}
-        className=" rounded-b-[40px] pb-20">
+        className=" rounded-b-[40px] pb-20"
+      >
         <View className="flex-row px-5 pt-12 justify-between items-center">
           <View className="flex-1">
             <Text className="text-sm text-white/80">Welcome back,</Text>
@@ -130,24 +131,24 @@ export default function HomeScreen() {
             </Text>
           </View>
 
-
-        <View className="flex-row gap-4">
-          {/* message icon */}
-          <TouchableOpacity onPress={() => router.push("./MessagesScreen")} className="bg-white/20 p-3 rounded-full">
-            <AntDesign name="message" size={22} color="#fff" />
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => router.push("./NotificationScreen")} className="bg-white/20 p-3 rounded-full">
-            <Ionicons name="notifications-outline" size={22} color="#fff" />
-          </TouchableOpacity>
+          <View className="flex-row gap-4">
+            <TouchableOpacity
+              onPress={() => router.push("/notifications")}
+              className="bg-white/20 p-3 rounded-full"
+            >
+              <Ionicons name="notifications-outline" size={22} color="#fff" />
+            </TouchableOpacity>
           </View>
         </View>
 
         {/* Location */}
         <View className="px-5 mt-8">
-          <View style={{
-            backgroundColor: Colors.primary
-          }} className="border border-white/40 rounded-2xl p-4">
+          <View
+            style={{
+              backgroundColor: Colors.primary,
+            }}
+            className="border border-white/40 rounded-2xl p-4"
+          >
             <View className="flex-row justify-between items-start">
               <View className="flex-row items-start">
                 <View className="bg-white/20 w-9 h-9 rounded-full justify-center items-center">
@@ -166,7 +167,7 @@ export default function HomeScreen() {
                   </Text>
                 </View>
               </View>
-              <TouchableOpacity onPress={() => Toast.show("change location")}>
+              <TouchableOpacity onPress={() => router.push("/ChangeLocation")}>
                 <Text className="text-white font-medium">Change</Text>
               </TouchableOpacity>
             </View>
@@ -176,19 +177,20 @@ export default function HomeScreen() {
 
       {/* Floating Request Pickup */}
       <View className="px-5 -mt-12 z-10">
-        <View style={{
-          backgroundColor: Colors.primary
-        }} className="border border-white/40 shadow-xl rounded-2xl p-5 flex-row justify-between items-center">
+        <View
+          style={{
+            backgroundColor: Colors.primary,
+          }}
+          className="border border-white/40 shadow-xl rounded-2xl p-5 flex-row justify-between items-center"
+        >
           <View>
-            <Text className="text-white text-lg font-bold">
-              Request Pickup
-            </Text>
+            <Text className="text-white text-lg font-bold">Request Pickup</Text>
             <Text className="text-white/90 text-sm mt-1">
               Get your laundry picked up today
             </Text>
           </View>
 
-          <TouchableOpacity onPress={() => Toast.show("request pickup")} className="bg-white w-12 h-12 rounded-full justify-center items-center shadow">
+          <TouchableOpacity className="bg-white w-12 h-12 rounded-full justify-center items-center shadow">
             <Ionicons name="add" size={26} color="#2563EB" />
           </TouchableOpacity>
         </View>
@@ -202,12 +204,15 @@ export default function HomeScreen() {
         <View className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100">
           <View className="flex-row justify-between items-start mb-3">
             <View className="flex-row items-safe">
-
               <View
                 className="w-9 h-9 rounded-full justify-center items-center"
                 style={{ backgroundColor: "rgba(37, 99, 235, 0.2)" }}
               >
-                <Ionicons name="cube-outline" size={20} color={Colors.primary} />
+                <Ionicons
+                  name="cube-outline"
+                  size={20}
+                  color={Colors.primary}
+                />
               </View>
 
               <View className="ml-2">
@@ -215,31 +220,31 @@ export default function HomeScreen() {
                   Order #{data.activeOrder.id}
                 </Text>
                 <Text className="text-sm text-gray-500 mb-3">
-                  {data.activeOrder.quantity} bags • $
-                  {data.activeOrder.price}.00
+                  {data.activeOrder.quantity} bags • ${data.activeOrder.price}
+                  .00
                 </Text>
               </View>
             </View>
 
             <Text
               className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusStyle(
-                data.activeOrder.status
+                data.activeOrder.status,
               )}`}
             >
               {data.activeOrder.status}
             </Text>
           </View>
 
-
           {/* Steps */}
           <View className="flex-row justify-between mb-2">
             {data.activeOrder.steps.map((step, index) => (
               <Text
                 key={step}
-                className={`text-xs ${index <= data.activeOrder.currentStep
-                  ? "text-blue-500"
-                  : "text-gray-400"
-                  }`}
+                className={`text-xs ${
+                  index <= data.activeOrder.currentStep
+                    ? "text-blue-500"
+                    : "text-gray-400"
+                }`}
               >
                 {step}
               </Text>
@@ -256,11 +261,16 @@ export default function HomeScreen() {
 
           <View className="flex-row justify-between items-center">
             <Text className="text-xs text-gray-500">
-              Estimated delivery:{" "}
-              {data.activeOrder.estimatedDelivery}
+              Estimated delivery: {data.activeOrder.estimatedDelivery}
             </Text>
-            <TouchableOpacity onPress={() => Toast.show("live track")} className="flex-row gap-3 items-center">
-              <Text style={{ color: Colors.primary }} className="text-[14px] font-bold">
+            <TouchableOpacity
+              onPress={() => router.push("/LiveTrackingScreen")}
+              className="flex-row gap-3 items-center"
+            >
+              <Text
+                style={{ color: Colors.primary }}
+                className="text-[14px] font-bold"
+              >
                 Track Live
               </Text>
               <Ionicons name="arrow-forward" size={16} color={Colors.primary} />
@@ -275,7 +285,6 @@ export default function HomeScreen() {
           <TouchableOpacity
             key={order.id}
             className="bg-white flex-row items-safe justify-center rounded-2xl p-4 mb-4 border border-gray-100"
-            onPress={() => router.push("./OrderDetails")}
           >
             <View
               className="w-9 h-9 rounded-full justify-center items-center"
@@ -284,9 +293,7 @@ export default function HomeScreen() {
               <Ionicons name="cube-outline" size={20} color={"black"} />
             </View>
             <View className="justify-between flex-1 mb-1 ml-2">
-              <Text className="font-semibold">
-                Order #{order.id}
-              </Text>
+              <Text className="font-semibold">Order #{order.id}</Text>
               <Text className="text-sm text-gray-500 mb-2">
                 {order.quantity} bag • Estimate cost ${order.price}
               </Text>
@@ -300,8 +307,6 @@ export default function HomeScreen() {
                   {order.status}
                 </Text>
               </View>
-
-
             </View>
 
             <View className="items-end justify-center">
@@ -310,18 +315,22 @@ export default function HomeScreen() {
                 <Text className="ml-1 text-sm">{order.rating.toFixed(2)}</Text>
               </View>
 
-              <TouchableOpacity onPress={() => {
-                console.log("recet_item: ", order);
-                router.push("./OrderDetails");
-
-              }} className="my-2">
-                <Text style={{ color: Colors.primary }} className="font-semibold">View Details</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  console.log("recet_item: ", order);
+                  router.push("/(stack)/OrderDetails");
+                }}
+                className="my-2"
+              >
+                <Text
+                  style={{ color: Colors.primary }}
+                  className="font-semibold"
+                >
+                  View Details
+                </Text>
               </TouchableOpacity>
 
-              <Text className="text-xs text-gray-400">
-                {order.date}
-              </Text>
-
+              <Text className="text-xs text-gray-400">{order.date}</Text>
             </View>
           </TouchableOpacity>
         ))}

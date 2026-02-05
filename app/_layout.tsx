@@ -77,7 +77,7 @@ export default function RootLayout() {
         ]}
       >
         {/* <Redirect href="/(auth)/register" /> */}
-         <Redirect href="/(driver)/(home)/HomeScreen" />
+        <Redirect href="/(tabs)/home" />
         <Stack
           screenOptions={{
             headerShown: false,

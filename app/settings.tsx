@@ -1,10 +1,10 @@
 import { View, Text } from 'react-native'
 import React from 'react'
 
-export default function CallingScreen() {
+export default function SettingScreen() {
   return (
     <View>
-      <Text>CallingScreen</Text>
+      <Text>SettingScreen</Text>
     </View>
   )
 }

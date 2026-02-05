@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { AntDesign, Feather, Ionicons } from "@expo/vector-icons";
 
 export default function TabLayout() {
   return (
@@ -10,7 +10,7 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="home/index"
         options={{
           title: "Home",
           tabBarIcon: ({ color, size }) => (
@@ -20,7 +20,36 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="profile"
+        name="orders/index"
+        options={{
+          title: "Orders",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="box" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="track/index"
+        options={{
+          title: "Track",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="location-outline" size={size} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="message/index"
+        options={{
+          title: "Message",
+          tabBarIcon: ({ color, size }) => (
+            <AntDesign name="message" size={size} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="profile/index"
         options={{
           title: "Profile",
           tabBarIcon: ({ color, size }) => (

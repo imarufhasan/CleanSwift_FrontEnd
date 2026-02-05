@@ -50,7 +50,7 @@ const notifications = [
 
 export default function NotificationScreen() {
   const router = useRouter();
-
+ 
   const renderItem = ({ item }: any) => (
     <TouchableOpacity
       className={`flex-row p-4 rounded-2xl mb-3 bg-white`}

@@ -37,27 +37,28 @@ const DriverRegistration: React.FC = () => {
   const isLastStep = currentStep === totalSteps;
 
   return (
-
-      <BaseContainer padding={0} margin={0}>
-        <View className="pb-6">
-          <Pagination
-            currentStep={currentStep}
-            totalSteps={totalSteps}
-            onBackPress={previousStep}
+    <BaseContainer padding={0} margin={0}>
+      <View className="pb-6">
+        <Pagination
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          onBackPress={previousStep}
+        />
+      </View>
+      <View style={{}}>
+        {renderStep()}
+        <View
+          style={{ marginHorizontal: 50 }}
+          className="mt-20  items-center justify-center"
+        >
+          <Button
+            label={isLastStep ? "Submit" : "Next"}
+            onPress={isLastStep ? () => {} : nextStep}
+            disabled={false}
           />
         </View>
-        <View style={{ flex: 1}}>
-          {renderStep()}
-        <View style={{ marginHorizontal: 50 }} className="mt-20  items-center justify-center">
-            <Button
-              label={isLastStep ? "Submit" : "Next"}
-              onPress={isLastStep ? () => {} : nextStep}
-              disabled={false} 
-            />
-          </View>
-        </View>
-      </BaseContainer>
-
+      </View>
+    </BaseContainer>
   );
 };
 

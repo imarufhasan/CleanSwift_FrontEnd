@@ -98,7 +98,7 @@ export default function OrderDetails() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => Toast.show("call driver")}
+              onPress={() => router.push("/CallScreen")}
               className="flex-row bg-blue-100/80 items-center justify-center border rounded-xl py-3 w-[48%]"
               style={{ borderColor: Colors.primary }}
             >

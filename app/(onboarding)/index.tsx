@@ -13,18 +13,14 @@ const OnboardingScreen: React.FC = () => {
   const totalSteps = ONBOARDING_DATA.length;
   const content = ONBOARDING_DATA[currentStep];
 
-  // 1. Setup Animation Values
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current; // Slide up from 30px
-  const scaleAnim = useRef(new Animated.Value(0.9)).current; // Pop from 90% size
-
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
   useEffect(() => {
-    // Reset values before starting
     fadeAnim.setValue(0);
     slideAnim.setValue(30);
     scaleAnim.setValue(0.9);
 
-    // 2. Run animations in parallel for a smooth "arrival"
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -55,7 +51,6 @@ const OnboardingScreen: React.FC = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      {/* Container for Illustration - Slightly different animation for depth */}
       <Animated.View
         style={{
           flex: 5,
@@ -67,7 +62,6 @@ const OnboardingScreen: React.FC = () => {
         <OnboardingIllustration SvgComponent={content.Svg} />
       </Animated.View>
 
-      {/* Container for Content - Sliding Up */}
       <Animated.View
         style={{
           flex: 4,

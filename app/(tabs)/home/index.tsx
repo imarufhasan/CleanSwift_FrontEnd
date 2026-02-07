@@ -13,6 +13,7 @@ import Toast from "@/constants/toast";
 import { useRouter } from "expo-router";
 import RequestPickupModal from "@/components/home/RequestPickupModal";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import ShowMessage from "@/constants/toast";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -129,7 +130,7 @@ export default function HomeScreen() {
       // }));
 
       setRefreshing(false);
-      Toast.show("updated");
+      ShowMessage.show("updated");
     }, 1500);
   }, []);
 
@@ -453,7 +454,7 @@ export default function HomeScreen() {
                   onPress={() => {
                     setConfirmed(false);
                     setBottomModal(false);
-                    Toast.show("Pickup request confirmed");
+                    ShowMessage.show("Pickup request confirmed");
                   }}
                   className="flex-1 bg-green-500 rounded-2xl py-3"
                 >

@@ -133,7 +133,7 @@ const Register = () => {
           Already have an account?{" "}
         </Text>
         <TouchableOpacity onPress={() => router.push("/")}>
-          <Text className="text-[#1a1c1e] text-sm font-bold">Login</Text>
+          <Text className="text-[#1a1c1e] text-lg font-bold">Login</Text>
         </TouchableOpacity>
       </View>
 

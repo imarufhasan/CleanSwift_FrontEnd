@@ -9,6 +9,7 @@ import CountryPicker, {
 } from "react-native-country-picker-modal";
 import { useRouter } from "expo-router";
 import Toast from "@/constants/toast";
+import ShowMessage from "@/constants/toast";
 
 export default function ProfileSettings() {
   const router = useRouter();
@@ -110,14 +111,11 @@ export default function ProfileSettings() {
           />
         </View>
 
-        {/* Preview */}
-        <Text className="text-xs text-gray-400 mt-2">
-          Full number: +{callingCode} {phone}
-        </Text>
+       
       </View>
 
       {/* Save Button */}
-      <TouchableOpacity onPress={() => Toast.show("profile saved")} className="bg-blue-500 py-4 rounded-xl mt-auto mb-10">
+      <TouchableOpacity onPress={() => ShowMessage.show("profile saved")} className="bg-blue-500 py-4 rounded-xl mt-auto mb-10">
         <Text className="text-white text-center font-semibold text-lg">
           Save
         </Text>

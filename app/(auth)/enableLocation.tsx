@@ -14,9 +14,9 @@ import {
 } from "react-native-permissions";
 import { Dimensions } from "react-native";
 import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const EnableLocation: React.FC = () => {
-
   const router = useRouter();
 
   const { width } = Dimensions.get("window");
@@ -72,7 +72,7 @@ const EnableLocation: React.FC = () => {
       }
 
       if (currentStatus === RESULTS.GRANTED) {
-        router.push("./HomeScreen");
+        router.push("/home");
         return;
       }
 
@@ -80,7 +80,6 @@ const EnableLocation: React.FC = () => {
 
       if (result === RESULTS.GRANTED) {
         setButtonLabel("Permission Already Granted ✓");
-
       } else if (result === RESULTS.DENIED) {
         setButtonLabel("Give Permissions");
         Alert.alert(
@@ -105,8 +104,8 @@ const EnableLocation: React.FC = () => {
   };
 
   return (
-    <BaseContainer>
-      <View className="flex-1 justify-center items-center px-5 py-10 h-full">
+    <SafeAreaView className="flex-1 bg-white px-5">
+      <View className="flex-1 h-full w-full ">
         {/* Location Icon */}
         <View className="justify-center items-center mb-8">
           <SvgIcon
@@ -121,11 +120,13 @@ const EnableLocation: React.FC = () => {
           title="Enable Location Permission"
           description="Allow location access to find nearby drivers and ensure accurate pickup and delivery for a smooth laundry experience"
         />
+      </View>
 
+      <View className="flex-1  justify-end mb-6">
         {/* Button */}
         <Button label={buttonLabel} onPress={requestPermission} />
       </View>
-    </BaseContainer>
+    </SafeAreaView>
   );
 };
 

@@ -21,7 +21,7 @@ export const Button: React.FC<ButtonProps> = ({
     disabled={disabled} 
   >
     <Text
-      className={`text-white text-base font-semibold mr-2 ${disabled ? "text-[#7f7f7f]" : ""}`}
+      className={`text-white text-lg font-semibold mr-2 ${disabled ? "text-[#7f7f7f]" : ""}`}
     >
       {label}
     </Text>

@@ -26,7 +26,6 @@ export default function RootLayout() {
     loadResources();
   }, []);
 
-  // Show splash screen until resources are ready and splash has been shown
   // if (!ready || showSplash) {
   //   return (
   //     <>
@@ -36,14 +35,13 @@ export default function RootLayout() {
   //   );
   // }
 
-  // Redirect immediately when ready
   return (
     <>
       <StatusBar style="dark" />
       <AlertNotificationRoot
-        theme="dark" // Choose 'light' or 'dark'
+        theme="dark" 
         toastConfig={{
-          autoClose: 4000, // Global default: 4 seconds
+          autoClose: 4000, 
           titleStyle: {
             fontSize: 16,
             fontWeight: "600",
@@ -54,7 +52,6 @@ export default function RootLayout() {
           },
         }}
         colors={[
-          // Light theme colors
           {
             label: "#1f2937",
             card: "#ffffff",
@@ -62,9 +59,8 @@ export default function RootLayout() {
             success: "#10b981",
             danger: "#ef4444",
             warning: "#f59e0b",
-            info: "#3b82f6", // Added info color
+            info: "#3b82f6", 
           },
-          // Dark theme colors
           {
             label: "#f9fafb",
             card: "#1f2937",
@@ -72,12 +68,12 @@ export default function RootLayout() {
             success: "#22c55e",
             danger: "#f87171",
             warning: "#fbbf24",
-            info: "#60a5fa", // Added info color
+            info: "#60a5fa", 
           },
         ]}
       >
         {/* <Redirect href="/(auth)/register" /> */}
-        <Redirect href="/(tabs)/home" />
+        {/* <Redirect href="/(tabs)/home" /> */}
         <Stack
           screenOptions={{
             headerShown: false,

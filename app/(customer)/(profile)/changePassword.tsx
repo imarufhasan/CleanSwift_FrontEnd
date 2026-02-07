@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "@/constants/color";
 import { useRouter } from "expo-router";
 import Toast from "@/constants/toast";
+import ShowMessage from "@/constants/toast";
 
 export default function ChangePassword() {
   const router = useRouter();
@@ -104,7 +105,7 @@ export default function ChangePassword() {
         style={{ backgroundColor: Colors.primary }}
         className="py-4 rounded-xl mt-auto mb-10"
         onPress={() => {
-          Toast.show("Password changed successfully");
+          ShowMessage.show("Password changed successfully");
         }}
       >
         <Text className="text-white text-center font-semibold text-[20px]">

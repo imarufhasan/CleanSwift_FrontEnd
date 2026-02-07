@@ -13,8 +13,8 @@ import { Ionicons } from "@expo/vector-icons";
 import Colors from "@/constants/color";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Toast from "@/constants/toast";
 import { formatChatTime } from "@/constants/chatTimes";
+import ShowMessage from "@/constants/toast";
 
 const driver = {
     name: "Michael Johnson",
@@ -181,7 +181,7 @@ export default function ChatScreen() {
                             multiline
                         />
 
-                        <TouchableOpacity onPress={() => Toast.show("send image")}>
+                        <TouchableOpacity onPress={() => ShowMessage.show("send image")}>
                             <Ionicons
                                 name="image-outline"
                                 size={22}

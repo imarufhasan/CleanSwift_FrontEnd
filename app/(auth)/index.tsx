@@ -14,6 +14,7 @@ import AuthText from "@/app/(auth)/components/AuthText";
 import { AUTH_DATA } from "@/constants/auth";
 import useLogin from "./services/hooks/useLogin";
 import ShowToast from "@/components/shared/ShowToast";
+import { Ionicons } from "@expo/vector-icons";
 
 const Index: React.FC = () => {
   const router = useRouter();
@@ -70,17 +71,21 @@ const Index: React.FC = () => {
             className="flex-row items-center"
           >
             <View
-              className={`w-5 h-5 rounded border ${
+              className={`w-5 h-5 rounded border items-center justify-center ${
                 rememberMe
                   ? "bg-[#00a2ff] border-[#00a2ff]"
                   : "border-[#d1d5db]"
               } mr-2`}
-            />
+            >
+              { rememberMe ? (
+                <Ionicons name="checkmark" size={16} color="#fff" className="absolute" />
+              ) : null }
+            </View>
             <Text className="text-[#7d848d] text-sm font-medium">
               Remember me
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push("/resetPassword")}>
+          <TouchableOpacity onPress={() => router.push("/forgetPassScreen")}>
             <Text className="text-[#ff4d4d] text-sm font-medium">
               Forgot password
             </Text>

@@ -18,20 +18,43 @@ type Props = {
   onClose: () => void;
   confirmed: boolean;
   setConfirmed: (value: boolean) => void;
+  pickupData: {
+    asap: boolean;
+    date: Date | null;
+    time: Date | null;
+    bags: number;
+  };
+  setPickupData: (data: Props["pickupData"]) => void;
+  openDatePicker: () => void;
+  openTimePicker: () => void;
 };
 
 type Step = 0 | 1 | 2 | 3 | 4;
 
-export default function RequestPickupModal({ visible, onClose, confirmed, setConfirmed }: Props) {
+export default function RequestPickupModal({
+  visible,
+  onClose,
+  confirmed,
+  setConfirmed,
+  pickupData,
+  setPickupData,
+  openDatePicker,
+  openTimePicker,
+}: Props) {
   const [internalVisible, setInternalVisible] = useState(visible);
   const [step, setStep] = useState<Step>(0);
-  const [bags, setBags] = useState(1);
-  const [selectAsap, setSelectAsap] = useState(true);
+  const [bags, setBags] = useState(pickupData.bags);
+  const [selectAsap, setSelectAsap] = useState(pickupData.asap);
+
+  //   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  // const [selectedTime, setSelectedTime] = useState<Date | null>(null);
+  // const [showDatePicker, setShowDatePicker] = useState(false);
+  // const [showTimePicker, setShowTimePicker] = useState(false);
 
   const translateY = useRef(new Animated.Value(height)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
 
-  const data = {
+  const dataLoal = {
     service: {
       name: "Washing & Drying",
       pricePerBag: 45,
@@ -149,13 +172,13 @@ export default function RequestPickupModal({ visible, onClose, confirmed, setCon
               </View>
               <View>
                 <View className="flex-row items-center mb-1">
-                  <Text className="font-semibold">{data.service.name}</Text>
+                  <Text className="font-semibold">{dataLoal.service.name}</Text>
                 </View>
                 <Text className="text-gray-500 text-sm">
                   Standard wash & dry service
                 </Text>
                 <Text className="text-blue-500 font-semibold mt-2">
-                  ${data.service.pricePerBag} per bag
+                  ${dataLoal.service.pricePerBag} per bag
                 </Text>
               </View>
             </View>
@@ -213,13 +236,13 @@ export default function RequestPickupModal({ visible, onClose, confirmed, setCon
             <View className="bg-white border border-gray-200 shadow-transparent flex-row gap-1 rounded-xl p-3 mb-4">
               <View>
                 <Text className="text-[13px] text-black font-semibold">
-                  Total Cost : ${bags * data.service.pricePerBag}
+                  Total Cost : ${bags * dataLoal.service.pricePerBag}
                 </Text>
               </View>
               <View className="ml-auto">
                 <Text className="text-[13px] text-gray-500">{bags} bags</Text>
                 <Text className="text-[13px] text-gray-500">
-                  ${data.service.pricePerBag} per bag
+                  ${dataLoal.service.pricePerBag} per bag
                 </Text>
               </View>
             </View>
@@ -236,7 +259,7 @@ export default function RequestPickupModal({ visible, onClose, confirmed, setCon
               Add any specific care instructions for your laundry? (optional)
             </Text>
 
-            {data.spacialInstructions.map((item) => (
+            {dataLoal.spacialInstructions.map((item) => (
               <View
                 key={item.id}
                 className="border border-gray-100 bg-white rounded-xl p-3 mb-2"
@@ -301,7 +324,11 @@ export default function RequestPickupModal({ visible, onClose, confirmed, setCon
               </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={() => setSelectAsap(false)}
+                onPress={() => {
+                  setSelectAsap(false);
+                  // null date and time when selecting schedule for later
+                  setPickupData({ ...pickupData, asap: false, date: null, time: null });
+                }}
                 className="items-center justify-between gap-3 flex-row border border-blue-500 rounded-2xl p-4 mb-6  w-full"
               >
                 <View className="flex-row items-center gap-3">
@@ -336,14 +363,22 @@ export default function RequestPickupModal({ visible, onClose, confirmed, setCon
                       Date
                     </Text>
                     <TouchableOpacity
-                      onPress={() => console.log("Date selected")}
-                      className="border flex-row items-start justify-between border-gray-200 rounded-xl p-3 mt-1"
+                      onPress={() => {
+                        setPickupData({ ...pickupData, asap: false });
+                        openDatePicker();
+                      }}
+                      className="border rounded-xl p-3 mt-1 border-blue-500 bg-blue-100 flex-row items-center justify-between"
                     >
-                      <Text className="text-sm text-gray-500">Select date</Text>
+                      <Text className="text-sm text-black font-semibold">
+                        {pickupData.date
+                          ? pickupData.date.toLocaleDateString()
+                          : "Select date"}
+                      </Text>
                       <Ionicons
                         name="calendar"
                         size={16}
                         color={Colors.primary}
+                        className="ml-2"
                       />
                     </TouchableOpacity>
                   </View>
@@ -352,14 +387,25 @@ export default function RequestPickupModal({ visible, onClose, confirmed, setCon
                       Time
                     </Text>
                     <TouchableOpacity
-                      onPress={() => console.log("time selected")}
-                      className="border flex-row items-start justify-between border-gray-200 rounded-xl p-3 mt-1"
+                      onPress={() => {
+                        setPickupData({ ...pickupData, asap: false });
+                        openTimePicker();
+                      }}
+                      className="border rounded-xl p-3 mt-1 border-blue-500 bg-blue-100 flex-row items-center justify-between"
                     >
-                      <Text className="text-sm text-gray-500">Select time</Text>
+                      <Text className="text-sm text-black font-semibold">
+                        {pickupData.time
+                          ? pickupData.time.toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : "Select time"}
+                      </Text>
                       <Ionicons
                         name="time-outline"
-                        size={18}
+                        size={16}
                         color={Colors.primary}
+                        className="ml-2"
                       />
                     </TouchableOpacity>
                   </View>
@@ -386,7 +432,7 @@ export default function RequestPickupModal({ visible, onClose, confirmed, setCon
             <View className="border border-gray-200 rounded-2xl p-4 w-full ">
               <View className="flex-row items-center justify-between">
                 <Text className="font-semibold">Service</Text>
-                <Text className="text-gray-500">{data.service.name}</Text>
+                <Text className="text-gray-500">{dataLoal.service.name}</Text>
               </View>
               <View className="flex-row items-center justify-between mt-2">
                 <Text className="font-semibold">Bags</Text>
@@ -403,7 +449,7 @@ export default function RequestPickupModal({ visible, onClose, confirmed, setCon
               <View className="flex-row items-center justify-between mt-2">
                 <Text className="font-bold text-black text-lg">Total</Text>
                 <Text className="text-blue-500 font-semibold text-lg">
-                  {"$" + bags * data.service.pricePerBag}
+                  {"$" + bags * dataLoal.service.pricePerBag}
                 </Text>
               </View>
             </View>
@@ -428,7 +474,7 @@ export default function RequestPickupModal({ visible, onClose, confirmed, setCon
               if (step < 4) setStep((prev) => (prev + 1) as Step);
               else {
                 setConfirmed(true);
-              };
+              }
             }}
             style={{ backgroundColor: Colors.primary }}
             className="flex-1 rounded-xl py-3 items-center"

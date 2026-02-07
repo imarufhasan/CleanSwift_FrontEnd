@@ -4,8 +4,10 @@ import { Ionicons, Feather } from "@expo/vector-icons";
 import Colors from "@/constants/color";
 import RatingStars from "@/components/home/RatingStars";
 import { trackingData } from "@/data/tracking";
+import { useRouter } from "expo-router";
 
 export default function Track() {
+  const router = useRouter();
   const { status, order, driver, orderDetails } = trackingData;
 
   const total =
@@ -19,7 +21,7 @@ export default function Track() {
         {/* Status Badge */}
         <View className="absolute top-12 self-center bg-white px-4 py-2 rounded-full flex-row items-center shadow">
           <View className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
-          <Text className="font-semibold">{status.label}</Text>
+          <Text className="font-semibold text-lg">{status.label}</Text>
         </View>
 
         {/* Zoom buttons */}
@@ -34,8 +36,10 @@ export default function Track() {
 
         {/* ETA Bubble */}
         <View className="absolute left-4 bottom-4 bg-white px-4 py-2 rounded-xl shadow">
-          <Text className="text-xs text-gray-500">Estimated Arrival</Text>
-          <Text className="font-bold text-lg">{status.etaMinutes} mins</Text>
+          <Text className="text-sm text-gray-500">Estimated Arrival</Text>
+          <Text className="font-bold text-[20px]">
+            {status.etaMinutes} mins
+          </Text>
         </View>
       </View>
 
@@ -59,7 +63,7 @@ export default function Track() {
         </View>
 
         <View className="flex-row mb-4">
-          <View className="flex-1 flex-row justify-center gap-4 border border-blue-200 rounded-xl py-3 items-center mr-2">
+          <View className="flex-1 flex-row justify-start pl-4 gap-2 border border-blue-200 rounded-xl py-3 items-center mr-2">
             <Feather name="box" size={18} color={Colors.primary} />
             <View>
               <Text className="text-xs text-gray-500">Order</Text>
@@ -67,7 +71,7 @@ export default function Track() {
             </View>
           </View>
 
-          <View className="flex-1 flex-row justify-center gap-4 border border-blue-200 rounded-xl py-3 items-center ml-2">
+          <View className="flex-1 flex-row justify-start pl-4 gap-2 border border-blue-200 rounded-xl py-3 items-center ml-2">
             <Feather name="clock" size={18} color={Colors.primary} />
             <View>
               <Text className="text-xs text-gray-500">ETA</Text>
@@ -77,7 +81,10 @@ export default function Track() {
         </View>
 
         <View className="flex-row">
-          <TouchableOpacity className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center mr-2">
+          <TouchableOpacity
+            onPress={() => router.push("/ChatScreen")}
+            className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center mr-2"
+          >
             <Ionicons
               name="chatbubble-outline"
               size={18}
@@ -86,7 +93,10 @@ export default function Track() {
             <Text className="ml-2 text-blue-600 font-semibold">Message</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center ml-2">
+          <TouchableOpacity
+            onPress={() => router.push("/CallScreen")}
+            className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center ml-2"
+          >
             <Ionicons name="call-outline" size={18} color={Colors.primary} />
             <Text className="ml-2 text-blue-600 font-semibold">
               Call Driver

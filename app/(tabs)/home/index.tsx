@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import Colors from "@/constants/color";
 import Toast from "@/constants/toast";
 import { useRouter } from "expo-router";
 import RequestPickupModal from "@/components/home/RequestPickupModal";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -19,6 +20,19 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [bottomModal, setBottomModal] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+
+  // const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  // const [selectedTime, setSelectedTime] = useState<Date | null>(null);
+
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
+  const [pickupData, setPickupData] = useState({
+    asap: true,
+    date: null as Date | null,
+    time: null as Date | null,
+    bags: 1,
+  });
 
   const [data, setData] = useState({
     user: {
@@ -71,6 +85,12 @@ export default function HomeScreen() {
     ],
   });
 
+  useEffect(() => {
+    if (!pickupData.asap && !pickupData.date) {
+      setShowDatePicker(true);
+    }
+  }, [pickupData.asap]);
+
   const getStatusStyle = (status: any) => {
     switch (status) {
       case "Washing":
@@ -112,6 +132,28 @@ export default function HomeScreen() {
       Toast.show("updated");
     }, 1500);
   }, []);
+
+  const onDateChange = (_: any, date?: Date) => {
+    setShowDatePicker(false);
+    if (date) {
+      setPickupData((prev) => ({
+        ...prev,
+        date,
+        asap: false,
+      }));
+    }
+  };
+
+  const onTimeChange = (_: any, time?: Date) => {
+    setShowTimePicker(false);
+    if (time) {
+      setPickupData((prev) => ({
+        ...prev,
+        time,
+        asap: false,
+      }));
+    }
+  };
 
   return (
     <View className="flex-1 bg-gray-100">
@@ -360,31 +402,62 @@ export default function HomeScreen() {
         onClose={() => setBottomModal(false)}
         confirmed={confirmed}
         setConfirmed={setConfirmed}
+        pickupData={pickupData}
+        setPickupData={setPickupData}
+        openDatePicker={() => setShowDatePicker(true)}
+        openTimePicker={() => setShowTimePicker(true)}
       />
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={pickupData.date || new Date()}
+          mode="date"
+          minimumDate={new Date()}
+          onChange={onDateChange}
+        />
+      )}
+
+      {showTimePicker && (
+        <DateTimePicker
+          value={pickupData.time || new Date()}
+          mode="time"
+          onChange={onTimeChange}
+        />
+      )}
+
       {/* Call Modal */}
       {confirmed && (
-        <Modal transparent visible={confirmed}>
+        <Modal
+          transparent
+          visible={confirmed}
+          animationType="fade"
+          onRequestClose={() => setConfirmed(false)}
+        >
           <View className="flex-1 justify-center items-center bg-black/50">
-            <View className="bg-white rounded-2xl p-6 h-0.5 w-[90%]">
-              <Text className="text-black text-[22px] font-bold text-center">
-                Are you sure confirm this Request?
+            <View className="bg-white rounded-2xl p-6 w-[90%]">
+              <Text className="text-black text-[20px] font-bold text-center">
+                Are you sure you want to confirm this request?
               </Text>
 
-              <View className="flex-row  items-center mt-6 gap-4">
+              <View className="flex-row items-center mt-6 gap-4">
                 <TouchableOpacity
                   onPress={() => setConfirmed(false)}
-                  className="bg-white flex-1 border border-red-500 rounded-2xl py-3 px-6"
+                  className="flex-1 border border-red-500 rounded-2xl py-3"
                 >
-                  <Text className="text-red-500 text-lg text-center font-semibold">
+                  <Text className="text-red-500 text-[20px] text-center font-semibold">
                     No
                   </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  onPress={() => setConfirmed(false)}
-                  className="flex-1 bg-green-500 rounded-2xl py-3 px-6"
+                  onPress={() => {
+                    setConfirmed(false);
+                    setBottomModal(false);
+                    Toast.show("Pickup request confirmed");
+                  }}
+                  className="flex-1 bg-green-500 rounded-2xl py-3"
                 >
-                  <Text className="text-white text-lg text-center font-semibold">
+                  <Text className="text-white text-[20px] text-center font-semibold">
                     Yes
                   </Text>
                 </TouchableOpacity>

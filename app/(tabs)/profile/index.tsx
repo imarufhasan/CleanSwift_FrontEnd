@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  ScrollView,
-} from "react-native";
+import { View, Text, Image, TouchableOpacity, ScrollView } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import Colors from "@/constants/color";
 import { useRouter } from "expo-router";
@@ -21,7 +15,6 @@ const menuItems = [
 ];
 
 export default function Profile() {
-
   const router = useRouter();
   return (
     <ScrollView className="flex-1 bg-[#F6F9FF]">
@@ -37,9 +30,7 @@ export default function Profile() {
           />
           <View className="ml-3 flex-1">
             <Text className="text-white text-[20px] font-bold">Ali Amin</Text>
-            <Text className="text-white/80 text-sm">
-              aliamin@gmail.com
-            </Text>
+            <Text className="text-white/80 text-sm">aliamin@gmail.com</Text>
           </View>
 
           {/* <TouchableOpacity className="bg-white/20 p-2 rounded-full">
@@ -71,18 +62,27 @@ export default function Profile() {
             onPress={() => {
               if (item.label === "Profile Setting") {
                 router.push("/profileSettings");
-              } 
+              } else if (item.label === "Payment Methods") {
+                //router.push("/paymentMethods");
+              } else if (item.label === "Change password") {
+                router.push("/changePassword");
+              } else if (item.label === "Support") {
+                //router.push("/support");
+              } else if (item.label === "About Us") {
+                //router.push("/aboutUs");
+              } else if (item.label === "Privacy Policy") {
+                //router.push("/privacyPolicy");
+              } else if (item.label === "Terms and Conditions") {
+                //router.push("/termsAndConditions");
+              }
             }}
           >
-
             <Ionicons
               name={item.icon as any}
               size={20}
               color={Colors.primary}
             />
-            <Text className="ml-3 flex-1 font-medium">
-              {item.label}
-            </Text>
+            <Text className="ml-3 flex-1 font-medium">{item.label}</Text>
             <MaterialIcons
               name="keyboard-arrow-right"
               size={22}
@@ -96,9 +96,7 @@ export default function Profile() {
       <View className="px-5 mt-4 mb-10">
         <TouchableOpacity className="border border-red-400 rounded-xl py-4 flex-row justify-center items-center">
           <Ionicons name="log-out-outline" size={20} color="#EF4444" />
-          <Text className="text-red-500 font-semibold ml-2">
-            Logout
-          </Text>
+          <Text className="text-red-500 font-semibold ml-2">Logout</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

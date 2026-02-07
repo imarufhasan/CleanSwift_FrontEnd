@@ -7,9 +7,9 @@ export const liveTrackingData = {
       { key: "requested", title: "Requested", time: "10:30 AM", status: "done" },
       { key: "assigned", title: "Driver Assigned", time: "10:35 AM", status: "done" },
       { key: "picked", title: "Picked Up", time: "11:15 AM", status: "done" },
-      { key: "washing", title: "Washing", subtitle: "Currently in progress", status: "done" },
-      { key: "delivery", title: "Out for Delivery", status: "done", icon: "truck" },
-      { key: "delivered", title: "Delivered", status: "done", icon: "home" },
+      { key: "washing", title: "Washing", time: "11:30 AM", subtitle: "Currently in progress", status: "done" },
+      { key: "delivery", title: "Out for Delivery", time: "12:00 PM", status: "done", icon: "truck" },
+      { key: "delivered", title: "Delivered", time: "12:30 PM", status: "done", icon: "home" },
     ],
   order: {
     id: 1248,

@@ -32,7 +32,7 @@ export default function LiveTrackingScreen() {
           {/* Status Badge */}
           <View className="absolute top-12 self-center bg-white px-4 py-2 rounded-full flex-row items-center shadow">
             <View className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
-            <Text className="font-semibold">{status.label}</Text>
+            <Text className="font-semibold text-lg">{status.label}</Text>
           </View>
 
           {/* Zoom buttons */}
@@ -47,34 +47,54 @@ export default function LiveTrackingScreen() {
 
           {/* ETA Bubble */}
           <View className="absolute left-4 bottom-4 bg-white px-4 py-2 rounded-xl shadow">
-            <Text className="text-xs text-gray-500">Estimated Arrival</Text>
-            <Text className="font-bold text-lg">{status.etaMinutes} mins</Text>
+            <Text className="text-sm text-gray-500">Estimated Ready Time</Text>
+            <Text className="font-bold text-[22px]">6:30 PM</Text>
           </View>
         </View>
 
         {/* Order Progress */}
         <View className="px-5 mt-6">
-          <Text className="font-bold text-lg mb-4">Order Progress</Text>
+          <View className="flex-row items-center mb-3 justify-between">
+            <Text className="font-bold text-[22px]">Order Progress</Text>
+            <Text className="text-sm bg-red-100 rounded-full px-3 py-2 font-bold text-red-500 ml-2">
+              In Progress
+            </Text>
+          </View>
           <View className="bg-white rounded-2xl p-4 shadow">
             {liveTrackingData.progressSteps.map((step, index) => {
               if (step.status === "done") {
                 return (
-                  <View key={step.key} className="flex-row mb-6">
-                    <View className="items-center mr-3">
-                      <View className="w-9 h-9 rounded-full bg-green-100 justify-center items-center">
-                        <Ionicons
-                          name="checkmark-circle-outline"
-                          size={22}
-                          color="#22C55E"
-                        />
+                  <View key={step.key}>
+                    <View className="flex-row">
+                      <View className="items-center mr-3">
+                        <View className="w-9 h-9 rounded-full bg-green-200 justify-center items-center">
+                          {step.title === "Delivered" ? (
+                            <Ionicons
+                              name="home-outline"
+                              size={22}
+                              color={"green"}
+                            />
+                          ) : (
+                            <Ionicons
+                              name="checkmark-circle-outline"
+                              size={22}
+                              color={"green"}
+                            />
+                          )}
+                        </View>
+                        <View className="w-[2px] flex-1 bg-green-500 mt-1" />
                       </View>
-                      <View className="w-[2px] flex-1 bg-green-200 mt-1" />
-                    </View>
 
-                    <View>
-                      <Text className="font-medium">{step.title}</Text>
-                      <Text className="text-xs text-gray-500">{step.time}</Text>
+                      <View>
+                        <Text className="font-medium">{step.title}</Text>
+                        <Text className="text-xs text-gray-500">
+                          {step.time}
+                        </Text>
+                      </View>
                     </View>
+                    {step.title !== "Delivered" ? (
+                      <View className="bg-green-200 h-[30px] w-[1px] ml-4 my-2 rounded-full" />
+                    ) : null}
                   </View>
                 );
               }
@@ -125,7 +145,7 @@ export default function LiveTrackingScreen() {
         </View>
 
         {/* Driver Card */}
-        <View className="bg-white rounded-2xl p-4 shadow mx-5 mb-5">
+        <View className="bg-white rounded-2xl p-4 shadow mx-5 mb-5 mt-4">
           <View className="flex-row items-center mb-3">
             <Image
               source={{ uri: driver.avatar }}
@@ -141,39 +161,40 @@ export default function LiveTrackingScreen() {
                 </Text>
               </View>
             </View>
-          </View>
 
-          <View className="flex-row mb-4">
-            <View className="flex-1 flex-row justify-center gap-4 border border-blue-200 rounded-xl py-3 items-center mr-2">
-              <Feather name="box" size={18} color={Colors.primary} />
-              <View>
-                <Text className="text-xs text-gray-500">Order</Text>
-                <Text className="font-semibold">#{order.id}</Text>
-              </View>
-            </View>
-
-            <View className="flex-1 flex-row justify-center gap-4 border border-blue-200 rounded-xl py-3 items-center ml-2">
-              <Feather name="clock" size={18} color={Colors.primary} />
-              <View>
-                <Text className="text-xs text-gray-500">ETA</Text>
-                <Text className="font-semibold">{order.eta}</Text>
-              </View>
-            </View>
+            <TouchableOpacity onPress={() => router.push("/DriverDetails")}>
+              <Text
+                style={{ color: Colors.primary }}
+                className="text-sm font-semibold  text-right"
+              >
+                View Details
+              </Text>
+            </TouchableOpacity>
           </View>
 
           <View className="flex-row">
-            <TouchableOpacity className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center mr-2">
-              <Ionicons
-                name="chatbubble-outline"
-                size={18}
-                color={Colors.primary}
-              />
-              <Text className="ml-2 text-blue-600 font-semibold">Message</Text>
+            <TouchableOpacity
+              onPress={() => router.push("/ChatScreen")}
+              className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center mr-2"
+            >
+              <AntDesign name="message" size={18} color={Colors.primary} />
+              <Text
+                style={{ color: Colors.primary }}
+                className="ml-2  font-semibold"
+              >
+                Message
+              </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center ml-2">
+            <TouchableOpacity
+              onPress={() => router.push("/CallScreen")}
+              className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center ml-2"
+            >
               <Ionicons name="call-outline" size={18} color={Colors.primary} />
-              <Text className="ml-2 text-blue-600 font-semibold">
+              <Text
+                style={{ color: Colors.primary }}
+                className="ml-2  font-semibold"
+              >
                 Call Driver
               </Text>
             </TouchableOpacity>
@@ -205,20 +226,16 @@ export default function LiveTrackingScreen() {
               <Text className="font-medium">{orderDetails.instructions}</Text>
             </View>
 
-            <View className="border-t border-gray-200 pt-3">
-              <View className="flex-row justify-between mb-2">
+            <View className="pt-3">
+              <View className="border-t border-b border-gray-200 py-3 flex-row justify-between mb-2">
                 <Text className="text-gray-600">
                   {orderDetails.pricing.bags} bags × $
                   {orderDetails.pricing.bagPrice}
                 </Text>
+
                 <Text>
                   ${orderDetails.pricing.bags * orderDetails.pricing.bagPrice}
                 </Text>
-              </View>
-
-              <View className="flex-row justify-between mb-2">
-                <Text className="text-gray-600">Tip</Text>
-                <Text>${orderDetails.pricing.tip}</Text>
               </View>
 
               <View className="flex-row justify-between mt-2">
@@ -231,8 +248,14 @@ export default function LiveTrackingScreen() {
 
         {/* Mark as Delivered Button */}
         <View className="px-5 mb-5">
-          <TouchableOpacity className="bg-blue-600 rounded-xl py-3 flex-row justify-center items-center">
-            <Text className="text-white font-semibold">Mark as Delivered</Text>
+          <TouchableOpacity
+            onPress={() => router.push("/DeliveredSuccessScreen")}
+            className="bg-green-600 gap-2 rounded-xl py-3 flex-row justify-center items-center"
+          >
+            <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
+            <Text className="text-white text-lg font-semibold">
+              Mark as Delivered
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>

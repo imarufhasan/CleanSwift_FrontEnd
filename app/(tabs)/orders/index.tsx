@@ -63,63 +63,90 @@ export default function Orders() {
           {activeOrder.progressSteps.map((step, index) => {
             if (step.status === "done") {
               return (
-                <View key={step.key} className="flex-row mb-6">
-                  <View className="items-center mr-3">
-                    <View className="w-9 h-9 rounded-full bg-green-100 justify-center items-center">
-                      <Ionicons
-                        name="checkmark-circle-outline"
-                        size={22}
-                        color="#22C55E"
-                      />
+                <View key={step.key}>
+                  <View className="flex-row">
+                    <View className="items-center mr-3">
+                      <View className="w-9 h-9 rounded-full bg-green-200 justify-center items-center">
+                        {step.title === "Delivered" ? (
+                          <Ionicons
+                            name="home-outline"
+                            size={22}
+                            color={"green"}
+                          />
+                        ) : (
+                          <Ionicons
+                            name="checkmark-circle-outline"
+                            size={22}
+                            color={"green"}
+                          />
+                        )}
+                      </View>
+                      <View className="w-[2px] flex-1 bg-green-500 mt-1" />
                     </View>
-                    <View className="w-[2px] flex-1 bg-green-200 mt-1" />
-                  </View>
 
-                  <View>
-                    <Text className="font-medium">{step.title}</Text>
-                    <Text className="text-xs text-gray-500">{step.time}</Text>
+                    <View>
+                      <Text className="font-medium">{step.title}</Text>
+                      <Text className="text-xs text-gray-500">{step.time}</Text>
+                    </View>
                   </View>
+                  {step.title !== "Delivered" ? (
+                    <View className="bg-green-200 h-[30px] w-[1px] ml-4 my-2 rounded-full" />
+                  ) : null}
                 </View>
               );
             }
 
             if (step.status === "active") {
               return (
-                <View key={step.key} className="flex-row mb-6">
-                  <View className="items-center mr-3">
-                    {/* loader icon */}
-                    <View className="w-9 h-9 rounded-full bg-blue-100 justify-center items-center">
-                      <Ionicons
-                        name="refresh-outline"
-                        size={22}
-                        color="#3B82F6"
-                      />
+                <View key={step.key}>
+                  <View className="flex-row">
+                    <View className="items-center mr-3">
+                      {/* loader icon */}
+                      <View className="w-9 h-9 rounded-full bg-blue-100 justify-center items-center">
+                        <Ionicons
+                          name="refresh-outline"
+                          size={22}
+                          color="#3B82F6"
+                        />
+                      </View>
+                    </View>
+
+                    <View>
+                      <Text className="font-medium text-black">
+                        {step.title}
+                      </Text>
+                      <Text className="text-xs text-black">In Progress</Text>
+                      <Text className="text-xs text-blue-500 font-semibold">
+                        {step.subtitle}
+                      </Text>
                     </View>
                   </View>
-
-                  <View>
-                    <Text className="font-medium text-black">{step.title}</Text>
-                    <Text className="text-xs text-black">In Progress</Text>
-                    <Text className="text-xs text-blue-500 font-semibold">
-                      {step.subtitle}
-                    </Text>
-                  </View>
+                  {step.title !== "Delivered" ? (
+                    <View className="bg-blue-300 h-[30px] w-[1px] ml-4 my-2 rounded-full" />
+                  ) : null}
                 </View>
               );
             }
 
             return (
-              <View key={step.key} className="flex-row mb-5 opacity-40">
-                <View className="items-center mr-3">
-                  <View className="w-9 h-9 rounded-full bg-gray-300 justify-center items-center">
-                    <AntDesign
-                      name={step.icon as any}
-                      size={16}
-                      color="#000"
-                    />
+              <View key={step.key}>
+                <View className="flex-row">
+                  <View className="flex-row opacity-40">
+                    <View className="items-center mr-3">
+                      <View className="w-9 h-9 rounded-full bg-gray-300 justify-center items-center">
+                        <AntDesign
+                          name={step.icon as any}
+                          size={16}
+                          color="#000"
+                        />
+                      </View>
+                    </View>
+                    <Text className="font-medium">{step.title}</Text>
                   </View>
                 </View>
-                <Text className="font-medium">{step.title}</Text>
+                {step.title !== "Delivered" ? (
+                  <View className="bg-gray-300 h-[30px] w-[1px] ml-4 my-2 rounded-full" />
+                ) : null}
               </View>
             );
           })}
@@ -146,7 +173,7 @@ export default function Orders() {
           </View>
 
           <View className="flex-row">
-            <TouchableOpacity className="flex-1 border border-blue-400 rounded-xl py-3 flex-row justify-center items-center mr-2">
+            <TouchableOpacity onPress={() => router.push("/ChatScreen")} className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center mr-2">
               <Ionicons
                 name="chatbubble-outline"
                 size={18}
@@ -155,7 +182,7 @@ export default function Orders() {
               <Text className="ml-2 text-blue-600 font-semibold">Message</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity className="flex-1 border border-blue-400 rounded-xl py-3 flex-row justify-center items-center ml-2">
+            <TouchableOpacity onPress={() => router.push("/CallScreen")} className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center ml-2">
               <Ionicons name="call-outline" size={18} color={Colors.primary} />
               <Text className="ml-2 text-blue-600 font-semibold">
                 Call Driver

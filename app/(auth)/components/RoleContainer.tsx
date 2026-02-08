@@ -30,7 +30,7 @@ const RoleContainer: React.FC<RoleContainerProps> = ({
           ? isCustomer
             ? "border-blue-400 bg-blue-50"
             : "border-emerald-400 bg-emerald-50"
-          : "border-transparent bg-[#F3F9FF]"
+          : "border-blue-100 bg-[#F3F9FF]"
       }`}
     >
       {/* Radio Indicator */}

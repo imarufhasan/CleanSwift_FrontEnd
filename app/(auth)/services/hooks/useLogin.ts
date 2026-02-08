@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { useState } from "react";
  
 const useLogin = () => {
@@ -6,30 +7,31 @@ const useLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const router = useRouter();
  
   const login = async () => {
-    try {
-      setLoading(true);
+    // try {
+    //   setLoading(true);
  
-      // Always show success message without logic
-      setSuccessMessage("Login successful!");
+    //   setSuccessMessage("Login successful!");
  
-      // Reset success message after a short delay
-      setTimeout(() => {
-        setSuccessMessage(null);
-      }, 3500);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "An unexpected error occurred";
+    //   setTimeout(() => {
+    //     setSuccessMessage(null);
+    //   }, 3500);
+    // } catch (err) {
+    //   const errorMessage =
+    //     err instanceof Error ? err.message : "An unexpected error occurred";
  
-      setError(errorMessage);
+    //   setError(errorMessage);
  
-      setTimeout(() => {
-        setError(null);
-      }, 3500);
-    } finally {
-      setLoading(false);
-    }
+    //   setTimeout(() => {
+    //     setError(null);
+    //   }, 3500);
+    // } finally {
+    //   setLoading(false);
+    // }
+
+    router.push("./enableLocation");
   };
  
   return {

@@ -1,6 +1,7 @@
+import ShowToast from "@/components/shared/ShowToast";
 import { Platform, ToastAndroid, Alert } from "react-native";
 
-const Toast = {
+const ShowMessage = {
   show: (message : any, duration = "short") => {
     if (Platform.OS === "android") {
       ToastAndroid.show(
@@ -15,16 +16,16 @@ const Toast = {
   },
 
   success: (message: any) => {
-    Toast.show(message);
+    ShowMessage.show(message);
   },
 
   error: (message: any) => {
-    Toast.show(message);
+    ShowMessage.show(message);
   },
 
   info: (message: any) => {
-    Toast.show(message);
+    ShowMessage.show(message);
   },
 };
 
-export default Toast;
+export default ShowMessage;

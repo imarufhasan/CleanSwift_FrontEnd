@@ -50,10 +50,10 @@ const notifications = [
 
 export default function NotificationScreen() {
   const router = useRouter();
-
+ 
   const renderItem = ({ item }: any) => (
     <TouchableOpacity
-      className={`flex-row p-4 rounded-2xl mb-3 bg-white`}
+      className={`flex-row p-6 rounded-2xl border-b border-blue-300 bg-white`}
     >
       {/* Icon */}
       <View
@@ -91,14 +91,14 @@ export default function NotificationScreen() {
   );
 
   return (
-    <View className="flex-1 bg-gray-100">
+    <View className="flex-1 bg-white">
       {/* Header */}
       <View
         className="pt-14 pb-4 px-5 flex-row items-center"
         style={{ backgroundColor: Colors.primary }}
       >
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#fff" />
+        <TouchableOpacity className="bg-white rounded-full p-3" onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={22} color="#000" />
         </TouchableOpacity>
 
         <Text className="text-white text-[22px] font-semibold ml-4">
@@ -112,7 +112,6 @@ export default function NotificationScreen() {
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={{
-          padding: 20,
           paddingBottom: 40,
         }}
         showsVerticalScrollIndicator={false}

@@ -59,7 +59,8 @@
           "locationWhenInUsePermission": "Allow CleanSwift to use your location to find nearby cleaning services.",
           "isAndroidBackgroundLocationEnabled": false
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true

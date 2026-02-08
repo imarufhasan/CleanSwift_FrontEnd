@@ -30,7 +30,7 @@ export const GoogleButton: React.FC<SocialButtonProps> = ({
         />
       )}
     </View>
-    <Text className="text-[#1a1c1e] text-base font-bold">{label}</Text>
+    <Text className="text-[#1a1c1e] text-lg font-bold">{label}</Text>
   </TouchableOpacity>
 );
 

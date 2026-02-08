@@ -11,7 +11,7 @@ export default function RootLayout() {
           animation: "slide_from_right",
         }}
       >
-        <Stack.Screen name="index" />
+        {/* <Stack.Screen name="index" /> 
         <Stack.Screen name="register" />
         <Stack.Screen name="otpVerification" />
         <Stack.Screen name="resetPassword" />
@@ -24,7 +24,7 @@ export default function RootLayout() {
         <Stack.Screen name="MessagesScreen" />
         <Stack.Screen name="CallingScreen" />
         <Stack.Screen name="ChatScreen" />
-        <Stack.Screen name="NotificationScreen" />
+        <Stack.Screen name="NotificationScreen" /> */}
       </Stack>
     </SafeAreaProvider>
   );

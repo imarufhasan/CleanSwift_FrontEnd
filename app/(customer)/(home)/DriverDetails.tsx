@@ -133,7 +133,7 @@ export default function DriverDetails() {
             </View>
             <View className="ml-3">
               <Text className="text-lg font-semibold">Verified Driver</Text>
-              <Text className="text-sm text-2xl">Background Check Completed</Text>
+              <Text className="text-sm">Background Check Completed</Text>
             </View>
           </View>
 
@@ -143,7 +143,7 @@ export default function DriverDetails() {
             </View>
             <View className="ml-3">
               <Text className="text-lg font-semibold">Insured Vehicle</Text>
-              <Text className="text-sm text-2xl">Full coverage insurance</Text>
+              <Text className="text-sm">Full coverage insurance</Text>
             </View>
           </View>
 
@@ -153,7 +153,7 @@ export default function DriverDetails() {
             </View>
             <View className="ml-3">
               <Text className="text-lg font-semibold">Top Rated</Text>
-              <Text className="text-sm text-2xl">Excellent customer feedback</Text>
+              <Text className="text-sm">Excellent customer feedback</Text>
             </View>
           </View>
         </View>

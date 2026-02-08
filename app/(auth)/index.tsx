@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-} from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import BaseContainer from "@/components/shared/BaseContainer";
 import { useRouter } from "expo-router";
 import { EmailInput } from "@/components/shared/EmailField";
@@ -14,6 +10,7 @@ import AuthText from "@/app/(auth)/components/AuthText";
 import { AUTH_DATA } from "@/constants/auth";
 import useLogin from "./services/hooks/useLogin";
 import ShowToast from "@/components/shared/ShowToast";
+import { Ionicons } from "@expo/vector-icons";
 
 const Index: React.FC = () => {
   const router = useRouter();
@@ -29,12 +26,9 @@ const Index: React.FC = () => {
   } = useLogin();
   const [rememberMe, setRememberMe] = useState(false);
 
-
   useEffect(() => {
     if (successMessage) {
-     
-       router.push("./enableLocation"); 
-
+      router.push("./enableLocation");
     }
   }, [successMessage, router]);
 
@@ -45,7 +39,6 @@ const Index: React.FC = () => {
         subtitle="Welcome back, your laundry is just a pickup away."
       />
 
-    
       <ShowToast
         message={error || successMessage}
         type={error ? "error" : successMessage ? "success" : "info"}
@@ -69,18 +62,23 @@ const Index: React.FC = () => {
             onPress={() => setRememberMe(!rememberMe)}
             className="flex-row items-center"
           >
-            <View
-              className={`w-5 h-5 rounded border ${
+            <TouchableOpacity
+              onPress={() => setRememberMe(!rememberMe)}
+              className={`w-5 h-5 mr-2 rounded border items-center justify-center ${
                 rememberMe
-                  ? "bg-[#00a2ff] border-[#00a2ff]"
-                  : "border-[#d1d5db]"
-              } mr-2`}
-            />
-            <Text className="text-[#7d848d] text-sm font-medium">
-              Remember me
-            </Text>
+                  ? "border-black/20 border bg-white"
+                  : "border-black/20 bg-white"
+              }`}
+            >
+              {rememberMe && (
+                <Ionicons name="checkmark" size={16} color="green" />
+              )}
+            </TouchableOpacity>
+
+            <Text className="text-black text-sm font-medium">Remember me</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push("/resetPassword")}>
+
+          <TouchableOpacity onPress={() => router.push("/forgetPassScreen")}>
             <Text className="text-[#ff4d4d] text-sm font-medium">
               Forgot password
             </Text>
@@ -94,9 +92,9 @@ const Index: React.FC = () => {
         />
       </View>
 
-      <View className="flex-row items-center my-10">
+      <View className="flex-row items-center my-7">
         <View className="flex-1 h-[1px] bg-[#e5e7eb]" />
-        <Text className="mx-4 text-[#7d848d] text-sm">or continue with</Text>
+        <Text className="mx-4 text-[#7d848d] text-lg">or continue with</Text>
         <View className="flex-1 h-[1px] bg-[#e5e7eb]" />
       </View>
 
@@ -107,9 +105,11 @@ const Index: React.FC = () => {
       />
 
       <View className="mt-8 pb-6 flex-row justify-center">
-        <Text className="text-[#7d848d] text-sm">Don't have an account? </Text>
+        <Text className="text-[#7d848d] text-base">
+          Don't have an account?{" "}
+        </Text>
         <TouchableOpacity onPress={() => router.push("/register")}>
-          <Text className="text-[#1a1c1e] text-sm font-bold">Register</Text>
+          <Text className="text-[#1a1c1e] text-base font-bold">Register</Text>
         </TouchableOpacity>
       </View>
     </BaseContainer>

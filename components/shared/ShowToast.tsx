@@ -1,3 +1,4 @@
+import ShowMessage from "@/constants/toast";
 import React, { useEffect } from "react";
 import { View } from "react-native";
 import { Toast, ALERT_TYPE } from "react-native-alert-notification";
@@ -66,7 +67,7 @@ const ShowToast: React.FC<ShowToastProps> = ({
       },
     };
 
-    Toast.show(toastConfig);
+    ShowMessage.show(toastConfig);
   }, [
     message,
     type,

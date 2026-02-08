@@ -26,14 +26,14 @@ export default function RootLayout() {
     loadResources();
   }, []);
 
-  // if (!ready || showSplash) {
-  //   return (
-  //     <>
-  //       <StatusBar style="light" />
-  //       <SplashScreen onFinish={() => setShowSplash(false)} />
-  //     </>
-  //   );
-  // }
+  if (!ready || showSplash) {
+    return (
+      <>
+        <StatusBar style="light" />
+        <SplashScreen onFinish={() => setShowSplash(false)} />
+      </>
+    );
+  }
 
   return (
     <>

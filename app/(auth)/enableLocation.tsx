@@ -29,15 +29,14 @@ const EnableLocation: React.FC = () => {
       ? PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION
       : PERMISSIONS.IOS.LOCATION_WHEN_IN_USE;
 
-  // Check current permission status on mount and when app comes back to foreground
   useEffect(() => {
     const checkPermission = async () => {
       const result = await check(LOCATION_PERMISSION);
       if (result === RESULTS.GRANTED) {
         setButtonLabel("Permission Already Granted ✓");
-        setTimeout(() => {
-          router.replace("./HomeScreen");
-        }, 300);
+        // setTimeout(() => {
+        //   router.replace("/(tabs)/home");
+        // }, 300);
       } else if (result === RESULTS.BLOCKED) {
         setButtonLabel("Open Settings");
       } else {

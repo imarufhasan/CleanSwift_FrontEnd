@@ -31,7 +31,7 @@ const useLogin = () => {
     //   setLoading(false);
     // }
 
-    router.push("./enableLocation");
+    router.push("/(auth)/enableLocation");
   };
  
   return {

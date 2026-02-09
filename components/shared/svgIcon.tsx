@@ -1,16 +1,16 @@
 import React from "react";
-import { SvgProps } from "react-native-svg"; // Import types from react-native-svg
+import { SvgProps } from "react-native-svg";
 
 interface SvgIconProps {
-  SvgComponent: React.FC<SvgProps>; // The passed SVG component
-  width?: number; // Optional width for resizing
-  height?: number; // Optional height for resizing
+  SvgComponent: React.FC<SvgProps>;
+  width?: number; 
+  height?: number;
 }
 
 const SvgIcon: React.FC<SvgIconProps> = ({
   SvgComponent,
-  width = 100,
-  height = 100,
+  width = 80,
+  height = 80,
 }) => {
   return <SvgComponent width={width} height={height} />;
 };

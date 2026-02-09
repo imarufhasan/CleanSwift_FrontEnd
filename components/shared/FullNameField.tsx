@@ -18,7 +18,7 @@ export const FullNameInput: React.FC<InputProps> = ({
     <Text className="text-[#1a1c1e] text-base font-bold mb-2 ml-1">
       {label}
     </Text>
-    <View className="bg-[#eaf8ff] border border-[#a2dfff] rounded-xl px-4">
+    <View className="bg-[#eaf8ff] border border-[#a2dfff] rounded-xl px-2">
       <TextInput
         placeholder={placeholder}
         placeholderTextColor="#7d848d"

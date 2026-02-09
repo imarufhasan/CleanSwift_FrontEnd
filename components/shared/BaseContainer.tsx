@@ -10,22 +10,21 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 interface BaseContainerProps {
   children: React.ReactNode;
-  padding?: boolean | number; // Optional padding for content (can be a boolean or a number)
-  margin?: boolean | number; // Optional margin for content (can be a boolean or a number)
-  additionalStyles?: object; // Optional to pass additional custom styles
-  keyboardVerticalOffset?: number; // Custom vertical offset for keyboard avoidance
-  backgroundColor?: string; // Optional background color for the container
+  padding?: boolean | number;
+  margin?: boolean | number;
+  additionalStyles?: object;
+  keyboardVerticalOffset?: number;
+  backgroundColor?: string;
 }
 
 const BaseContainer: React.FC<BaseContainerProps> = ({
   children,
-  padding = true, // Default padding is true
-  margin = false, // Default margin is false
+  padding = true,
+  margin = false,
   additionalStyles = {},
   keyboardVerticalOffset = Platform.OS === "ios" ? 0 : 20,
-  backgroundColor = "white", // Default background color is white
+  backgroundColor = "white",
 }) => {
-  // Calculate padding and margin values based on the provided props
   const paddingStyle = padding
     ? typeof padding === "boolean"
       ? 16
@@ -36,8 +35,7 @@ const BaseContainer: React.FC<BaseContainerProps> = ({
   return (
     <SafeAreaView
       className="flex-1"
-      style={{ backgroundColor, margin: marginStyle }} // Apply background color and margin
-      edges={["top"]}
+      style={{ backgroundColor, margin: marginStyle }}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -48,8 +46,8 @@ const BaseContainer: React.FC<BaseContainerProps> = ({
           <ScrollView
             className="flex-1"
             contentContainerStyle={{
-              paddingHorizontal: paddingStyle, // Apply padding if defined
-              ...additionalStyles, // Merge any custom styles passed
+              paddingHorizontal: paddingStyle,
+              ...additionalStyles,
             }}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}

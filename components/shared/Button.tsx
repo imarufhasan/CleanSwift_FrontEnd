@@ -1,3 +1,4 @@
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import React from "react";
 import { TouchableOpacity, Text } from "react-native";
 
@@ -5,12 +6,14 @@ interface ButtonProps {
   label: string;
   onPress: () => void;
   disabled?: boolean;
+  license?: boolean;
 }
 
 export const Button: React.FC<ButtonProps> = ({
   label,
   onPress,
   disabled = false,
+  license,
 }) => (
   <TouchableOpacity
     activeOpacity={0.8}
@@ -20,16 +23,22 @@ export const Button: React.FC<ButtonProps> = ({
       flexDirection: "row",
       justifyContent: "center",
       alignItems: "center",
-      width: "100%", // Make sure it spans the full width
-      paddingVertical: 16, // Adjust padding to make the button larger
-      borderRadius: 16, // Rounded corners for the button
+      width: "100%",
+      paddingVertical: 16,
+      borderRadius: 10,
     }}
     disabled={disabled}
   >
     <Text
-      className={`text-white text-lg font-semibold mr-2 ${disabled ? "text-[#7f7f7f]" : ""}`}
+      className={`text-white text-lg font-semibold ${disabled ? "text-[#7f7f7f]" : ""}`}
     >
       {label}
     </Text>
+    {license && (
+      <>
+        {/* arrow right */}
+        <MaterialIcons name="keyboard-arrow-right" size={18} color={"white"} />
+      </>
+    )}
   </TouchableOpacity>
 );

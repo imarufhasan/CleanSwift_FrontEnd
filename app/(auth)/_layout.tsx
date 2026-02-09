@@ -10,22 +10,7 @@ export default function RootLayout() {
           contentStyle: { backgroundColor: "#fff" },
           animation: "slide_from_right",
         }}
-      >
-        {/* <Stack.Screen name="index" /> 
-        <Stack.Screen name="register" />
-        <Stack.Screen name="otpVerification" />
-        <Stack.Screen name="resetPassword" />
-        <Stack.Screen name="enableLocation" />
-        <Stack.Screen name="selectRole" />
-        <Stack.Screen name="driverRegistration" />
-        <Stack.Screen name="HomeScreen" />
-        <Stack.Screen name="OrderDetails" />
-        <Stack.Screen name="DriverDetails" />
-        <Stack.Screen name="MessagesScreen" />
-        <Stack.Screen name="CallingScreen" />
-        <Stack.Screen name="ChatScreen" />
-        <Stack.Screen name="NotificationScreen" /> */}
-      </Stack>
+      ></Stack>
     </SafeAreaProvider>
   );
 }

@@ -8,14 +8,14 @@ import UniversalFilePicker from "@/components/shared/UniversalFilePicker";
 const DriverLicense = () => {
   return (
     <BaseContainer backgroundColor="#E6F6FF" padding={0} margin={0}>
-      <View className="flex-1 items-center">
+      <View className="flex-1 items-center ">
         <SvgIcon SvgComponent={DeriverLicenseIcon} />
       </View>
       <GeneralText
         title="Driver's License"
         description="Upload a clear photo of your driver's license"
       />
-      <UniversalFilePicker></UniversalFilePicker>
+      <UniversalFilePicker />
     </BaseContainer>
   );
 };

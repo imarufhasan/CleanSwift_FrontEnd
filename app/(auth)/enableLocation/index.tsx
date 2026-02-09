@@ -18,7 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const EnableLocation: React.FC = () => {
   const router = useRouter();
-  const [role, setRole] = useState("customer");
+  const [role, setRole] = useState("driver");
   const { width } = Dimensions.get("window");
   const { height } = Dimensions.get("window");
   const [buttonLabel, setButtonLabel] = useState("Give Permissions");

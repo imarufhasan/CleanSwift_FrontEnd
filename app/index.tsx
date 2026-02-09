@@ -6,7 +6,7 @@ import SplashScreen from "@/components/initial/Splashscreen";
 type Role = "customer" | "driver";
 
 export default function Index() {
-  const role: Role = "customer";
+  const role: Role = "driver";
 
   const [ready, setReady] = useState(false);
 

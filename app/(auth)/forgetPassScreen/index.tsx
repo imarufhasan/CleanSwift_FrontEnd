@@ -21,10 +21,8 @@ export default function ForgetPassScreen() {
   const [isModalVisible, setModalVisible] = useState(false);
 
   const handleVerify = (code: string) => {
-    //setModalVisible(false);
-    //router.push("/(auth)/selectRole");
-    //reset password screen
-    ShowMessage.show("reset password comming soon.");
+    setModalVisible(false);
+    router.push("/(auth)/resetPassword");
   };
 
   const isValidEmail = (value: string) =>

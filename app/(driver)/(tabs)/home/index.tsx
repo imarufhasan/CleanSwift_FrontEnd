@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -6,8 +6,9 @@ import {
   TouchableOpacity,
   RefreshControl,
   Modal,
+  Animated,
 } from "react-native";
-import { AntDesign, Ionicons } from "@expo/vector-icons";
+import { AntDesign, Feather, Ionicons } from "@expo/vector-icons";
 import Colors from "@/constants/color";
 import Toast from "@/constants/toast";
 import { useRouter } from "expo-router";
@@ -21,6 +22,7 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [bottomModal, setBottomModal] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+  const [selected, setSelected] = useState(true);
 
   // const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   // const [selectedTime, setSelectedTime] = useState<Date | null>(null);
@@ -156,6 +158,16 @@ export default function HomeScreen() {
     }
   };
 
+  const translateX = useRef(new Animated.Value(selected ? 40 : 0)).current;
+
+  useEffect(() => {
+    Animated.timing(translateX, {
+      toValue: selected ? 40 : 3,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [selected]);
+
   return (
     <View className="flex-1 bg-gray-100">
       <ScrollView
@@ -169,27 +181,23 @@ export default function HomeScreen() {
           style={{
             backgroundColor: Colors.primary,
           }}
-          className=" rounded-b-[40px] pb-20"
+          className=" rounded-b-[40px] pb-[60px]"
         >
           <View className="flex-row px-5 pt-12 justify-between items-center">
             <View className="flex-1">
-              <Text className="text-sm text-white/80">Welcome back,</Text>
-              <Text className="text-2xl font-bold text-white">
+              <Text className="text-[16px] text-white/80">Welcome back,</Text>
+              <Text className="text-[22px] font-bold text-white">
                 {data.user.name}
               </Text>
             </View>
 
-            <View className="flex-row gap-4">
-              <TouchableOpacity
-                onPress={() => router.push("/notifications")}
-                className="bg-white/20 p-3 rounded-full"
-              >
-                <Ionicons name="notifications-outline" size={22} color="#fff" />
-              </TouchableOpacity>
+            <View className="flex-row items-center gap-1">
+              <View className="bg-green-400 w-4 h-4 rounded-full" />
+              <Text className="text-white text-base">Online</Text>
             </View>
           </View>
 
-          {/* Location */}
+          {/* Availability Status */}
           <View className="px-5 mt-8">
             <View
               style={{
@@ -199,33 +207,34 @@ export default function HomeScreen() {
             >
               <View className="flex-row justify-between items-start">
                 <View className="flex-row items-start">
-                  <View className="bg-white/20 w-9 h-9 rounded-full justify-center items-center">
-                    <Ionicons name="location-outline" size={18} color="#fff" />
-                  </View>
-
                   <View className="ml-3">
                     <Text className="text-white font-semibold">
-                      {data.location.title}
-                    </Text>
-                    <Text className="text-white text-lg">
-                      {data.location.street}
+                      Availability Status
                     </Text>
                     <Text className="text-white text-sm">
-                      {data.location.city}, {data.location.state}
+                      Accepting new jobs
                     </Text>
                   </View>
                 </View>
+
                 <TouchableOpacity
-                  onPress={() => router.push("/ChangeLocation")}
+                  onPress={() => setSelected((prev) => !prev)}
+                  activeOpacity={0.8}
+                  className={`w-[70px] h-[36px] rounded-full justify-center ${
+                    selected ? "bg-green-500" : "bg-gray-400"
+                  }`}
                 >
-                  <Text className="text-white font-medium">Change</Text>
+                  <Animated.View
+                    style={{ transform: [{ translateX }] }}
+                    className="w-[26px] h-[26px] rounded-full bg-white"
+                  />
                 </TouchableOpacity>
               </View>
             </View>
           </View>
         </View>
 
-        {/* Floating Request Pickup */}
+        {/* Today's Earnings */}
         <View className="px-5 -mt-12 z-10">
           <View
             style={{
@@ -234,11 +243,9 @@ export default function HomeScreen() {
             className="border border-white/40 shadow-xl rounded-2xl p-5 flex-row justify-between items-center"
           >
             <View>
-              <Text className="text-white text-lg font-bold">
-                Request Pickup
-              </Text>
-              <Text className="text-white/90 text-sm mt-1">
-                Get your laundry picked up today
+              <Text className="text-white text-base">Today's Earnings</Text>
+              <Text className="text-white/90 text-2xl font-bold mt-1">
+                $156
               </Text>
             </View>
 
@@ -246,155 +253,160 @@ export default function HomeScreen() {
               onPress={() => setBottomModal(true)}
               className="bg-white w-12 h-12 rounded-full justify-center items-center shadow"
             >
-              <Ionicons name="add" size={26} color="#2563EB" />
+              <Feather name="dollar-sign" size={26} color={Colors.primary} />
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Content */}
         <View className="px-5 mt-6">
-          {/* Active Order */}
-          <Text className="text-lg font-bold mb-3">Active Order</Text>
+          {/* Active Route */}
+          <>
+            <Text className="text-lg font-bold mb-3">Active Route</Text>
+            <View className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100">
+              <View className="flex-row justify-between items-start mb-3">
+                <View className="flex-row items-safe">
+                  <View
+                    className="w-9 h-9 rounded-full justify-center items-center"
+                    style={{ backgroundColor: "rgba(37, 99, 235, 0.2)" }}
+                  >
+                    <Ionicons
+                      name="cube-outline"
+                      size={20}
+                      color={Colors.primary}
+                    />
+                  </View>
 
-          <View className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100">
-            <View className="flex-row justify-between items-start mb-3">
-              <View className="flex-row items-safe">
+                  <View className="ml-2">
+                    <Text className="font-semibold">
+                      Order #{data.activeOrder.id}
+                    </Text>
+                    <Text className="text-sm text-gray-500 mb-3">
+                      {data.activeOrder.quantity} bags • $
+                      {data.activeOrder.price}
+                      .00
+                    </Text>
+                  </View>
+                </View>
+
+                <Text
+                  className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusStyle(
+                    data.activeOrder.status,
+                  )}`}
+                >
+                  In Progress
+                </Text>
+              </View>
+
+              {/* Steps */}
+              <View className="flex-row justify-between mb-2">
+                {data.activeOrder.steps.map((step, index) => (
+                  <Text
+                    key={step}
+                    className={`text-xs ${
+                      index <= data.activeOrder.currentStep
+                        ? "text-blue-500"
+                        : "text-gray-400"
+                    }`}
+                  >
+                    {step}
+                  </Text>
+                ))}
+              </View>
+
+              {/* Progress Bar */}
+              <View className="h-2 bg-gray-200 rounded-full mb-3">
                 <View
-                  className="w-9 h-9 rounded-full justify-center items-center"
-                  style={{ backgroundColor: "rgba(37, 99, 235, 0.2)" }}
-                >
-                  <Ionicons
-                    name="cube-outline"
-                    size={20}
-                    color={Colors.primary}
-                  />
-                </View>
-
-                <View className="ml-2">
-                  <Text className="font-semibold">
-                    Order #{data.activeOrder.id}
-                  </Text>
-                  <Text className="text-sm text-gray-500 mb-3">
-                    {data.activeOrder.quantity} bags • ${data.activeOrder.price}
-                    .00
-                  </Text>
-                </View>
-              </View>
-
-              <Text
-                className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusStyle(
-                  data.activeOrder.status,
-                )}`}
-              >
-                {data.activeOrder.status}
-              </Text>
-            </View>
-
-            {/* Steps */}
-            <View className="flex-row justify-between mb-2">
-              {data.activeOrder.steps.map((step, index) => (
-                <Text
-                  key={step}
-                  className={`text-xs ${
-                    index <= data.activeOrder.currentStep
-                      ? "text-blue-500"
-                      : "text-gray-400"
-                  }`}
-                >
-                  {step}
-                </Text>
-              ))}
-            </View>
-
-            {/* Progress Bar */}
-            <View className="h-2 bg-gray-200 rounded-full mb-3">
-              <View
-                className="h-2 bg-blue-500 rounded-full"
-                style={{ width: `${data.activeOrder.progress}%` }}
-              />
-            </View>
-
-            <View className="flex-row justify-between items-center">
-              <Text className="text-xs text-gray-500">
-                Estimated delivery: {data.activeOrder.estimatedDelivery}
-              </Text>
-              <TouchableOpacity
-                onPress={() => router.push("/LiveTrackingScreen")}
-                className="flex-row gap-3 items-center"
-              >
-                <Text
-                  style={{ color: Colors.primary }}
-                  className="text-[14px] font-bold"
-                >
-                  Track Live
-                </Text>
-                <Ionicons
-                  name="arrow-forward"
-                  size={16}
-                  color={Colors.primary}
+                  className="h-2 bg-blue-500 rounded-full"
+                  style={{ width: `${data.activeOrder.progress}%` }}
                 />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Recent Orders */}
-          <Text className="text-lg font-bold mb-3">Recent Orders</Text>
-
-          {data.recentOrders.map((order) => (
-            <TouchableOpacity
-              key={order.id}
-              className="bg-white flex-row items-safe justify-center rounded-2xl p-4 mb-4 border border-gray-100"
-            >
-              <View
-                className="w-9 h-9 rounded-full justify-center items-center"
-                style={{ backgroundColor: "rgba(161, 162, 167, 0.2)" }}
-              >
-                <Ionicons name="cube-outline" size={20} color={"black"} />
               </View>
-              <View className="justify-between flex-1 mb-1 ml-2">
-                <Text className="font-semibold">Order #{order.id}</Text>
-                <Text className="text-sm text-gray-500 mb-2">
-                  {order.quantity} bag • Estimate cost ${order.price}
+
+              <View className="flex-row justify-between items-center">
+                <Text className="text-xs text-gray-500">
+                  Estimated delivery: {data.activeOrder.estimatedDelivery}
                 </Text>
-                <View className="flex-row items-center">
-                  <Ionicons
-                    name="checkmark-circle-outline"
-                    size={16}
-                    color="green"
-                  />
-                  <Text className="ml-1 text-green-600 text-sm">
-                    {order.status}
-                  </Text>
-                </View>
-              </View>
-
-              <View className="items-end justify-center">
-                <View className="flex-row items-center">
-                  <Ionicons name="star" size={14} color="#FACC15" />
-                  <Text className="ml-1 text-sm">
-                    {order.rating.toFixed(2)}
-                  </Text>
-                </View>
-
                 <TouchableOpacity
-                  onPress={() => {
-                    console.log("recet_item: ", order);
-                    router.push("/(stack)/OrderDetails");
-                  }}
-                  className="my-2"
+                  onPress={() => router.push("/LiveTrackingScreen")}
+                  className="flex-row gap-3 items-center"
                 >
                   <Text
                     style={{ color: Colors.primary }}
-                    className="font-semibold"
+                    className="text-[14px] font-bold"
                   >
-                    View Details
+                    Track Live
                   </Text>
+                  <Ionicons
+                    name="arrow-forward"
+                    size={16}
+                    color={Colors.primary}
+                  />
                 </TouchableOpacity>
-
-                <Text className="text-xs text-gray-400">{order.date}</Text>
               </View>
-            </TouchableOpacity>
-          ))}
+            </View>
+          </>
+
+          {/* Available Jobs */}
+          <>
+            <Text className="text-lg font-bold mb-3">Available Jobs</Text>
+            <View className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100">
+              <View className="flex-row justify-between items-start mb-3">
+                <View className="flex-row items-safe">
+                  <View className="ml-2">
+                    <Text className="font-semibold mb-1">Order #1251</Text>
+                    <View className="flex-row">
+                      <Ionicons
+                        name="location-outline"
+                        size={14}
+                        color={"gray"}
+                      />
+                      <Text className="text-sm text-gray-500 mb-1">
+                        123 Elm St
+                      </Text>
+                    </View>
+                    <View className="flex-row">
+                      <Ionicons name="time-outline" size={14} color={"gray"} />
+                      <Text className="text-sm text-gray-500 mb-1">
+                        Posted 2 mins ago
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                <View className="items-end justify-center">
+                  <Text className="font-bold text-green-500 text-[24px]">
+                    $45
+                  </Text>
+                  <Text className="font-sm text-gray-500">You earn 70%</Text>
+                </View>
+              </View>
+
+              <View className="flex-row justify-between bg-blue-50 rounded-[10px] py-4 px-6">
+                <View className="flex-1 items-start justify-center">
+                  <Text className="text-base text-gray-500">Begs</Text>
+                  <Text className="text-lg font-bold text-black">2 Begs</Text>
+                </View>
+                <View className="flex-1 items-start justify-center ml-[20px]">
+                  <Text className="text-base text-gray-500">Distance</Text>
+                  <Text className="text-lg font-bold text-black">1.2 mi</Text>
+                </View>
+              </View>
+
+              <View className=" mt-3 flex-row items-center justify-center gap-4">
+                <View className="flex-1 bg-white border-[1px] border-blue-500 rounded-2xl px-4 py-3 items-center justify-center">
+                  <Text className="text-blue-500 font-medium text-[18px]">
+                    Decline
+                  </Text>
+                </View>
+
+                <View className="flex-1  bg-blue-500 rounded-2xl px-4 py-3 items-center justify-center">
+                  <Text className="text-white font-medium text-[18px]">
+                    Accept
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </>
         </View>
       </ScrollView>
 

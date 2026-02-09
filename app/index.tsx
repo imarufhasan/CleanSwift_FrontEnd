@@ -34,13 +34,13 @@ export default function Index() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  if (role === "customer") {
-    return <Redirect href="/(customer)/(tabs)/home" />;
-  }
+  // if (role === "customer") {
+  //   return <Redirect href="/(customer)/(tabs)/home" />;
+  // }
 
-  if (role === "driver") {
-    return <Redirect href="/(driver)/(tabs)/home" />;
-  }
+  // if (role === "driver") {
+  //   return <Redirect href="/(driver)/(tabs)/home" />;
+  // }
 
   return null;
 }

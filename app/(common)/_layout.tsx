@@ -48,6 +48,7 @@ export default function CommonLayout() {
       <Stack.Screen name="changePassword/index" options={{ headerShown: false }} />
       <Stack.Screen name="supportScreen/index" options={{ headerShown: false }} />
       <Stack.Screen name="PrivacyPolicyScreen/index" options={{ headerShown: false }} />
+      <Stack.Screen name="LiveTrackScreenDriver/index" options={{ headerShown: false }} />
     </Stack>
   );
 }

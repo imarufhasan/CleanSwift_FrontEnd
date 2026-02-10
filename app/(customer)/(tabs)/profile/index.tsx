@@ -13,6 +13,7 @@ import Colors from "@/constants/color";
 import { useRouter } from "expo-router";
 import Toast from "@/constants/toast";
 import ShowMessage from "@/constants/toast";
+import { useUserInfo } from "@/src/core/store/userInfo";
 
 const menuItems = [
   { label: "Profile Setting", icon: "person-outline" },
@@ -28,6 +29,9 @@ export default function Profile() {
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
   const [logoutModal, setLogoutModal] = useState(false);
+  const role = useUserInfo((state) => state.role);
+  const setRole = useUserInfo((state) => state.setRole);
+  const clearUser = useUserInfo((state) => state.clearUser);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -149,7 +153,7 @@ export default function Profile() {
         </View>
       </ScrollView>
 
-       {logoutModal && (
+      {logoutModal && (
         <Modal
           transparent
           visible={logoutModal}
@@ -177,6 +181,7 @@ export default function Profile() {
                     setLogoutModal(false);
                     ShowMessage.show("Logged out successfully");
                     router.replace("/(auth)/login");
+                    clearUser();
                   }}
                   className="flex-1 bg-green-500 rounded-2xl py-3"
                 >

@@ -80,7 +80,7 @@ const EnableLocation: React.FC = () => {
         if (role === "customer") {
           router.push("/(customer)/(tabs)/home");
         }
-        if (role === "driver") {
+        if (role === "driver"  || role === null) {
           router.push("/(driver)/(tabs)/home");
         }
         return;

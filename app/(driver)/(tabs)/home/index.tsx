@@ -15,6 +15,7 @@ import { useRouter } from "expo-router";
 import RequestPickupModal from "@/components/home/RequestPickupModal";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import ShowMessage from "@/constants/toast";
+import TodayStats from "@/components/driver/home/TodayStats";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -23,9 +24,6 @@ export default function HomeScreen() {
   const [bottomModal, setBottomModal] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [selected, setSelected] = useState(true);
-
-  // const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  // const [selectedTime, setSelectedTime] = useState<Date | null>(null);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -169,12 +167,12 @@ export default function HomeScreen() {
   }, [selected]);
 
   return (
-    <View className="flex-1 bg-gray-100">
+    <View className="flex-1 bg-blue-50">
       <ScrollView
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
-        className="flex-1 bg-white"
+        className="flex-1 bg-blue-50"
       >
         {/* Header */}
         <View
@@ -259,7 +257,12 @@ export default function HomeScreen() {
         </View>
 
         {/* Content */}
-        <View className="px-5 mt-6">
+        <View className="px-5 mt-6 ">
+          {/* Today's Status */}
+          <>
+            <TodayStats />
+          </>
+
           {/* Active Route */}
           <>
             <Text className="text-lg font-bold mb-3">Active Route</Text>
@@ -327,7 +330,7 @@ export default function HomeScreen() {
                   Estimated delivery: {data.activeOrder.estimatedDelivery}
                 </Text>
                 <TouchableOpacity
-                  onPress={() => router.push("/LiveTrackingScreen")}
+                  onPress={() => router.push("/LiveTrackScreenDriver")}
                   className="flex-row gap-3 items-center"
                 >
                   <Text
@@ -393,14 +396,14 @@ export default function HomeScreen() {
               </View>
 
               <View className=" mt-3 flex-row items-center justify-center gap-4">
-                <View className="flex-1 bg-white border-[1px] border-blue-500 rounded-2xl px-4 py-3 items-center justify-center">
-                  <Text className="text-blue-500 font-medium text-[18px]">
+                <View className="flex-1 bg-white border-[1px] border-blue-500 rounded-[10px] px-4 py-3 items-center justify-center">
+                  <Text className="text-blue-500 text-[18px]">
                     Decline
                   </Text>
                 </View>
 
-                <View className="flex-1  bg-blue-500 rounded-2xl px-4 py-3 items-center justify-center">
-                  <Text className="text-white font-medium text-[18px]">
+                <View className="flex-1  bg-blue-500 rounded-[10px] px-4 py-3 items-center justify-center">
+                  <Text className="text-white text-[18px]">
                     Accept
                   </Text>
                 </View>

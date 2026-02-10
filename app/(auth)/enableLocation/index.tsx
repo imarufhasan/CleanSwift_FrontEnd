@@ -15,10 +15,12 @@ import {
 import { Dimensions } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useUserInfo } from "@/src/core/store/userInfo";
 
 const EnableLocation: React.FC = () => {
   const router = useRouter();
-  const [role, setRole] = useState("driver");
+  const role = useUserInfo((state) => state.role);
+
   const { width } = Dimensions.get("window");
   const { height } = Dimensions.get("window");
   const [buttonLabel, setButtonLabel] = useState("Give Permissions");
@@ -73,6 +75,8 @@ const EnableLocation: React.FC = () => {
       }
 
       if (currentStatus === RESULTS.GRANTED) {
+        console.log("user role: ", role);
+
         if (role === "customer") {
           router.push("/(customer)/(tabs)/home");
         }

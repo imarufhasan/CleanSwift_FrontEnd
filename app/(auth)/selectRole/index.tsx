@@ -8,19 +8,23 @@ import { useRouter } from "expo-router"; // Import useRouter from expo-router
 import { SafeAreaView } from "react-native-safe-area-context";
 import AuthText from "../components/AuthText";
 import RoleContainer from "../components/RoleContainer";
+import { useUserInfo } from "@/src/core/store/userInfo";
 
 const SelectRole = () => {
   const [selectedRole, setSelectedRole] = useState<"customer" | "driver">(
     "customer",
   );
-  const router = useRouter(); // Get router instance
+  const router = useRouter();
+  const setRole = useUserInfo((state) => state.setRole);
 
   const handleContinue = () => {
     //
     console.log("Proceeding as:", selectedRole);
     if (selectedRole === "driver") {
+      setRole("driver");
       router.push("./driverRegistration");
     } else {
+      setRole("customer");
       router.push("/(auth)/enableLocation");
     }
   };

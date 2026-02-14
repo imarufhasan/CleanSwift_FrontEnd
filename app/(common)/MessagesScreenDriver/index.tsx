@@ -47,7 +47,7 @@ const messages = [
   },
 ];
 
-export default function MessagesScreen() {
+export default function MessagesScreenDriver() {
   const router = useRouter();
 
   const renderItem = ({ item }: any) => (

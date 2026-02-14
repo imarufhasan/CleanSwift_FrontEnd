@@ -20,7 +20,7 @@ export default function DeliveredSuccessScreen() {
 
   const data = {
     driver: {
-      name: "Michael Johnson",
+      name: "Ali Amin",
       rating: 4.9,
       trips: 234,
       avatar: "https://i.pravatar.cc/150?img=12",
@@ -102,7 +102,7 @@ export default function DeliveredSuccessScreen() {
             <View className="flex-1">
               <Text className="text-gray-500 text-xs mb-1">Delivered by</Text>
               <Text className="text-black font-semibold text-[20px]">
-                Michael Johnson
+                Ali Amin
               </Text>
 
               <View className="flex-row items-center mt-1">
@@ -333,7 +333,7 @@ export default function DeliveredSuccessScreen() {
                   ))}
                 </View>
                 <Text className="text-gray-400 text-sm mb-4 mt-1">
-                  You rated Michael Johnson 5 stars
+                  You rated Ali Amin 5 stars
                 </Text>
               </View>
 

@@ -17,7 +17,7 @@ import { formatChatTime } from "@/constants/chatTimes";
 import ShowMessage from "@/constants/toast";
 
 const driver = {
-  name: "Michael Johnson",
+  name: "Ali Amin",
   avatar: require("@/assets/images/profile.png"),
   online: true,
 };
@@ -134,9 +134,9 @@ export default function ChatScreen() {
             </Text>
           </View>
 
-          <TouchableOpacity onPress={() => router.push("/(common)/CallScreen")}>
+          {/* <TouchableOpacity onPress={() => router.push("/(common)/CallScreen")}>
             <Ionicons name="call-outline" size={22} color="#fff" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         {/* Messages */}

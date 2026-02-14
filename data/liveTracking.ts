@@ -17,7 +17,7 @@ export const liveTrackingData = {
   },
 
   driver: {
-    name: "Michael Johnson",
+    name: "Ali Amin",
     rating: 4.9,
     trips: 234,
     avatar: "https://i.pravatar.cc/150?img=12",

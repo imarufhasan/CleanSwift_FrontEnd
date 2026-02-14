@@ -6,7 +6,7 @@ import { useRouter } from "expo-router";
 import RatingStars from "@/components/home/RatingStars";
 import Toast from "@/constants/toast";
 
-export default function OrderDetails() {
+export default function OrderDetailsDriver() {
   const router = useRouter();
   const data = {
     driver: {
@@ -62,23 +62,12 @@ export default function OrderDetails() {
                 <Text className="font-bold text-2xl">{data.driver.name}</Text>
 
                 <View className="flex-row items-center mt-1">
-                  <RatingStars rating={data.driver.rating} size={16} />
-
                   <Text className="ml-1 text-sm text-gray-600">
-                    {data.driver.rating} ({data.driver.trips} trips)
+                    28 orders completed
                   </Text>
                 </View>
               </View>
             </View>
-
-            <TouchableOpacity onPress={() => router.push("/DriverDetails")}>
-              <Text
-                className="text-sm font-semibold"
-                style={{ color: Colors.primary }}
-              >
-                View Details
-              </Text>
-            </TouchableOpacity>
           </View>
 
           {/* Actions */}
@@ -107,7 +96,7 @@ export default function OrderDetails() {
                 className="ml-2 text-lg font-semibold"
                 style={{ color: Colors.primary }}
               >
-                Call Driver
+                Call Customer
               </Text>
             </TouchableOpacity>
           </View>

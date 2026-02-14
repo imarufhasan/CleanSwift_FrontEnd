@@ -8,7 +8,7 @@ import {
   RefreshControl,
   Modal,
 } from "react-native";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { AntDesign, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import Colors from "@/constants/color";
 import { useRouter } from "expo-router";
 import Toast from "@/constants/toast";
@@ -52,7 +52,7 @@ export default function Profile() {
         {/* Header */}
         <View
           style={{ backgroundColor: Colors.primary }}
-          className="pt-14 pb-20 px-5 rounded-b-[32px]"
+          className="pt-14 pb-20 px-5"
         >
           <View className="flex-row items-center">
             <Image
@@ -60,26 +60,42 @@ export default function Profile() {
               className="w-[70px] h-[70px] rounded-full border-2 border-white"
             />
             <View className="ml-3 flex-1">
-              <Text className="text-white text-[20px] font-bold">Ali Amin</Text>
+              <Text className="text-white text-2xl font-bold">Ali Amin</Text>
               <Text className="text-white/80 text-sm">aliamin@gmail.com</Text>
             </View>
-
-            {/* <TouchableOpacity className="bg-white/20 p-2 rounded-full">
-            <Ionicons name="settings-outline" size={20} color="#fff" />
-          </TouchableOpacity> */}
           </View>
         </View>
 
         {/* Stats */}
         <View className="px-5 -mt-12">
-          <View className="bg-white rounded-2xl flex-row py-4 shadow-sm">
-            <View className="flex-1 items-center border-r border-gray-200">
-              <Text className="text-[28px] font-bold">28</Text>
-              <Text className="text-gray-500 text-sm">Total Orders</Text>
+          <View className="bg-white rounded-2xl  py-4 shadow-sm">
+            <View className="flex-row">
+              <View className="flex-1 items-center">
+                <Text className="text-gray-500 text-sm">RaDriver Tier</Text>
+                <Text className="text-[20px] font-bold">Gold</Text>
+              </View>
+              <View className="flex-1 items-center">
+                <Text className="text-gray-500 text-sm">Performance</Text>
+                <Text className="font-bold text-blue-500 text-[20px]">Top 10%</Text>
+              </View>
             </View>
-            <View className="flex-1 items-center">
-              <Text className="font-bold text-[28px]">$560</Text>
-              <Text className="text-gray-500 text-sm">Total Spent</Text>
+
+            <View className="bg-gray-100 h-[1px] w-full my-4"/>
+
+            <View className="flex-row">
+              <View className="flex-1 items-center border-r border-gray-200">
+                <Text className="text-[28px] font-bold">4.9</Text>
+                <Text className="text-gray-500 text-sm">Rating</Text>
+              </View>
+
+              <View className="flex-1 items-center border-r border-gray-200">
+                <Text className="text-[28px] font-bold">234</Text>
+                <Text className="text-gray-500 text-sm">Deliveries</Text>
+              </View>
+              <View className="flex-1 items-center">
+                <Text className="font-bold text-[28px]">98%</Text>
+                <Text className="text-gray-500 text-sm">Success</Text>
+              </View>
             </View>
           </View>
         </View>

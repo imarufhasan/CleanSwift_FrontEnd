@@ -7,7 +7,7 @@ import { useRouter } from "expo-router";
 const messages = [
   {
     id: "1",
-    name: "Michael Johnson",
+    name: "Ali Amin",
     lastMessage: "I’m on my way with your order 🚗",
     time: "2 min ago",
     unread: 2,

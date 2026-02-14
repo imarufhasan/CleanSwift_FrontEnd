@@ -17,7 +17,7 @@ import { formatChatTime } from "@/constants/chatTimes";
 import ShowMessage from "@/constants/toast";
 
 const driver = {
-  name: "Michael Johnson",
+  name: "Ali Amin",
   avatar: require("@/assets/images/profile.png"),
   online: true,
 };

@@ -333,7 +333,11 @@ export default function HomeScreen() {
                   Estimated delivery: {data.activeOrder.estimatedDelivery}
                 </Text>
                 <TouchableOpacity
-                  onPress={() => router.push("/LiveTrackScreenDriver")}
+                  onPress={() =>
+                    router.push(
+                      "/LiveTrackScreenDriver/LiveTrackScreenDriverMain",
+                    )
+                  }
                   className="flex-row gap-3 items-center"
                 >
                   <Text

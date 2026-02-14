@@ -108,9 +108,10 @@ const TopTab = ({
 }) => (
   <TouchableOpacity
     onPress={onPress}
-    className={`flex-1 py-2 rounded-xl ${
-      active ? "bg-blue-500" : "bg-transparent"
-    }`}
+    className={`flex-1 py-2 rounded-xl`}
+    style={{
+      backgroundColor: active ? Colors.primary : "transparent",
+    }}
   >
     <Text
       className={`text-center py-1 text-sm font-medium ${
@@ -293,7 +294,10 @@ const ActiveScreen = () => {
             Estimated delivery: {JOBS.data.activeOrder.estimatedDelivery}
           </Text>
           <TouchableOpacity
-            onPress={() => router.push("/LiveTrackingScreen")}
+            // onPress={() => router.push("/LiveTrackingScreen")}
+            onPress={() => {
+              router.push("/LiveTrackScreenDriver/LiveTrackScreenDriverMain");
+            }}
             className="flex-row gap-3 items-center"
           >
             <Text
@@ -356,7 +360,7 @@ const CompletedScreen = () => {
             <TouchableOpacity
               onPress={() => {
                 console.log("recet_item: ", order);
-                router.push("/(common)/OrderDetails");
+                router.push("/(common)/OrderDetailsDriver");
               }}
               className="my-2"
             >
@@ -395,7 +399,10 @@ export default function JobsScreen() {
   return (
     <View className="flex-1 bg-gray-100">
       {/* Header */}
-      <View className="bg-blue-500 px-5 pt-14 pb-12 rounded-b-[32px]">
+      <View
+        style={{ backgroundColor: Colors.primary }}
+        className=" px-5 pt-14 pb-[60px] rounded-b-[32px]"
+      >
         <Text className="text-white text-2xl font-bold">Jobs</Text>
 
         <Text className="text-blue-100 text-sm mt-1">

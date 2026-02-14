@@ -33,7 +33,7 @@ export default function CallScreen() {
           style={{ color: Colors.primary }}
           className="text-xl font-semibold"
         >
-          Michael Johnson
+          Ali Amin
         </Text>
 
         {/* mute and speaker icon */}
@@ -56,7 +56,7 @@ export default function CallScreen() {
         </View>
 
         {/* end call */}
-        <TouchableOpacity className="bg-red-500 rounded-full p-4 mt-10">
+        <TouchableOpacity onPress={() => router.back()} className="bg-red-500 rounded-full p-4 mt-10">
           <AntDesign name="phone" size={28} color="white" />
         </TouchableOpacity>
       </View>

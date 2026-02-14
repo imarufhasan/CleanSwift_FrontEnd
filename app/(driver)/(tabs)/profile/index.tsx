@@ -17,7 +17,8 @@ import { useUserInfo } from "@/src/core/store/userInfo";
 
 const menuItems = [
   { label: "Profile Setting", icon: "person-outline" },
-  { label: "Payment Methods", icon: "card-outline" },
+  { label: "Connect Stripe", icon: "card-outline" },
+  { label: "Earnings History", icon: "briefcase" },
   { label: "Change password", icon: "lock-closed-outline" },
   { label: "Support", icon: "help-circle-outline" },
   { label: "About Us", icon: "information-circle-outline" },
@@ -71,16 +72,18 @@ export default function Profile() {
           <View className="bg-white rounded-2xl  py-4 shadow-sm">
             <View className="flex-row">
               <View className="flex-1 items-center">
-                <Text className="text-gray-500 text-sm">RaDriver Tier</Text>
+                <Text className="text-gray-500 text-sm">Driver Tier</Text>
                 <Text className="text-[20px] font-bold">Gold</Text>
               </View>
               <View className="flex-1 items-center">
                 <Text className="text-gray-500 text-sm">Performance</Text>
-                <Text className="font-bold text-blue-500 text-[20px]">Top 10%</Text>
+                <Text className="font-bold text-blue-500 text-[20px]">
+                  Top 10%
+                </Text>
               </View>
             </View>
 
-            <View className="bg-gray-100 h-[1px] w-full my-4"/>
+            <View className="bg-gray-100 h-[1px] w-full my-4" />
 
             <View className="flex-row">
               <View className="flex-1 items-center border-r border-gray-200">
@@ -100,6 +103,39 @@ export default function Profile() {
           </View>
         </View>
 
+        <TouchableOpacity
+          onPress={() => {
+            router.push("/DriverVerification");
+          }}
+          className="px-5 mt-6"
+        >
+          <View className="bg-blue-50 items-center gap-6 p-4 flex-row border-[1px] border-[#01A1FF] rounded-2xl">
+            <View className="bg-white rounded-full p-3">
+              <Ionicons name="time-outline" size={22} color={"#01A1FF"} />
+            </View>
+
+            <View className="justify-between flex-1">
+              <Text className="font-semibold text-black text-lg">
+                Verified Driver
+              </Text>
+              <Text className="text-gray-500 text-sm">
+                All documents approved
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => {
+                router.push("/DriverVerification");
+              }}
+            >
+              <Ionicons
+                name="chevron-forward-sharp"
+                size={18}
+                color={"#01A1FF"}
+              />
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+
         {/* Menu */}
         <View className="px-5 mt-6">
           {menuItems.map((item, index) => (
@@ -115,6 +151,8 @@ export default function Profile() {
                   router.push("/changePassword");
                 } else if (item.label === "Support") {
                   router.push("/supportScreen");
+                } else if (item.label === "Earnings History") {
+                  router.push("/DriverEarningHistory");
                 } else if (item.label === "About Us") {
                   router.push({
                     pathname: "/PrivacyPolicyScreen",
@@ -142,11 +180,7 @@ export default function Profile() {
                 }
               }}
             >
-              <Ionicons
-                name={item.icon as any}
-                size={20}
-                color={Colors.primary}
-              />
+              <Ionicons name={item.icon as any} size={20} color={"black"} />
               <Text className="ml-3 flex-1 font-medium">{item.label}</Text>
               <MaterialIcons
                 name="keyboard-arrow-right"

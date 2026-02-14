@@ -173,7 +173,10 @@ export default function Orders() {
           </View>
 
           <View className="flex-row">
-            <TouchableOpacity onPress={() => router.push("/ChatScreen")} className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center mr-2">
+            <TouchableOpacity
+              onPress={() => router.push("/ChatScreen")}
+              className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center mr-2"
+            >
               <Ionicons
                 name="chatbubble-outline"
                 size={18}
@@ -182,7 +185,10 @@ export default function Orders() {
               <Text className="ml-2 text-blue-600 font-semibold">Message</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => router.push("/CallScreen")} className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center ml-2">
+            <TouchableOpacity
+              onPress={() => router.push("/CallScreen")}
+              className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center ml-2"
+            >
               <Ionicons name="call-outline" size={18} color={Colors.primary} />
               <Text className="ml-2 text-blue-600 font-semibold">
                 Call Driver
@@ -271,6 +277,21 @@ export default function Orders() {
                 <Ionicons name="star" size={14} color="#FACC15" />
                 <Text className="ml-1 text-sm">{order.rating.toFixed(1)}</Text>
               </View>
+
+              <TouchableOpacity
+                onPress={() => {
+                  console.log("recet_item: ", order);
+                  router.push("/(common)/OrderDetails");
+                }}
+                className="my-2"
+              >
+                <Text
+                  style={{ color: Colors.primary }}
+                  className="font-semibold"
+                >
+                  View Details
+                </Text>
+              </TouchableOpacity>
 
               <Text className="text-xs text-gray-400">{order.date}</Text>
             </View>

@@ -22,9 +22,7 @@ export default function CommonLayout() {
         name="notifications/index"
         options={{ headerShown: false }}
       />
-
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-
       <Stack.Screen
         name="ChangeLocation/index"
         options={{ headerShown: false }}
@@ -47,7 +45,6 @@ export default function CommonLayout() {
         name="profileSettings/index"
         options={{ headerShown: false }}
       />
-
       <Stack.Screen
         name="changePassword/index"
         options={{ headerShown: false }}
@@ -68,8 +65,20 @@ export default function CommonLayout() {
         name="LiveTrackScreenDriver/LiveTrackScreenDriverMain/index"
         options={{ headerShown: false }}
       />
-        <Stack.Screen
+      <Stack.Screen
         name="OrderDetailsDriver/index"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="DriverVerification/index"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="DriverEarningHistory/index"
+        options={{ headerShown: false }}
+      />
+       <Stack.Screen
+        name="DeliveredSuccessScreen/index"
         options={{ headerShown: false }}
       />
     </Stack>

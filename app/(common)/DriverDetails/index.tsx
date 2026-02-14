@@ -31,7 +31,7 @@ export default function DriverDetails() {
     <ScrollView className="flex-1 bg-gray-100">
       {/* Header */}
       <View
-        className="pb-6 rounded-b-[30px]"
+        className="pb-6"
         style={{ backgroundColor: Colors.primary }}
       >
         <View className="flex-row items-center px-5 pt-12 mb-[40px]">

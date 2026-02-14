@@ -325,7 +325,7 @@ const CompletedScreen = () => {
       {JOBS.data.recentOrders.map((order) => (
         <TouchableOpacity
           key={order.id}
-          className="bg-white items-safe justify-center rounded-2xl p-4 mb-4 border border-gray-100"
+          className="bg-white items-safe justify-center rounded-2xl p-4 mb-4 border border-gray-200"
         >
           <View className=" flex-row items-center justify-center">
             <View className="justify-between flex-1 mb-1 ml-2">

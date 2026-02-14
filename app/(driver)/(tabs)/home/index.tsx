@@ -28,6 +28,9 @@ export default function HomeScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
+  const [acceptModal, setAcceptModal] = useState(false);
+  const [declineModal, setDeclineModal] = useState(false);
+
   const [pickupData, setPickupData] = useState({
     asap: true,
     date: null as Date | null,
@@ -266,8 +269,8 @@ export default function HomeScreen() {
           {/* Active Route */}
           <>
             <Text className="text-lg font-bold mb-3">Active Route</Text>
-            <View className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100">
-              <View className="flex-row justify-between items-start mb-3">
+            <View className="bg-white rounded-2xl px-4 py-6 shadow-sm mb-6 border border-gray-100">
+              <View className="flex-row justify-between items-start mb-4">
                 <View className="flex-row items-safe">
                   <View
                     className="w-9 h-9 rounded-full justify-center items-center"
@@ -351,7 +354,18 @@ export default function HomeScreen() {
 
           {/* Available Jobs */}
           <>
-            <Text className="text-lg font-bold mb-3">Available Jobs</Text>
+            <View className=" mb-3 flex-row items-center justify-between">
+              <Text className="text-lg font-bold">Available Jobs</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  router.push("/(driver)/(tabs)/jobs?tab=Available");
+                }}
+              >
+                <Text className="text-blue-500 font-semibold text-base">
+                  View All
+                </Text>
+              </TouchableOpacity>
+            </View>
             <View className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100">
               <View className="flex-row justify-between items-start mb-3">
                 <View className="flex-row items-safe">
@@ -396,17 +410,22 @@ export default function HomeScreen() {
               </View>
 
               <View className=" mt-3 flex-row items-center justify-center gap-4">
-                <View className="flex-1 bg-white border-[1px] border-blue-500 rounded-[10px] px-4 py-3 items-center justify-center">
-                  <Text className="text-blue-500 text-[18px]">
+                <TouchableOpacity
+                  onPress={() => setDeclineModal(true)}
+                  className="flex-1 border border-blue-400 py-2 rounded-xl"
+                >
+                  <Text className="text-center py-2 text-blue-500 font-medium">
                     Decline
                   </Text>
-                </View>
-
-                <View className="flex-1  bg-blue-500 rounded-[10px] px-4 py-3 items-center justify-center">
-                  <Text className="text-white text-[18px]">
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setAcceptModal(true)}
+                  className="flex-1 bg-blue-500 py-2 rounded-xl"
+                >
+                  <Text className="text-center py-2 text-white font-medium">
                     Accept
                   </Text>
-                </View>
+                </TouchableOpacity>
               </View>
             </View>
           </>
@@ -482,6 +501,68 @@ export default function HomeScreen() {
           </View>
         </Modal>
       )}
+
+      <Modal transparent visible={declineModal} animationType="fade">
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <View className="bg-white rounded-2xl p-6 w-[90%]">
+            <Text className="text-[24px] font-bold text-center">
+              Are you sure Decline the Job?
+            </Text>
+
+            <View className="flex-row gap-4 mt-6">
+              <TouchableOpacity
+                onPress={() => setDeclineModal(false)}
+                className="flex-1 border-[2px] border-red-500 rounded-xl py-3"
+              >
+                <Text className="text-center text-red-500 font-bold">No</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  setDeclineModal(false);
+                  ShowMessage.show("Job Decline successfully");
+                }}
+                className="flex-1 bg-blue-500 rounded-xl py-3"
+              >
+                <Text className="text-white text-center font-semibold">
+                  Yes
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal transparent visible={acceptModal} animationType="fade">
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <View className="bg-white rounded-2xl p-6 w-[90%]">
+            <Text className="text-[24px] font-bold text-center">
+              Are you sure Accept the Job?
+            </Text>
+
+            <View className="flex-row gap-4 mt-6">
+              <TouchableOpacity
+                onPress={() => setAcceptModal(false)}
+                className="flex-1 border-[2px] border-red-500 rounded-xl py-3"
+              >
+                <Text className="text-center text-red-500 font-bold">No</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  setAcceptModal(false);
+                  ShowMessage.show("Job accepted successfully");
+                }}
+                className="flex-1 bg-blue-500 rounded-xl py-3"
+              >
+                <Text className="text-white text-center font-semibold">
+                  Yes
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Modal } from "react-native";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import Colors from "@/constants/color";
 import RatingStars from "@/components/home/RatingStars";
 import ShowMessage from "@/constants/toast";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 const JOBS = {
   Available: [
@@ -182,7 +182,7 @@ const JobCard = ({
             onPress={onDecline}
             className="flex-1 border border-blue-400 py-2 rounded-xl"
           >
-            <Text className="text-center text-blue-500 font-medium">
+            <Text className="text-center py-2 text-blue-500 font-medium">
               Decline
             </Text>
           </TouchableOpacity>
@@ -191,7 +191,9 @@ const JobCard = ({
             onPress={onAccept}
             className="flex-1 bg-blue-500 py-2 rounded-xl"
           >
-            <Text className="text-center text-white font-medium">Accept</Text>
+            <Text className="text-center py-2 text-white font-medium">
+              Accept
+            </Text>
           </TouchableOpacity>
         </View>
       )}
@@ -319,13 +321,29 @@ const CompletedScreen = () => {
       {JOBS.data.recentOrders.map((order) => (
         <TouchableOpacity
           key={order.id}
-          className="bg-white flex-row items-safe justify-center rounded-2xl p-4 mb-4 border border-gray-100"
+          className="bg-white items-safe justify-center rounded-2xl p-4 mb-4 border border-gray-100"
         >
-          <View className="justify-between flex-1 mb-1 ml-2">
-            <Text className="font-semibold">Order #{order.id}</Text>
-            <Text className="text-sm text-gray-500 mb-2">
-              {order.quantity} bags
-            </Text>
+          <View className=" flex-row items-center justify-center">
+            <View className="justify-between flex-1 mb-1 ml-2">
+              <Text className="font-semibold">Order #{order.id}</Text>
+              <Text className="text-sm text-gray-500 mb-2">
+                {order.quantity} bags
+              </Text>
+            </View>
+
+            <View className="items-end justify-center">
+              <Text className="text-green-600 text-lg font-bold">
+                $ {order.price}
+              </Text>
+              <View className="flex-row items-center">
+                <RatingStars rating={order.rating} />
+                <Text className="ml-1 text-sm">{order.rating.toFixed(2)}</Text>
+              </View>
+            </View>
+          </View>
+
+          <View className="h-[1px] bg-gray-100 w-full mt-3" />
+          <View className="flex-row items-center justify-between">
             <View className="flex-row items-center">
               <Ionicons
                 name="checkmark-circle-outline"
@@ -333,16 +351,6 @@ const CompletedScreen = () => {
                 color="green"
               />
               <Text className="ml-1 text-green-600 text-sm">{order.date}</Text>
-            </View>
-          </View>
-
-          <View className="items-end justify-center">
-            <Text className="text-green-600 text-lg font-bold">
-              $ {order.price}
-            </Text>
-            <View className="flex-row items-center">
-              <RatingStars rating={order.rating} />
-              <Text className="ml-1 text-sm">{order.rating.toFixed(2)}</Text>
             </View>
 
             <TouchableOpacity
@@ -365,13 +373,24 @@ const CompletedScreen = () => {
 
 /* -------------------- Main Screen -------------------- */
 export default function JobsScreen() {
+  const { tab } = useLocalSearchParams();
   const router = useRouter();
+
   const [activeTab, setActiveTab] = useState<
     "Available" | "Active" | "Completed"
   >("Available");
 
   const [acceptModal, setAcceptModal] = useState(false);
   const [declineModal, setDeclineModal] = useState(false);
+
+  // ✅ Sync tab param
+  useEffect(() => {
+    console.log("TAB PARAM:", tab);
+
+    if (tab === "Active") setActiveTab("Active");
+    else if (tab === "Completed") setActiveTab("Completed");
+    else if (tab === "Available") setActiveTab("Available");
+  }, [tab]);
 
   return (
     <View className="flex-1 bg-gray-100">
@@ -398,17 +417,20 @@ export default function JobsScreen() {
         <TopTab
           label="Available"
           active={activeTab === "Available"}
-          onPress={() => setActiveTab("Available")}
+          // onPress={() => setActiveTab("Available")}
+          onPress={() => router.setParams({ tab: "Available" })}
         />
         <TopTab
           label="Active"
           active={activeTab === "Active"}
-          onPress={() => setActiveTab("Active")}
+          //onPress={() => setActiveTab("Active")}
+          onPress={() => router.setParams({ tab: "Active" })}
         />
         <TopTab
           label="Completed"
           active={activeTab === "Completed"}
-          onPress={() => setActiveTab("Completed")}
+          //onPress={() => setActiveTab("Completed")}
+          onPress={() => router.setParams({ tab: "Completed" })}
         />
       </View>
 

@@ -28,7 +28,7 @@ const StatCard = ({
       </View>
 
       <Text className="text-2xl font-bold text-black">{value}</Text>
-      <Text className="text-xs text-gray-400 mt-1">{subtitle}</Text>
+      <Text className={`text-xs ${title === "Deliveries" ? "text-green-500" : "text-gray-400"}  mt-4`}>{subtitle}</Text>
     </View>
   );
 };

@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, Image, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "@/constants/color";
+import { router } from "expo-router";
 
 interface Props {
   name: string;
@@ -35,7 +36,7 @@ export default function CustomerCard({
           </View>
         </View>
 
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push("/OrderDetailsDriver")}>
           <Text
             style={{ color: Colors.primary }}
             className="text-sm font-semibold"

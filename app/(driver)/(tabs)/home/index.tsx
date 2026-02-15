@@ -421,7 +421,7 @@ export default function HomeScreen() {
                   onPress={() => setDeclineModal(true)}
                   className="flex-1 border border-blue-400 py-2 rounded-xl"
                 >
-                  <Text className="text-center py-2 text-blue-500 font-medium">
+                  <Text className="text-center text-lg py-1 text-blue-500 font-medium">
                     Decline
                   </Text>
                 </TouchableOpacity>
@@ -429,7 +429,7 @@ export default function HomeScreen() {
                   onPress={() => setAcceptModal(true)}
                   className="flex-1 bg-blue-500 py-2 rounded-xl"
                 >
-                  <Text className="text-center py-2 text-white font-medium">
+                  <Text className="text-center text-lg py-1 text-white font-medium">
                     Accept
                   </Text>
                 </TouchableOpacity>
@@ -511,7 +511,7 @@ export default function HomeScreen() {
 
       <Modal transparent visible={declineModal} animationType="fade">
         <View className="flex-1 justify-center items-center bg-black/50">
-          <View className="bg-white rounded-2xl p-6 w-[90%]">
+          <View className="bg-white rounded-2xl p-8 w-[90%]">
             <Text className="text-[24px] font-bold text-center">
               Are you sure Decline the Job?
             </Text>
@@ -521,7 +521,7 @@ export default function HomeScreen() {
                 onPress={() => setDeclineModal(false)}
                 className="flex-1 border-[2px] border-red-500 rounded-xl py-3"
               >
-                <Text className="text-center text-red-500 font-bold">No</Text>
+                <Text className="text-center text-lg text-red-500 font-bold">No</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -531,7 +531,7 @@ export default function HomeScreen() {
                 }}
                 className="flex-1 bg-blue-500 rounded-xl py-3"
               >
-                <Text className="text-white text-center font-semibold">
+                <Text className="text-white text-lg text-center font-semibold">
                   Yes
                 </Text>
               </TouchableOpacity>
@@ -542,7 +542,7 @@ export default function HomeScreen() {
 
       <Modal transparent visible={acceptModal} animationType="fade">
         <View className="flex-1 justify-center items-center bg-black/50">
-          <View className="bg-white rounded-2xl p-6 w-[90%]">
+          <View className="bg-white rounded-2xl p-8 w-[90%]">
             <Text className="text-[24px] font-bold text-center">
               Are you sure Accept the Job?
             </Text>
@@ -552,7 +552,7 @@ export default function HomeScreen() {
                 onPress={() => setAcceptModal(false)}
                 className="flex-1 border-[2px] border-red-500 rounded-xl py-3"
               >
-                <Text className="text-center text-red-500 font-bold">No</Text>
+                <Text className="text-center text-lg text-red-500 font-bold">No</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -562,7 +562,7 @@ export default function HomeScreen() {
                 }}
                 className="flex-1 bg-blue-500 rounded-xl py-3"
               >
-                <Text className="text-white text-center font-semibold">
+                <Text className="text-white text-lg text-center font-semibold">
                   Yes
                 </Text>
               </TouchableOpacity>

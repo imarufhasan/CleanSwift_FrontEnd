@@ -39,7 +39,7 @@ export default function HomeScreen() {
     user: {
       name: "Ali Amin",
     },
-
+    notificationCount: 100,
     location: {
       title: "Current Location",
       street: "123 Main Street, Apt 4B",
@@ -182,9 +182,19 @@ export default function HomeScreen() {
             <View className="flex-row gap-4">
               <TouchableOpacity
                 onPress={() => router.push("/(common)/notifications")}
-                className="bg-white/20 p-3 rounded-full"
+                className="bg-white/20 p-3 rounded-full relative"
               >
                 <Ionicons name="notifications-outline" size={22} color="#fff" />
+
+                {data.notificationCount > 0 && (
+                  <View className="absolute -top-1 -right-1 bg-red-500 min-w-[22px] min-h-[22px] rounded-full justify-center items-center px-1">
+                    <Text className="text-white text-[8px]">
+                      {data.notificationCount > 99
+                        ? "99+"
+                        : data.notificationCount}
+                    </Text>
+                  </View>
+                )}
               </TouchableOpacity>
             </View>
           </View>

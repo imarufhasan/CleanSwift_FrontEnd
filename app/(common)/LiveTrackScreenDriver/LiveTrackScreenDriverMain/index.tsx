@@ -122,7 +122,7 @@ export default function LiveTrackScreenDriverMain() {
 
       <Modal transparent visible={deliverySuccessModal} animationType="fade">
         <View className="flex-1 justify-center items-center bg-black/50">
-          <View className="bg-white rounded-2xl p-6 w-[90%]">
+          <View className="bg-white rounded-2xl p-8 w-[90%]">
             {/* ✅ Success Icon */}
             <View className="items-center mt-2">
               <View className="w-20 h-20 rounded-full bg-blue-100 items-center justify-center">

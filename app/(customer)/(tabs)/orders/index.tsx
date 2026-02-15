@@ -175,22 +175,22 @@ export default function Orders() {
           <View className="flex-row">
             <TouchableOpacity
               onPress={() => router.push("/ChatScreen")}
-              className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center mr-2"
+              className="flex-1 border bg-blue-100 border-blue-500 rounded-xl py-3 flex-row justify-center items-center mr-2"
             >
               <Ionicons
                 name="chatbubble-outline"
                 size={18}
                 color={Colors.primary}
               />
-              <Text className="ml-2 text-blue-600 font-semibold">Message</Text>
+              <Text className="ml-2 text-lg text-blue-500 font-semibold">Message</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => router.push("/CallScreen")}
-              className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center ml-2"
+              className="flex-1 border bg-blue-100 border-blue-500 rounded-xl py-3 flex-row justify-center items-center ml-2"
             >
               <Ionicons name="call-outline" size={18} color={Colors.primary} />
-              <Text className="ml-2 text-blue-600 font-semibold">
+              <Text className="ml-2 text-lg text-blue-500 font-semibold">
                 Call Driver
               </Text>
             </TouchableOpacity>

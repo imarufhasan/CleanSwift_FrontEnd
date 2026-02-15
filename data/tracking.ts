@@ -1,6 +1,6 @@
 export const trackingData = {
   status: {
-    label: "Driver En Route",
+    label: "Driver Route",
     etaMinutes: 12,
   },
 

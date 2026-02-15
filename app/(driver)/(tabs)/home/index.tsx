@@ -256,12 +256,9 @@ export default function HomeScreen() {
               </Text>
             </View>
 
-            <TouchableOpacity
-              onPress={() => setBottomModal(true)}
-              className="bg-white w-12 h-12 rounded-full justify-center items-center shadow"
-            >
+            <View className="bg-white w-12 h-12 rounded-full justify-center items-center shadow">
               <Feather name="dollar-sign" size={26} color={Colors.primary} />
-            </TouchableOpacity>
+            </View>
           </View>
         </View>
 

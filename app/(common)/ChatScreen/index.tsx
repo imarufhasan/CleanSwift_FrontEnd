@@ -160,13 +160,13 @@ export default function ChatScreen() {
             <Ionicons name="arrow-back" size={22} color="#fff" />
           </TouchableOpacity>
 
-          <Image source={driver.avatar} className="w-10 h-10 rounded-full" />
+          <Image source={driver.avatar} className="w-[45px] h-[45px] rounded-full" />
 
           <View className="ml-3 flex-1">
-            <Text className="text-white font-semibold text-base">
+            <Text className="text-white font-semibold text-2xl">
               {driver.name}
             </Text>
-            <Text className="text-white/80 text-xs">
+            <Text className="text-white/80 text-sm">
               {driver.online ? "Online" : "Offline"}
             </Text>
           </View>

@@ -2,10 +2,29 @@
 import CustomerCard from "@/components/driver/home/CustomerCard";
 import Colors from "@/constants/color";
 import { Feather, FontAwesome6, Ionicons } from "@expo/vector-icons";
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, Image, TouchableOpacity } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 export default function WashingStep({ setActiveStep }: any) {
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [selectedTime, setSelectedTime] = useState<Date | null>(null);
+
+  const onTimeChange = (_: any, time?: Date) => {
+    setShowTimePicker(false);
+
+    if (time) {
+      setSelectedTime(time);
+    }
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   return (
     <View className="bg-white mb-6 px-4">
       <CustomerCard name="Ali Amin" address="123 Main Street, Apt 4B" />
@@ -15,8 +34,17 @@ export default function WashingStep({ setActiveStep }: any) {
           Set Estimated Ready Time
         </Text>
 
-        <TouchableOpacity className="border-[1px] border-blue-500 rounded-xl p-3 my-4 items-center justify-between flex-row">
+        {/* <TouchableOpacity className="border-[1px] border-blue-500 rounded-xl p-3 my-4 items-center justify-between flex-row">
           <Text className="text-gray-400 font-semibold text-base">00:00</Text>
+          <Ionicons name="time-outline" size={16} color={Colors.primary} />
+        </TouchableOpacity> */}
+        <TouchableOpacity
+          onPress={() => setShowTimePicker(true)}
+          className="border-[1px] border-blue-500 rounded-xl p-3 my-4 items-center justify-between flex-row"
+        >
+          <Text className="text-gray-600 font-semibold text-base">
+            {selectedTime ? formatTime(selectedTime) : "00:00"}
+          </Text>
           <Ionicons name="time-outline" size={16} color={Colors.primary} />
         </TouchableOpacity>
 
@@ -63,6 +91,16 @@ export default function WashingStep({ setActiveStep }: any) {
           <FontAwesome6 name="arrow-right-long" size={18} color="white" />
         </TouchableOpacity>
       </View>
+
+      {showTimePicker && (
+        <DateTimePicker
+          value={selectedTime || new Date()}
+          mode="time"
+          is24Hour={true}
+          display="default"
+          onChange={onTimeChange}
+        />
+      )}
     </View>
   );
 }

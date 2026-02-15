@@ -45,11 +45,9 @@ export default function RequestPickupModal({
   const [step, setStep] = useState<Step>(0);
   const [bags, setBags] = useState(pickupData.bags);
   const [selectAsap, setSelectAsap] = useState(pickupData.asap);
-
-  //   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  // const [selectedTime, setSelectedTime] = useState<Date | null>(null);
-  // const [showDatePicker, setShowDatePicker] = useState(false);
-  // const [showTimePicker, setShowTimePicker] = useState(false);
+  const [selectedInstruction, setSelectedInstruction] = useState<number | null>(
+    1,
+  );
 
   const translateY = useRef(new Animated.Value(height)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
@@ -250,7 +248,7 @@ export default function RequestPickupModal({
         )}
 
         {/* STEP 3: Instructions */}
-        {step === 2 && (
+        {/* {step === 2 && (
           <View className="px-5">
             <Text className="text-[22px] font-semibold mb-2">
               Special Instructions
@@ -280,6 +278,70 @@ export default function RequestPickupModal({
               />
             </View>
           </View>
+        )} */}
+        {/* STEP 3: Instructions */}
+        {step === 2 && (
+          <View className="px-5">
+            <Text className="text-[22px] font-semibold mb-2">
+              Special Instructions
+            </Text>
+            <Text className="text-sm text-gray-500 mb-4">
+              Add any specific care instructions for your laundry? (optional)
+            </Text>
+
+            {dataLoal.spacialInstructions.map((item) => {
+              const isSelected = selectedInstruction === item.id;
+
+              return (
+                <TouchableOpacity
+                  key={item.id}
+                  // onPress={() => setSelectedInstruction(item.id)}
+                  onPress={() => {
+                    if (selectedInstruction === item.id) {
+                      setSelectedInstruction(null);
+                    } else {
+                      setSelectedInstruction(item.id);
+                    }
+                  }}
+                  className={`border rounded-xl p-3 mb-2 flex-row items-center justify-between ${
+                    isSelected
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-100 bg-white"
+                  }`}
+                >
+                  <View>
+                    <Text
+                      className={`font-medium ${
+                        isSelected ? "text-blue-500" : "text-black"
+                      }`}
+                    >
+                      {item.title}
+                    </Text>
+                    <Text className="text-xs text-gray-500">
+                      {item.description}
+                    </Text>
+                  </View>
+
+                  {isSelected && (
+                    <AntDesign
+                      name="check-circle"
+                      size={20}
+                      color={Colors.primary}
+                    />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+
+            <View className="border border-gray-100 bg-white rounded-xl p-3 mt-3">
+              <TextInput
+                placeholder="Or write custom instructions..."
+                multiline
+                textAlignVertical="top"
+                className="text-sm text-gray-500 min-h-[80px]"
+              />
+            </View>
+          </View>
         )}
 
         {/* step 4 pickup time */}
@@ -296,7 +358,7 @@ export default function RequestPickupModal({
             <View className=" justify-between">
               <TouchableOpacity
                 onPress={() => setSelectAsap(true)}
-                className="items-center justify-between gap-3 flex-row border border-blue-500 rounded-2xl p-4 mb-6  w-full"
+                className={`${selectAsap ? "border-blue-500" : "border-gray-500"} items-center justify-between gap-3 flex-row border  rounded-2xl p-4 mb-6  w-full`}
               >
                 <View className="flex-row items-center gap-3">
                   <View className="bg-blue-100 rounded-full p-2">
@@ -327,9 +389,14 @@ export default function RequestPickupModal({
                 onPress={() => {
                   setSelectAsap(false);
                   // null date and time when selecting schedule for later
-                  setPickupData({ ...pickupData, asap: false, date: null, time: null });
+                  setPickupData({
+                    ...pickupData,
+                    asap: false,
+                    date: null,
+                    time: null,
+                  });
                 }}
-                className="items-center justify-between gap-3 flex-row border border-blue-500 rounded-2xl p-4 mb-6  w-full"
+                className={`${!selectAsap ? "border-blue-500" : "border-gray-500"} items-center justify-between gap-3 flex-row border  rounded-2xl p-4 mb-6  w-full`}
               >
                 <View className="flex-row items-center gap-3">
                   <View className="bg-blue-100 rounded-full p-2">

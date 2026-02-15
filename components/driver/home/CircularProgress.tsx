@@ -4,9 +4,9 @@ import Svg, { Circle } from "react-native-svg";
 import Colors from "@/constants/color";
 
 export default function CircularProgress({
-  size = 120,
-  strokeWidth = 12,
-  progress = 60, // 👈 pass dynamic value (0-100)
+  size = 80,
+  strokeWidth = 10,
+  progress = 60,
 }) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -18,7 +18,7 @@ export default function CircularProgress({
       <Svg width={size} height={size}>
         {/* Background Circle */}
         <Circle
-          stroke="#E5E7EB"
+          stroke={Colors.purple.light}
           fill="none"
           cx={size / 2}
           cy={size / 2}
@@ -28,7 +28,7 @@ export default function CircularProgress({
 
         {/* Progress Circle */}
         <Circle
-          stroke={Colors.primary}
+          stroke={Colors.purple.dark}
           fill="none"
           cx={size / 2}
           cy={size / 2}
@@ -43,9 +43,9 @@ export default function CircularProgress({
       </Svg>
 
       {/* Center Text */}
-      <View className="absolute items-center">
+      {/* <View className="absolute items-center">
         <Text className="text-2xl font-bold">{progress}%</Text>
-      </View>
+      </View> */}
     </View>
   );
 }

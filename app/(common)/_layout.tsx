@@ -57,10 +57,10 @@ export default function CommonLayout() {
         name="PrivacyPolicyScreen/index"
         options={{ headerShown: false }}
       />
-      <Stack.Screen
+      {/* <Stack.Screen
         name="LiveTrackScreenDriver/index"
         options={{ headerShown: false }}
-      />
+      /> */}
       <Stack.Screen
         name="LiveTrackScreenDriver/LiveTrackScreenDriverMain/index"
         options={{ headerShown: false }}

@@ -12,7 +12,7 @@ export default function DryingStep({ setActiveStep }: any) {
       <CustomerCard name="Ali Amin" address="123 Main Street, Apt 4B" />
 
       <View className="bg-purple-100 rounded-2xl p-4 my-4 w-full items-center justify-center">
-        <CircularProgress progress={60} />
+        <CircularProgress progress={40} />
         <Text className="font-bold text-2xl text-black mt-3">
           Drying in Progress
         </Text>

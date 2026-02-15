@@ -3,6 +3,12 @@ const Colors = {
   primaryDark: "#1E40AF",  // blue-800
   primaryLight: "#3B82F6", // blue-500
 
+  purple: {
+    light: "#C084FC",   // soft purple
+    DEFAULT: "#8B5CF6", // main purple (modern UI)
+    dark: "#6D28D9",    // deep purple
+  },
+
   white: "#FFFFFF",
   black: "#000000",
 

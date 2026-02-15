@@ -193,8 +193,14 @@ export default function HomeScreen() {
             </View>
 
             <View className="flex-row items-center gap-1">
-              <View className="bg-green-400 w-4 h-4 rounded-full" />
-              <Text className="text-white text-base">Online</Text>
+              <View
+                className={`w-4 h-4 rounded-full ${
+                  selected ? "bg-green-400" : "bg-gray-400"
+                }`}
+              />
+              <Text className="text-white text-base">
+                {selected ? "Online" : "Offline"}
+              </Text>
             </View>
           </View>
 
@@ -213,7 +219,7 @@ export default function HomeScreen() {
                       Availability Status
                     </Text>
                     <Text className="text-white text-sm">
-                      Accepting new jobs
+                      {selected ? "Accepting new jobs" : "Not accepting jobs"}
                     </Text>
                   </View>
                 </View>

@@ -1,17 +1,34 @@
-import React from "react";
-import { View, Text } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { View, Text, Animated, Easing } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import Colors from "@/constants/color";
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 export default function CircularProgress({
   size = 80,
   strokeWidth = 10,
-  progress = 60,
+  progress = 60, // 0 - 100
 }) {
+  const animatedValue = useRef(new Animated.Value(0)).current;
+  
+
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
 
-  const strokeDashoffset = circumference - (circumference * progress) / 100;
+  useEffect(() => {
+    Animated.timing(animatedValue, {
+      toValue: progress,
+      duration: 800,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: false,
+    }).start();
+  }, [progress]);
+
+  const strokeDashoffset = animatedValue.interpolate({
+    inputRange: [0, 100],
+    outputRange: [circumference, 0],
+  });
 
   return (
     <View className="items-center justify-center">
@@ -26,8 +43,8 @@ export default function CircularProgress({
           strokeWidth={strokeWidth}
         />
 
-        {/* Progress Circle */}
-        <Circle
+        {/* Animated Progress Circle */}
+        <AnimatedCircle
           stroke={Colors.purple.dark}
           fill="none"
           cx={size / 2}
@@ -42,9 +59,9 @@ export default function CircularProgress({
         />
       </Svg>
 
-      {/* Center Text */}
+      {/* Center Percentage */}
       {/* <View className="absolute items-center">
-        <Text className="text-2xl font-bold">{progress}%</Text>
+        <Text className="text-xl font-bold">{progress}%</Text>
       </View> */}
     </View>
   );

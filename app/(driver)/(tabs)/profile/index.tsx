@@ -56,14 +56,22 @@ export default function Profile() {
           className="pt-14 pb-20 px-5"
         >
           <View className="flex-row items-center">
-            <Image
-              source={{ uri: "https://i.pravatar.cc/150?img=12" }}
-              className="w-[70px] h-[70px] rounded-full border-2 border-white"
-            />
-            <View className="ml-3 flex-1">
+            <TouchableOpacity
+              onPress={() => router.push("/profileSettings")}
+              className="w-[70px] h-[70px]"
+            >
+              <Image
+                source={require("../../../../assets/images/profile.png")}
+                className="w-[70px] h-[70px] rounded-full border-2 border-white"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => router.push("/profileSettings")}
+              className="ml-3 flex-1"
+            >
               <Text className="text-white text-2xl font-bold">Ali Amin</Text>
               <Text className="text-white/80 text-sm">aliamin@gmail.com</Text>
-            </View>
+            </TouchableOpacity>
           </View>
         </View>
 

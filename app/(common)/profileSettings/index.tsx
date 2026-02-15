@@ -10,6 +10,7 @@ import CountryPicker, {
 import { useRouter } from "expo-router";
 import Toast from "@/constants/toast";
 import ShowMessage from "@/constants/toast";
+import * as ImagePicker from "expo-image-picker";
 
 export default function ProfileSettings() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function ProfileSettings() {
   const [callingCode, setCallingCode] = useState("92");
   const [phone, setPhone] = useState("");
   const [fullName, setFullName] = useState("Ali Amin");
+  const [profileImage, setProfileImage] = useState<string | null>(null);
 
   const getPhonePlaceholder = (code: CountryCode) => {
     switch (code) {
@@ -32,6 +34,27 @@ export default function ProfileSettings() {
         return "01712 345678";
       default:
         return "Phone number";
+    }
+  };
+
+  const pickImage = async () => {
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permissionResult.granted) {
+      ShowMessage.show("Permission to access gallery is required!");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setProfileImage(result.assets[0].uri);
     }
   };
 
@@ -56,12 +79,21 @@ export default function ProfileSettings() {
       {/* Profile Image */}
       <View className="items-center mb-10">
         <View className="relative">
-          <Image
+          {/* <Image
             source={require("../../../assets/images/profile.png")}
             className="w-24 h-24 rounded-full"
+          /> */}
+          <Image
+            source={
+              profileImage
+                ? { uri: profileImage }
+                : require("../../../assets/images/profile.png")
+            }
+            className="w-24 h-24 rounded-full"
           />
+
           <TouchableOpacity
-            onPress={() => {}}
+            onPress={pickImage}
             className="absolute bottom-0 right-0 bg-blue-500 w-8 h-8 rounded-full items-center justify-center border-2 border-white"
           >
             <Ionicons name="camera" size={16} color="#fff" />

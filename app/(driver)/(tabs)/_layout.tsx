@@ -39,6 +39,16 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
+        name="message/index"
+        options={{
+          title: "Message",
+          tabBarIcon: ({ color, size }) => (
+            <AntDesign name="message" size={size} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
         name="profile/index"
         options={{
           title: "Profile",

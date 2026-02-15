@@ -15,6 +15,7 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { formatChatTime } from "@/constants/chatTimes";
 import ShowMessage from "@/constants/toast";
+import * as ImagePicker from "expo-image-picker";
 
 const driver = {
   name: "Ali Amin",
@@ -22,7 +23,15 @@ const driver = {
   online: true,
 };
 
-const initialMessages = [
+type Message = {
+  id: string;
+  sender: "user" | "driver";
+  time: string;
+  text?: string;
+  image?: string;
+};
+
+const initialMessages: Message[] = [
   {
     id: "1",
     text: "Hello! I’m on my way 🚗",
@@ -46,7 +55,7 @@ const initialMessages = [
 export default function ChatScreen() {
   const router = useRouter();
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState(initialMessages);
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
 
   const flatListRef = useRef<FlatList>(null);
 
@@ -69,31 +78,32 @@ export default function ChatScreen() {
     setMessage("");
   };
 
-  const renderItem = ({ item }: any) => {
+  const renderItem = ({ item }: { item: Message }) => {
     const isUser = item.sender === "user";
 
     return (
       <View
         className={`mb-3 flex-row ${isUser ? "justify-end" : "justify-start"}`}
       >
-        {!isUser && (
-          <Image
-            source={driver.avatar}
-            className="w-8 h-8 rounded-full mr-2 self-end"
-          />
-        )}
-
         <View
           className={`max-w-[75%] px-4 py-3 rounded-2xl ${
             isUser ? "rounded-br-none" : "rounded-bl-none bg-gray-200"
           }`}
           style={isUser ? { backgroundColor: Colors.primary } : undefined}
         >
-          <Text
-            className={`text-sm ${isUser ? "text-white" : "text-gray-800"}`}
-          >
-            {item.text}
-          </Text>
+          {item.image ? (
+            <Image
+              source={{ uri: item.image }}
+              className="w-[180px] h-[180px] rounded-xl"
+              resizeMode="cover"
+            />
+          ) : (
+            <Text
+              className={`text-sm ${isUser ? "text-white" : "text-gray-800"}`}
+            >
+              {item.text}
+            </Text>
+          )}
 
           <Text
             className={`text-[10px] mt-1 ${
@@ -105,6 +115,33 @@ export default function ChatScreen() {
         </View>
       </View>
     );
+  };
+
+  const pickImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      ShowMessage.show("Permission required");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          image: result.assets[0].uri,
+          sender: "user",
+          time: formatChatTime(new Date()),
+        },
+      ]);
+    }
   };
 
   return (
@@ -165,7 +202,7 @@ export default function ChatScreen() {
               multiline
             />
 
-            <TouchableOpacity onPress={() => ShowMessage.show("send image")}>
+            <TouchableOpacity onPress={pickImage}>
               <Ionicons name="image-outline" size={22} color={Colors.primary} />
             </TouchableOpacity>
           </View>

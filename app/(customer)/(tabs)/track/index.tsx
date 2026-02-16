@@ -5,6 +5,7 @@ import Colors from "@/constants/color";
 import RatingStars from "@/components/home/RatingStars";
 import { trackingData } from "@/data/tracking";
 import { useRouter } from "expo-router";
+import MapView, { Marker } from "react-native-maps";
 
 export default function Track() {
   const router = useRouter();
@@ -17,7 +18,44 @@ export default function Track() {
   return (
     <ScrollView className="flex-1">
       {/* Map Placeholder */}
-      <View className="h-[300px] bg-blue-100 relative">
+      <View className="h-[350px] bg-blue-100 relative overflow-hidden">
+        {/* <MapView
+          style={{ flex: 1 }}
+          initialRegion={{
+            latitude: 23.8103,
+            longitude: 90.4125,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          }}
+        >
+          <Marker
+            coordinate={{
+              latitude: 23.8103,
+              longitude: 90.4125,
+            }}
+            title="Driver"
+          />
+        </MapView> */}
+
+        {/* Fake Map Grid Background */}
+        <View className="absolute inset-0 opacity-40">
+          <View className="flex-1 flex-row flex-wrap">
+            {[...Array(100)].map((_, i) => (
+              <View
+                key={i}
+                className="w-[10%] h-[10%] border border-blue-200"
+              />
+            ))}
+          </View>
+        </View>
+
+        {/* Fake Location Marker */}
+        <View className="absolute self-center top-1/2 -mt-10 items-center">
+          <View className="w-[120px] h-[120px] p-4 items-center justify-center bg-transparent border-blue-400 border-[1px] rounded-full">
+            <Ionicons name="location-sharp" size={30} color="#2563eb" />
+            <View className="w-3 h-3 bg-blue-600 rounded-full mt-1" />
+          </View>
+        </View>
         {/* Status Badge */}
         <View className="absolute top-12 self-center bg-white px-4 py-2 rounded-full flex-row items-center shadow">
           <View className="w-2 h-2 rounded-full bg-blue-500 mr-2" />

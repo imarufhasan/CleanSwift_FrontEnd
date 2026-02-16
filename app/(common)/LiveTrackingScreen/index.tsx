@@ -20,6 +20,26 @@ export default function LiveTrackingScreen() {
       <SafeAreaView edges={["bottom"]} className="bg-[#F6F9FF] flex-1">
         {/* Map Placeholder */}
         <View className="h-[300px] bg-blue-100 relative">
+          {/* Fake Map Grid Background */}
+          <View className="absolute inset-0 opacity-40">
+            <View className="flex-1 flex-row flex-wrap">
+              {[...Array(100)].map((_, i) => (
+                <View
+                  key={i}
+                  className="w-[10%] h-[10%] border border-blue-200"
+                />
+              ))}
+            </View>
+          </View>
+
+          {/* Fake Location Marker */}
+          <View className="absolute self-center top-1/2 -mt-10 items-center">
+            <View className="w-[100px] h-[100px] p-4 items-center justify-center bg-transparent border-blue-400 border-[1px] rounded-full">
+              <Ionicons name="location-sharp" size={30} color="#2563eb" />
+              <View className="w-3 h-3 bg-blue-600 rounded-full mt-1" />
+            </View>
+          </View>
+
           {/* back icon */}
           <TouchableOpacity
             onPress={() => {

@@ -114,7 +114,7 @@ const TopTab = ({
     }}
   >
     <Text
-      className={`text-center py-1 text-sm font-medium ${
+      className={`text-center py-1 text-base font-semibold ${
         active ? "text-white" : "text-gray-500"
       }`}
     >
@@ -403,7 +403,7 @@ export default function JobsScreen() {
         style={{ backgroundColor: Colors.primary }}
         className=" px-5 pt-14 pb-[60px] rounded-b-[32px]"
       >
-        <Text className="text-white text-2xl font-bold">Jobs</Text>
+        <Text className="text-white text-[26px] font-bold">Jobs</Text>
 
         <Text className="text-blue-100 text-sm mt-1">
           Manage your delivery jobs

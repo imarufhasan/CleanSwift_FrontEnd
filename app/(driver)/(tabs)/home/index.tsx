@@ -27,6 +27,7 @@ export default function HomeScreen() {
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const progressAnim = useRef(new Animated.Value(0)).current;
 
   const [acceptModal, setAcceptModal] = useState(false);
   const [declineModal, setDeclineModal] = useState(false);
@@ -88,6 +89,14 @@ export default function HomeScreen() {
       },
     ],
   });
+
+  useEffect(() => {
+    Animated.timing(progressAnim, {
+      toValue: data.activeOrder.progress,
+      duration: 800, // smooth speed
+      useNativeDriver: false, // width animation must be false
+    }).start();
+  }, [data.activeOrder.progress]);
 
   useEffect(() => {
     if (!pickupData.asap && !pickupData.date) {
@@ -163,7 +172,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     Animated.timing(translateX, {
-      toValue: selected ? 40 : 3,
+      toValue: selected ? 40 : 4,
       duration: 200,
       useNativeDriver: true,
     }).start();
@@ -322,12 +331,15 @@ export default function HomeScreen() {
                   </Text>
                 ))}
               </View>
-
-              {/* Progress Bar */}
-              <View className="h-2 bg-gray-200 rounded-full mb-3">
-                <View
+              <View className="h-2 bg-gray-200 rounded-full mb-3 overflow-hidden">
+                <Animated.View
                   className="h-2 bg-blue-500 rounded-full"
-                  style={{ width: `${data.activeOrder.progress}%` }}
+                  style={{
+                    width: progressAnim.interpolate({
+                      inputRange: [0, 100],
+                      outputRange: ["0%", "100%"],
+                    }),
+                  }}
                 />
               </View>
 
@@ -416,12 +428,12 @@ export default function HomeScreen() {
                 </View>
               </View>
 
-              <View className=" mt-3 flex-row items-center justify-center gap-4">
+              <View className=" mt-5 flex-row items-center justify-center gap-4">
                 <TouchableOpacity
                   onPress={() => setDeclineModal(true)}
-                  className="flex-1 border border-blue-400 py-2 rounded-xl"
+                  className="flex-1 border border-red-400 py-2 rounded-xl"
                 >
-                  <Text className="text-center text-lg py-1 text-blue-500 font-medium">
+                  <Text className="text-center text-lg py-1 text-red-500 font-medium">
                     Decline
                   </Text>
                 </TouchableOpacity>
@@ -521,7 +533,9 @@ export default function HomeScreen() {
                 onPress={() => setDeclineModal(false)}
                 className="flex-1 border-[2px] border-red-500 rounded-xl py-3"
               >
-                <Text className="text-center text-lg text-red-500 font-bold">No</Text>
+                <Text className="text-center text-lg text-red-500 font-bold">
+                  No
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -552,7 +566,9 @@ export default function HomeScreen() {
                 onPress={() => setAcceptModal(false)}
                 className="flex-1 border-[2px] border-red-500 rounded-xl py-3"
               >
-                <Text className="text-center text-lg text-red-500 font-bold">No</Text>
+                <Text className="text-center text-lg text-red-500 font-bold">
+                  No
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity

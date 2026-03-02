@@ -23,7 +23,8 @@ const SelectRole = () => {
     if (selectedRole === "driver") {
       setRole("driver");
       router.push("./driverRegistration");
-    } else {
+    }
+    if (selectedRole === "customer") {
       setRole("customer");
       router.push("/(auth)/enableLocation");
     }

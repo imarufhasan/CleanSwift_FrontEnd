@@ -14,6 +14,7 @@ import { useRouter } from "expo-router";
 import Toast from "@/constants/toast";
 import ShowMessage from "@/constants/toast";
 import { useUserInfo } from "@/src/core/store/userInfo";
+import { useProfileInfoQuery } from "@/src/services/authApi";
 
 const menuItems = [
   { label: "Profile Setting", icon: "person-outline" },
@@ -27,6 +28,8 @@ const menuItems = [
 
 export default function Profile() {
   const router = useRouter();
+  const { data: profileInfo, error, isLoading } = useProfileInfoQuery();
+
   const [refreshing, setRefreshing] = useState(false);
   const [logoutModal, setLogoutModal] = useState(false);
   const role = useUserInfo((state) => state.role);
@@ -40,6 +43,13 @@ export default function Profile() {
       ShowMessage.show("updated");
     }, 1500);
   }, []);
+
+  const logout = () => {
+    setLogoutModal(false);
+    router.replace("/(auth)/login");
+    clearUser();
+    ShowMessage.show("Logged out successfully");
+  };
 
   return (
     <View className="flex-1 bg-gray-100">
@@ -56,17 +66,17 @@ export default function Profile() {
         >
           <View className="flex-row items-center">
             <Image
-              source={{ uri: "https://i.pravatar.cc/150?img=12" }}
+              source={{ uri: profileInfo?.data?.image }}
               className="w-[70px] h-[70px] rounded-full border-2 border-white"
             />
             <View className="ml-3 flex-1">
-              <Text className="text-white text-[20px] font-bold">Ali Amin</Text>
-              <Text className="text-white/80 text-sm">aliamin@gmail.com</Text>
+              <Text className="text-white text-[20px] font-bold">
+                {profileInfo?.data?.name}
+              </Text>
+              <Text className="text-white/80 text-sm">
+                {profileInfo?.data?.email}
+              </Text>
             </View>
-
-            {/* <TouchableOpacity className="bg-white/20 p-2 rounded-full">
-            <Ionicons name="settings-outline" size={20} color="#fff" />
-          </TouchableOpacity> */}
           </View>
         </View>
 
@@ -177,12 +187,7 @@ export default function Profile() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  onPress={() => {
-                    setLogoutModal(false);
-                    ShowMessage.show("Logged out successfully");
-                    router.replace("/(auth)/login");
-                    clearUser();
-                  }}
+                  onPress={() => logout()}
                   className="flex-1 bg-green-500 rounded-2xl py-3"
                 >
                   <Text className="text-white text-[20px] text-center font-semibold">

@@ -7,7 +7,6 @@ type Role = "customer" | "driver";
 
 export default function Index() {
   const role: Role = "driver";
-
   const [ready, setReady] = useState(false);
 
   const isLoggedIn = false;
@@ -15,11 +14,19 @@ export default function Index() {
 
   useEffect(() => {
     const prepare = async () => {
-      await Splash.hideAsync();
+      // Keep native splash until React splash finishes
+      await Splash.preventAutoHideAsync();
+
+      // Simulate loading (API, auth, etc.)
+      await new Promise(res => setTimeout(res, 3000));
+
       setReady(true);
+
+      // Now hide the native splash
+      await Splash.hideAsync();
     };
 
-    setTimeout(prepare, 3000);
+    prepare();
   }, []);
 
   if (!ready) {

@@ -16,10 +16,15 @@ import { Dimensions } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUserInfo } from "@/src/core/store/userInfo";
+import { useProfileInfoQuery } from "@/src/services/authApi";
+import SelectRole from "../selectRole";
 
 const EnableLocation: React.FC = () => {
   const router = useRouter();
   const role = useUserInfo((state) => state.role);
+  const setRole = useUserInfo((state) => state.setRole);
+
+  const { data: profileInfo, error, isLoading } = useProfileInfoQuery();
 
   const { width } = Dimensions.get("window");
   const { height } = Dimensions.get("window");
@@ -30,6 +35,12 @@ const EnableLocation: React.FC = () => {
     Platform.OS === "android"
       ? PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION
       : PERMISSIONS.IOS.LOCATION_WHEN_IN_USE;
+
+  useEffect(() => {
+    if (profileInfo) {
+      console.log("Profile:", profileInfo?.data?.role);
+    }
+  }, [profileInfo]);
 
   useEffect(() => {
     const checkPermission = async () => {
@@ -77,10 +88,12 @@ const EnableLocation: React.FC = () => {
       if (currentStatus === RESULTS.GRANTED) {
         console.log("user role: ", role);
 
-        if (role === "customer") {
+        if (profileInfo?.data?.role === "CUSTOMER") {
+          setRole("customer");
           router.push("/(customer)/(tabs)/home");
         }
-        if (role === "driver"  || role === null) {
+        if (profileInfo?.data?.role === "DRIVER") {
+          setRole("driver");
           router.push("/(driver)/(tabs)/home");
         }
         return;

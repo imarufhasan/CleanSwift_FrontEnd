@@ -12,13 +12,13 @@ import GoogleButton from "../components/GoogleButton";
 import { useLoginMutation } from "@/src/services/authApi";
 import * as SecureStore from "expo-secure-store";
 import ShowMessage from "@/constants/toast";
-import { setTokens } from "@/src/services/storage/tokenStorage";
+import { clearTokens, setTokens } from "@/src/services/storage/tokenStorage";
 
 const Index: React.FC = () => {
   const router = useRouter();
 
-  const [email, setEmail] = useState("marufhasan60sta@gmail.com");
-  //const [email, setEmail] = useState("maruf.hasan@sparktechagency.com");
+  const [email, setEmail] = useState("marufhasan60sta@gmail.com"); //customer
+  //const [email, setEmail] = useState("maruf.hasan@sparktechagency.com"); //driver
   const [password, setPassword] = useState("123456");
   const [rememberMe, setRememberMe] = useState(false);
 
@@ -27,10 +27,12 @@ const Index: React.FC = () => {
   const handleLogin = async () => {
     try {
       const res = await login({ email, password }).unwrap();
+
+      await clearTokens();
       await setTokens(res.data.accessToken, res.data.refreshToken);
-      //console.log("access_token: ", res.data.accessToken);
+      //setToken(res.data.accessToken);
+
       ShowMessage.show(res?.message || "Login Success");
-      // Navigate
       router.push("/(auth)/enableLocation");
     } catch (err: any) {
       ShowMessage.show(err?.data?.message || "Login failed");

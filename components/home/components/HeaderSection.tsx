@@ -28,7 +28,7 @@ export default function HeaderSection({
 }: Props) {
   const router = useRouter();
 
-  console.log("profileInfo: ", profileInfo);
+  // console.log("profileInfo: ", profileInfo);
   
 
   return (

@@ -22,6 +22,7 @@ import SelectRole from "../selectRole";
 const EnableLocation: React.FC = () => {
   const router = useRouter();
   const role = useUserInfo((state) => state.role);
+  const token = useUserInfo((state) => state.accessToken);
   const setRole = useUserInfo((state) => state.setRole);
 
   const { data: profileInfo, error, isLoading } = useProfileInfoQuery();
@@ -35,12 +36,6 @@ const EnableLocation: React.FC = () => {
     Platform.OS === "android"
       ? PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION
       : PERMISSIONS.IOS.LOCATION_WHEN_IN_USE;
-
-  useEffect(() => {
-    if (profileInfo) {
-      console.log("Profile:", profileInfo?.data?.role);
-    }
-  }, [profileInfo]);
 
   useEffect(() => {
     const checkPermission = async () => {
@@ -86,14 +81,19 @@ const EnableLocation: React.FC = () => {
       }
 
       if (currentStatus === RESULTS.GRANTED) {
-        console.log("user role: ", role);
 
-        if (profileInfo?.data?.role === "CUSTOMER") {
-          setRole("customer");
+        console.log("role local: ", role);
+        console.log("token local: ", token);
+        
+        
+        console.log("profile user role: ", profileInfo);
+
+        if (role === "CUSTOMER") {
+          setRole("CUSTOMER");
           router.push("/(customer)/(tabs)/home");
         }
-        if (profileInfo?.data?.role === "DRIVER") {
-          setRole("driver");
+        if (role === "DRIVER") {
+          setRole("DRIVER");
           router.push("/(driver)/(tabs)/home");
         }
         return;

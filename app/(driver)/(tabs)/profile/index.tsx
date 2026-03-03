@@ -14,6 +14,10 @@ import { useRouter } from "expo-router";
 import Toast from "@/constants/toast";
 import ShowMessage from "@/constants/toast";
 import { useUserInfo } from "@/src/core/store/userInfo";
+import { clearTokens } from "@/src/services/storage/tokenStorage";
+import { api } from "@/src/services/api";
+import { useProfileInfoQuery } from "@/src/services/authApi";
+import * as SecureStore from "expo-secure-store";
 
 const menuItems = [
   { label: "Profile Setting", icon: "person-outline" },
@@ -28,11 +32,13 @@ const menuItems = [
 
 export default function Profile() {
   const router = useRouter();
+  const { data: profileInfo, error, isLoading } = useProfileInfoQuery();
+
   const [refreshing, setRefreshing] = useState(false);
   const [logoutModal, setLogoutModal] = useState(false);
   const role = useUserInfo((state) => state.role);
   const setRole = useUserInfo((state) => state.setRole);
-  const clearUser = useUserInfo((state) => state.clearUser);
+  const clearUser = useUserInfo((state) => state.clearAuth);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -41,6 +47,15 @@ export default function Profile() {
       ShowMessage.show("updated");
     }, 1500);
   }, []);
+
+  const logout = async () => {
+    await SecureStore.deleteItemAsync("accessToken");
+    await SecureStore.deleteItemAsync("refreshToken");
+    setLogoutModal(false);
+    router.replace("/(auth)/login");
+    clearUser();
+    ShowMessage.show("Logged out successfully");
+  };
 
   return (
     <View className="flex-1 bg-gray-100">
@@ -69,8 +84,12 @@ export default function Profile() {
               onPress={() => router.push("/profileSettings")}
               className="ml-3 flex-1"
             >
-              <Text className="text-white text-2xl font-bold">Ali Amin</Text>
-              <Text className="text-white/80 text-sm">aliamin@gmail.com</Text>
+              <Text className="text-white text-2xl font-bold">
+                {profileInfo?.data?.name}
+              </Text>
+              <Text className="text-white/80 text-sm">
+                {profileInfo?.data?.email}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -235,12 +254,7 @@ export default function Profile() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  onPress={() => {
-                    setLogoutModal(false);
-                    ShowMessage.show("Logged out successfully");
-                    router.replace("/(auth)/login");
-                    clearUser();
-                  }}
+                  onPress={() => logout()}
                   className="flex-1 bg-green-500 rounded-2xl py-3"
                 >
                   <Text className="text-white text-[20px] text-center font-semibold">

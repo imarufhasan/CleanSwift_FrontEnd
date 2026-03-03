@@ -5,6 +5,14 @@ export interface LoginResponse {
   data: {
     accessToken: string;
     refreshToken: string;
+    user: {
+      _id: string;
+      name: string;
+      phone: string;
+      email: string;
+      image: string;
+      role: string;
+    };
   };
 }
 

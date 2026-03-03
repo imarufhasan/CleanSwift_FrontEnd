@@ -9,33 +9,81 @@ import AuthText from "@/app/(auth)/components/AuthText";
 import { AUTH_DATA } from "@/constants/auth";
 import { Ionicons } from "@expo/vector-icons";
 import GoogleButton from "../components/GoogleButton";
-import { useLoginMutation } from "@/src/services/authApi";
+import { useLoginMutation, useProfileInfoQuery } from "@/src/services/authApi";
 import * as SecureStore from "expo-secure-store";
 import ShowMessage from "@/constants/toast";
-import { clearTokens, setTokens } from "@/src/services/storage/tokenStorage";
+import {
+  clearTokens,
+  getAccessToken,
+  setTokens,
+} from "@/src/services/storage/tokenStorage";
+import {
+  checkInternetConnection,
+  checkServerConnection,
+} from "@/src/utils/networkCheck";
+import { api } from "@/src/services/api";
+import { UserRole, useUserInfo } from "@/src/core/store/userInfo";
 
 const Index: React.FC = () => {
   const router = useRouter();
+  const [login, { isLoading, error, data }] = useLoginMutation();
 
   const [email, setEmail] = useState("marufhasan60sta@gmail.com"); //customer
   //const [email, setEmail] = useState("maruf.hasan@sparktechagency.com"); //driver
   const [password, setPassword] = useState("123456");
   const [rememberMe, setRememberMe] = useState(false);
-
-  const [login, { isLoading, error, data }] = useLoginMutation();
+  const setRole = useUserInfo((state) => state.setRole);
+  const setTokens = useUserInfo((state) => state.setTokens);
+  const [loader, setLoader] = useState(false);
 
   const handleLogin = async () => {
     try {
-      const res = await login({ email, password }).unwrap();
+      setLoader(true);
+      // 1️⃣ Check Internet
+      const hasInternet = await checkInternetConnection();
+      if (!hasInternet) {
+        ShowMessage.show("No internet connection");
+        return;
+      }
 
-      await clearTokens();
-      await setTokens(res.data.accessToken, res.data.refreshToken);
-      //setToken(res.data.accessToken);
+      // 2️⃣ Check Server
+      const serverUp = await checkServerConnection();
+      console.log("serverUp: ", serverUp);
+
+      if (!serverUp) {
+        ShowMessage.show("Server is unavailable. Please try later.");
+        return;
+      }
+
+      const res = await login({ email, password }).unwrap();
+      const login_res_role = res?.data?.user?.role;
+
+      console.log("login_res role: ", login_res_role);
+      console.log("login_res token: ", res.data.accessToken);
+      setRole(login_res_role as UserRole);
+      setTokens(res.data.accessToken, res.data.refreshToken);
+
+      await SecureStore.deleteItemAsync("accessToken");
+      await SecureStore.deleteItemAsync("refreshToken");
+
+      await SecureStore.setItemAsync("accessToken", res.data.accessToken);
+      await SecureStore.setItemAsync("refreshToken", res.data.refreshToken);
+
+      api.util.resetApiState();
+
+      // const profileResponse = useProfileInfoQuery();
+      // if (profileResponse?.data?.role) {
+      //   const userRole = profileResponse.data.role;
+      //   console.log("userRole from profile api: ", profileResponse);
+      //   setRole(userRole);
+      // }
 
       ShowMessage.show(res?.message || "Login Success");
       router.push("/(auth)/enableLocation");
     } catch (err: any) {
       ShowMessage.show(err?.data?.message || "Login failed");
+    } finally {
+      setLoader(false);
     }
   };
 
@@ -88,9 +136,10 @@ const Index: React.FC = () => {
         </View>
 
         <Button
-          label={isLoading ? "Logging in..." : "Login"}
+          label={loader ? "Logging in..." : "Login"}
           onPress={handleLogin}
-          disabled={isLoading}
+          disabled={loader}
+          loading={loader}
         />
       </View>
 

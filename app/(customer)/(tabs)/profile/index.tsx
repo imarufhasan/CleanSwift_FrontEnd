@@ -15,6 +15,8 @@ import Toast from "@/constants/toast";
 import ShowMessage from "@/constants/toast";
 import { useUserInfo } from "@/src/core/store/userInfo";
 import { useProfileInfoQuery } from "@/src/services/authApi";
+import { clearTokens } from "@/src/services/storage/tokenStorage";
+import { api } from "@/src/services/api";
 
 const menuItems = [
   { label: "Profile Setting", icon: "person-outline" },
@@ -34,7 +36,7 @@ export default function Profile() {
   const [logoutModal, setLogoutModal] = useState(false);
   const role = useUserInfo((state) => state.role);
   const setRole = useUserInfo((state) => state.setRole);
-  const clearUser = useUserInfo((state) => state.clearUser);
+  const clearUser = useUserInfo((state) => state.clearAuth);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -44,7 +46,9 @@ export default function Profile() {
     }, 1500);
   }, []);
 
-  const logout = () => {
+  const logout = async () => {
+    await clearTokens();
+    api.util.resetApiState();
     setLogoutModal(false);
     router.replace("/(auth)/login");
     clearUser();

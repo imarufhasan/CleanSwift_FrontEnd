@@ -1,21 +1,39 @@
 import { create } from "zustand";
-import { UserInfo, UserRole } from "../types/user";
+
+export type UserRole = "CUSTOMER" | "DRIVER" | "ADMIN";
+
+export interface UserInfo {
+  role: UserRole | null;
+  accessToken: string | null;
+  refreshToken: string | null;
+}
 
 interface UserInfoState extends UserInfo {
-  setRole: (role: UserRole) => void;
-  clearUser: () => void;
+  setRole: (role: UserRole | null) => void;
+  setTokens: (accessToken: string, refreshToken: string) => void;
+  clearAuth: () => void;
 }
 
 export const useUserInfo = create<UserInfoState>((set) => ({
   role: null,
+  accessToken: null,
+  refreshToken: null,
 
   setRole: (role) =>
     set(() => ({
       role,
     })),
 
-  clearUser: () =>
+  setTokens: (accessToken, refreshToken) =>
+    set(() => ({
+      accessToken,
+      refreshToken,
+    })),
+
+  clearAuth: () =>
     set(() => ({
       role: null,
+      accessToken: null,
+      refreshToken: null,
     })),
 }));

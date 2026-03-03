@@ -1,12 +1,17 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import * as SecureStore from "expo-secure-store";
 import { getAccessToken } from "./storage/tokenStorage";
+import { BASE_URL } from "../constants/api";
+import { useUserInfo } from "../core/store/userInfo";
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: "http://10.10.20.30:6000/api/v1",
+  baseUrl: BASE_URL,
   prepareHeaders: async (headers) => {
-    const token = await getAccessToken();
-
+    const token = useUserInfo((state) => state.accessToken);
+    console.log("api call token: ", token);
+    console.log("headers: ", headers);
+    
+    
     if (token) {
       headers.set("Authorization", `Bearer ${token}`);
     }

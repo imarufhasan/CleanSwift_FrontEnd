@@ -7,7 +7,8 @@ import { useUserInfo } from "../core/store/userInfo";
 const baseQuery = fetchBaseQuery({
   baseUrl: BASE_URL,
   prepareHeaders: async (headers) => {
-    const token = useUserInfo((state) => state.accessToken);
+    //const token = getAccessToken();
+    const token = await SecureStore.getItemAsync("accessToken");
     console.log("api call token: ", token);
     console.log("headers: ", headers);
     

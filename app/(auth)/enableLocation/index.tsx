@@ -15,14 +15,18 @@ import {
 import { Dimensions } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useUserInfo } from "@/src/core/store/userInfo";
+import { UserRole, useUserInfo } from "@/src/core/store/userInfo";
 import { useProfileInfoQuery } from "@/src/services/authApi";
 import SelectRole from "../selectRole";
+import * as SecureStore from "expo-secure-store";
+import { ACCESS_KEY, REFRESH_KEY } from "@/src/services/storage/tokenStorage";
 
 const EnableLocation: React.FC = () => {
   const router = useRouter();
   const role = useUserInfo((state) => state.role);
   const token = useUserInfo((state) => state.accessToken);
+  const [roleData, setRoleData] = useState("");
+  const [tokenData, setTokenData] = useState("");
   const setRole = useUserInfo((state) => state.setRole);
 
   const { data: profileInfo, error, isLoading } = useProfileInfoQuery();
@@ -38,6 +42,13 @@ const EnableLocation: React.FC = () => {
       : PERMISSIONS.IOS.LOCATION_WHEN_IN_USE;
 
   useEffect(() => {
+
+    const getRoleAndToken = async () => {
+      const role = await SecureStore.getItemAsync(ACCESS_KEY);
+      const token = await SecureStore.getItemAsync(REFRESH_KEY);
+      setRoleData(role as string);
+      setTokenData(token as string);
+    }
     const checkPermission = async () => {
       const result = await check(LOCATION_PERMISSION);
       if (result === RESULTS.GRANTED) {
@@ -53,6 +64,8 @@ const EnableLocation: React.FC = () => {
     };
 
     checkPermission();
+
+    getRoleAndToken();
 
     // Re-check when app comes back to foreground
     const subscription = AppState.addEventListener("change", (state) => {

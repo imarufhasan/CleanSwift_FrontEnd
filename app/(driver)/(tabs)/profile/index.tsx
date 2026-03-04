@@ -16,8 +16,8 @@ import ShowMessage from "@/constants/toast";
 import { useUserInfo } from "@/src/core/store/userInfo";
 import { clearTokens } from "@/src/services/storage/tokenStorage";
 import { api } from "@/src/services/api";
-import { useProfileInfoQuery } from "@/src/services/authApi";
 import * as SecureStore from "expo-secure-store";
+import { useProfileInfoQuery } from "@/src/services/authApi";
 
 const menuItems = [
   { label: "Profile Setting", icon: "person-outline" },
@@ -76,7 +76,7 @@ export default function Profile() {
               className="w-[70px] h-[70px]"
             >
               <Image
-                source={require("../../../../assets/images/profile.png")}
+              source={{ uri: profileInfo?.data?.image }}
                 className="w-[70px] h-[70px] rounded-full border-2 border-white"
               />
             </TouchableOpacity>

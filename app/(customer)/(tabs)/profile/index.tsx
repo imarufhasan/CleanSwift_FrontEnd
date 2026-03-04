@@ -17,6 +17,7 @@ import { useUserInfo } from "@/src/core/store/userInfo";
 import { useProfileInfoQuery } from "@/src/services/authApi";
 import { clearTokens } from "@/src/services/storage/tokenStorage";
 import { api } from "@/src/services/api";
+import * as SecureStore from "expo-secure-store";
 
 const menuItems = [
   { label: "Profile Setting", icon: "person-outline" },
@@ -47,8 +48,8 @@ export default function Profile() {
   }, []);
 
   const logout = async () => {
-    await clearTokens();
-    api.util.resetApiState();
+    await SecureStore.deleteItemAsync("accessToken");
+    await SecureStore.deleteItemAsync("refreshToken");
     setLogoutModal(false);
     router.replace("/(auth)/login");
     clearUser();

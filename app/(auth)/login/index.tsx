@@ -9,7 +9,7 @@ import AuthText from "@/app/(auth)/components/AuthText";
 import { AUTH_DATA } from "@/constants/auth";
 import { Ionicons } from "@expo/vector-icons";
 import GoogleButton from "../components/GoogleButton";
-import { useLoginMutation, useProfileInfoQuery } from "@/src/services/authApi";
+import { useLoginMutation } from "@/src/services/authApi";
 import * as SecureStore from "expo-secure-store";
 import ShowMessage from "@/constants/toast";
 import {

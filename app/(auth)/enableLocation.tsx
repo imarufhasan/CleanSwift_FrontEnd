@@ -17,7 +17,7 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { UserRole, useUserInfo } from "@/src/core/store/userInfo";
 import { useProfileInfoQuery } from "@/src/services/authApi";
-import SelectRole from "../selectRole";
+import SelectRole from "./selectRole";
 import * as SecureStore from "expo-secure-store";
 import { ACCESS_KEY, REFRESH_KEY } from "@/src/services/storage/tokenStorage";
 
@@ -96,10 +96,10 @@ const EnableLocation: React.FC = () => {
       if (currentStatus === RESULTS.GRANTED) {
 
         console.log("role local: ", role);
-        console.log("token local: ", token);
+        //console.log("token local: ", token);
         
         
-        console.log("profile user role: ", profileInfo);
+        //console.log("profile user role: ", profileInfo);
 
         if (role === "CUSTOMER") {
           setRole("CUSTOMER");

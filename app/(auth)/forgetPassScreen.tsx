@@ -13,7 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import Colors from "@/constants/color";
 import ShowMessage from "@/constants/toast";
-import OTPVerificationModal from "../components/Modals/Otpverificationmodal";
+import OTPVerificationModal from "./components/Modals/Otpverificationmodal";
 
 export default function ForgetPassScreen() {
   const router = useRouter();

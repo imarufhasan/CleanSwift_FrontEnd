@@ -8,21 +8,16 @@ import { Button } from "@/components/shared/Button";
 import AuthText from "@/app/(auth)/components/AuthText";
 import { AUTH_DATA } from "@/constants/auth";
 import { Ionicons } from "@expo/vector-icons";
-import GoogleButton from "../components/GoogleButton";
 import { useLoginMutation } from "@/src/services/authApi";
 import * as SecureStore from "expo-secure-store";
 import ShowMessage from "@/constants/toast";
-import {
-  clearTokens,
-  getAccessToken,
-  setTokens,
-} from "@/src/services/storage/tokenStorage";
 import {
   checkInternetConnection,
   checkServerConnection,
 } from "@/src/utils/networkCheck";
 import { api } from "@/src/services/api";
 import { UserRole, useUserInfo } from "@/src/core/store/userInfo";
+import GoogleButton from "./components/GoogleButton";
 
 const Index: React.FC = () => {
   const router = useRouter();

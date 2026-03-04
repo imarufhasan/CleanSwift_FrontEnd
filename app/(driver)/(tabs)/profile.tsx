@@ -18,7 +18,7 @@ import { clearTokens } from "@/src/services/storage/tokenStorage";
 import { api } from "@/src/services/api";
 import * as SecureStore from "expo-secure-store";
 import { useProfileInfoQuery } from "@/src/services/authApi";
-
+import { useDispatch } from "react-redux";
 const menuItems = [
   { label: "Profile Setting", icon: "person-outline" },
   { label: "Connect Stripe", icon: "card-outline" },
@@ -33,6 +33,7 @@ const menuItems = [
 export default function Profile() {
   const router = useRouter();
   const { data: profileInfo, error, isLoading } = useProfileInfoQuery();
+  const dispatch = useDispatch();
 
   const [refreshing, setRefreshing] = useState(false);
   const [logoutModal, setLogoutModal] = useState(false);
@@ -51,6 +52,7 @@ export default function Profile() {
   const logout = async () => {
     await SecureStore.deleteItemAsync("accessToken");
     await SecureStore.deleteItemAsync("refreshToken");
+    dispatch(api.util.resetApiState());
     setLogoutModal(false);
     router.replace("/(auth)/login");
     clearUser();
@@ -76,7 +78,7 @@ export default function Profile() {
               className="w-[70px] h-[70px]"
             >
               <Image
-              source={{ uri: profileInfo?.data?.image }}
+                source={{ uri: profileInfo?.data?.image }}
                 className="w-[70px] h-[70px] rounded-full border-2 border-white"
               />
             </TouchableOpacity>

@@ -19,17 +19,27 @@ export const authApi = api.injectEndpoints({
       }),
     }),
 
+    // /user/verify-signup-otp
+    verifyOTP: builder.mutation<any, any>({
+      query: (body) => ({
+        url: "/user/verify-signup-otp",
+        method: "POST",
+        body,
+      }),
+    }),
+
     profileInfo: builder.query<any, void>({
       query: () => ({
         url: "/user/profile",
         method: "GET",
-      })
-    })
+      }),
+    }),
   }),
 });
 
 export const {
   useLoginMutation,
   useRegisterMutation,
+  useVerifyOTPMutation,
   useProfileInfoQuery,
 } = authApi;

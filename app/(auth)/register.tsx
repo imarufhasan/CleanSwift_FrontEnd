@@ -11,47 +11,142 @@ import { AUTH_DATA } from "@/constants/auth";
 import ShowToast from "@/components/shared/ShowToast";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import useRegister from "../services/hooks/useRegister";
-import AuthText from "../components/AuthText";
-import GoogleButton from "../components/GoogleButton";
-import OTPVerificationModal from "../components/Modals/Otpverificationmodal";
+import useRegister from "./services/hooks/useRegister";
+import AuthText from "./components/AuthText";
+import OTPVerificationModal from "./components/Modals/Otpverificationmodal";
+import GoogleButton from "./components/GoogleButton";
+import {
+  useRegisterMutation,
+  useVerifyOTPMutation,
+} from "@/src/services/authApi";
+import ShowMessage from "@/constants/toast";
+import { UserRole, useUserInfo } from "@/src/core/store/userInfo";
+import * as SecureStore from "expo-secure-store";
+import { api } from "@/src/services/api";
 
 const Register = () => {
   const router = useRouter();
-  const {
-    fullName,
-    setFullName,
-    mobileNumber,
-    setMobileNumber,
-    email,
-    setEmail,
-    password,
-    setPassword,
-    agreedToTerms,
-    setAgreedToTerms,
-    loading,
-    error,
-    successMessage,
-    register,
-  } = useRegister();
 
+  const [register, { data, error: registerError, isLoading, isSuccess }] =
+    useRegisterMutation();
+
+  const [
+    verifyOTP,
+    { data: verifyOtpData, error: verifyOtpError, isLoading: verifyOtpLoading },
+  ] = useVerifyOTPMutation();
+
+  const [fullName, setFullName] = useState("");
+  const [mobileNumber, setMobileNumber] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isModalVisible, setModalVisible] = useState<boolean>(false);
-
-  // Open modal when registration succeeds
+  const [otpCode, setOtpCode] = useState<string>("");
+  const setRole = useUserInfo((state) => state.setRole);
+  const setTokens = useUserInfo((state) => state.setTokens);
   useEffect(() => {
     if (successMessage) {
       setModalVisible(true);
     }
   }, [successMessage]);
 
-  const handleRegisterClick = () => {
-    //register();
-    setModalVisible(true);
+  const handleRegisterClick = async () => {
+    if (!fullName || !mobileNumber || !email || !password) {
+      ShowMessage.error("All fields are required");
+      return;
+    }
+
+    if (!agreedToTerms) {
+      ShowMessage.error("Please agree to Terms and Policies");
+      return;
+    }
+
+    try {
+      const req = {
+        name: fullName,
+        phone: mobileNumber,
+        email,
+        password,
+      };
+      console.log("register_req_data: ", req);
+
+      const res = await register(req).unwrap();
+      console.log("register_res: ", res);
+
+      const message =
+        typeof res?.message === "string"
+          ? res.message
+          : res?.message?.text || "OTP sent successfully";
+
+      ShowMessage.success(message);
+
+      setModalVisible(true);
+    } catch (err: any) {
+      // RTK Query error format
+      let errorMsg = "Registration failed";
+
+      if (err?.data) {
+        if (typeof err.data === "string") errorMsg = err.data;
+        else if (err.data?.message) errorMsg = err.data.message;
+      } else if (err?.error) {
+        errorMsg = err.error;
+      }
+      console.log("errorMsg: ", errorMsg);
+
+      ShowMessage.error(errorMsg);
+      setError(errorMsg);
+    }
   };
 
-  const handleVerify = (code: string) => {
-    setModalVisible(false);
-    router.push("/(auth)/selectRole");
+  const handleVerify = async (code: string) => {
+    try {
+      const req = {
+        userEmail: email,
+        otp: otpCode,
+      };
+      console.log("register_req_data: ", req);
+
+      const res = await verifyOTP(req).unwrap();
+      console.log("verifyOTP_res: ", res);
+
+      const message =
+        typeof res?.message === "string"
+          ? res.message
+          : res?.message?.text || "OTP verified successfully!";
+
+      setRole(res?.data?.user?.role as UserRole);
+      setTokens(res?.data?.accessToken, res?.data?.refreshToken);
+
+      await SecureStore.deleteItemAsync("accessToken");
+      await SecureStore.deleteItemAsync("refreshToken");
+
+      await SecureStore.setItemAsync("accessToken", res.data.accessToken);
+      await SecureStore.setItemAsync("refreshToken", res.data.refreshToken);
+
+      api.util.resetApiState();
+
+      ShowMessage.success(message);
+      router.replace("/(driver)/(tabs)/home");
+
+      setModalVisible(false);
+    } catch (err: any) {
+      // RTK Query error format
+      let errorMsg = "Registration failed";
+
+      if (err?.data) {
+        if (typeof err.data === "string") errorMsg = err.data;
+        else if (err.data?.message) errorMsg = err.data.message;
+      } else if (err?.error) {
+        errorMsg = err.error;
+      }
+      console.log("errorMsg: ", errorMsg);
+
+      ShowMessage.error(errorMsg);
+      setError(errorMsg);
+    }
   };
 
   const handleResend = () => {
@@ -117,9 +212,9 @@ const Register = () => {
         </View>
 
         <Button
-          label={loading ? "Registering..." : "Register"}
+          label={isLoading ? "Registering..." : "Register"}
           onPress={handleRegisterClick}
-          disabled={loading}
+          disabled={isLoading}
         />
       </View>
 
@@ -149,7 +244,9 @@ const Register = () => {
         onClose={() => setModalVisible(false)}
         onVerify={handleVerify}
         onResend={handleResend}
-        resendTimerSeconds={60}
+        resendTimerSeconds={300}
+        setParentCode={setOtpCode}
+        code={otpCode}
       />
 
       {error || successMessage ? (

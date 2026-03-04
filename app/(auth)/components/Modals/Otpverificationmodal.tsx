@@ -9,36 +9,39 @@ import ResendCode from "@/components/shared/ResentCode";
 interface OTPVerificationModalProps {
   isVisible: boolean;
   onClose: () => void;
-
   onVerify: (code: string) => void;
-
   resendTimerSeconds?: number;
-
   onResend?: () => void;
+  // new prop
+  setParentCode?: (code: string) => void;
+  code?: string; // optional, if parent wants to control
 }
 
 const OTPVerificationModal: React.FC<OTPVerificationModalProps> = ({
   isVisible,
   onClose,
   onVerify,
-  resendTimerSeconds = 60,
+  resendTimerSeconds = 300,
   onResend,
+  setParentCode, // renamed
+  code,
 }) => {
-  const [code, setCode] = useState<string>("");
+  const [internalCode, setInternalCode] = useState<string>(""); // local state
   const otpRef = useRef<OTPInputHandle>(null);
 
   useEffect(() => {
     if (isVisible) {
-      setCode("");
+      setInternalCode("");
+      if (setParentCode) setParentCode(""); // reset parent code
       setTimeout(() => otpRef.current?.reset(), 100);
     }
   }, [isVisible]);
 
   const handleContinue = () => {
-    if (code.length === 6) onVerify(code);
+    if (internalCode.length === 6) onVerify(internalCode);
   };
 
-  const isFilled = code.length === 6;
+  const isFilled = internalCode.length === 6;
 
   return (
     <BottomModal isVisible={isVisible} onClose={onClose}>
@@ -50,8 +53,15 @@ const OTPVerificationModal: React.FC<OTPVerificationModalProps> = ({
       <OTPInput
         ref={otpRef}
         length={6}
-        onComplete={(fullCode) => setCode(fullCode)}
-        onChange={(digits) => setCode(digits.join(""))}
+        onComplete={(fullCode) => {
+          setInternalCode(fullCode); // update local
+          if (setParentCode) setParentCode(fullCode); // update parent
+        }}
+        onChange={(digits) => {
+          const joined = digits.join("");
+          setInternalCode(joined);
+          if (setParentCode) setParentCode(joined);
+        }}
       />
 
       <ResendCode

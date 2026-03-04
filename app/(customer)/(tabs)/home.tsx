@@ -15,10 +15,10 @@ import RequestPickupModal from "@/components/home/RequestPickupModal";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import ShowMessage from "@/constants/toast";
 import { useProfileInfoQuery } from "@/src/services/authApi";
-import HeaderSection from "../../../../components/home/components/HeaderSection";
-import ActiveOrderCard from "../../../../components/home/components/ActiveOrderCard";
-import RecentOrdersList from "../../../../components/home/components/RecentOrdersList";
 import RequestPickupCard from "@/components/home/components/RequestPickupCard";
+import HeaderSection from "@/components/home/components/HeaderSection";
+import ActiveOrderCard from "@/components/home/components/ActiveOrderCard";
+import RecentOrdersList from "@/components/home/components/RecentOrdersList";
 
 export default function HomeScreen() {
   const router = useRouter();

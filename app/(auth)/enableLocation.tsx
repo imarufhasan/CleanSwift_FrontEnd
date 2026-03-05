@@ -29,7 +29,7 @@ const EnableLocation: React.FC = () => {
   const [tokenData, setTokenData] = useState("");
   const setRole = useUserInfo((state) => state.setRole);
 
-  const { data: profileInfo, error, isLoading } = useProfileInfoQuery();
+  const { data: profileInfo, error, isLoading } = useProfileInfoQuery();  
 
   const { width } = Dimensions.get("window");
   const { height } = Dimensions.get("window");

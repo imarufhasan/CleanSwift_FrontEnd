@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import BaseContainer from "@/components/shared/BaseContainer";
 import { useRouter } from "expo-router";
@@ -18,6 +18,7 @@ import {
 import { api } from "@/src/services/api";
 import { UserRole, useUserInfo } from "@/src/core/store/userInfo";
 import GoogleButton from "./components/GoogleButton";
+import { ACCESS_KEY } from "@/src/services/storage/tokenStorage";
 
 const Index: React.FC = () => {
   const router = useRouter();
@@ -32,6 +33,8 @@ const Index: React.FC = () => {
   const setUserInfo = useUserInfo((state) => state.setUserInfo);
   const [loader, setLoader] = useState(false);
   const { userInfo } = useUserInfo();
+  // const token = useUserInfo((state) => state.accessToken);
+  // const role = useUserInfo((state) => state.role);
 
   const handleLogin = async () => {
     try {
@@ -51,35 +54,48 @@ const Index: React.FC = () => {
       const res = await login({ email, password }).unwrap();
       const login_res_role = res?.data?.user?.role;
 
-      console.log("login_res role: ", login_res_role);
-      console.log("login_res token: ", res.data.accessToken);
+      console.log("login_res: ", res);
       setRole(login_res_role as UserRole);
       setTokens(res?.data?.accessToken, res?.data?.refreshToken);
-      //setUserInfo(res?.data?.user);
 
       await SecureStore.deleteItemAsync("accessToken");
       await SecureStore.deleteItemAsync("refreshToken");
-
       await SecureStore.setItemAsync("accessToken", res.data.accessToken);
       await SecureStore.setItemAsync("refreshToken", res.data.refreshToken);
 
       api.util.resetApiState();
 
-      // const profileResponse = useProfileInfoQuery();
-      // if (profileResponse?.data?.role) {
-      //   const userRole = profileResponse.data.role;
-      //   console.log("userRole from profile api: ", profileResponse);
-      //   setRole(userRole);
-      // }
-
       ShowMessage.show(res?.message || "Login Success");
+
       router.push("/(auth)/enableLocation");
+      const token = useUserInfo.getState().accessToken;
+      console.log("local token 2: ", token);
     } catch (err: any) {
       ShowMessage.show(err?.data?.message || "Login failed");
     } finally {
       setLoader(false);
     }
   };
+
+  useEffect(() => {
+    // if (token) {
+    //   console.log("logout token: ", token);
+    // } else {
+    //   console.log("logout token: ", "nothing");
+    // }
+
+    // if (role) {
+    //   console.log("logout role: ", role);
+    // } else {
+    //   console.log("logout role: ", "nothing");
+    // }
+    const getAuthInfo = async () => {
+      const token = await SecureStore.getItemAsync(ACCESS_KEY);
+      console.log("token logout: ", token);
+      
+    }
+    getAuthInfo();
+  }, []);
 
   return (
     <BaseContainer>

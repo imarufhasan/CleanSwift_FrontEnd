@@ -21,11 +21,11 @@ const SelectRole = () => {
     //
     console.log("Proceeding as:", selectedRole);
     if (selectedRole === "driver") {
-      setRole("driver");
+      //setRole("driver");
       router.push("./driverRegistration");
     }
     if (selectedRole === "customer") {
-      setRole("customer");
+      //setRole("customer");
       router.push("/(auth)/enableLocation");
     }
   };

@@ -54,6 +54,11 @@ export default function Profile() {
     router.replace("/(auth)/login");
     clearUser();
     ShowMessage.show("Logged out successfully");
+
+    // const token = useUserInfo((state) => state.accessToken);
+    // console.log("logout token: ", token);
+    // const role = useUserInfo((state) => state.role);
+    // console.log("logout role: ", role);
   };
 
   return (

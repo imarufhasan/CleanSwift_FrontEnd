@@ -129,7 +129,8 @@ const Register = () => {
       api.util.resetApiState();
 
       ShowMessage.success(message);
-      router.replace("/(driver)/(tabs)/home");
+      //router.replace("/(driver)/(tabs)/home");
+      router.push("/(auth)/selectRole");
 
       setModalVisible(false);
     } catch (err: any) {

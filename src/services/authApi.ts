@@ -28,6 +28,33 @@ export const authApi = api.injectEndpoints({
       }),
     }),
 
+    // forget pass
+    forgetpassword: builder.mutation<any, any>({
+      query: (body) => ({
+        url: "/user/forgot-password",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    // /user/verify-forgot-password-otp
+    verifyForgetPassOtp: builder.mutation<any, any>({
+      query: (body) => ({
+        url: "/user/verify-forgot-password-otp",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    // user/reset-password
+    resetPassword: builder.mutation<any, any>({
+      query: (body) => ({
+        url: "/user/reset-password",
+        method: "POST",
+        body,
+      }),
+    }),
+
     profileInfo: builder.query<any, void>({
       query: () => ({
         url: "/user/profile",
@@ -41,5 +68,8 @@ export const {
   useLoginMutation,
   useRegisterMutation,
   useVerifyOTPMutation,
+  useForgetpasswordMutation,
+  useVerifyForgetPassOtpMutation,
+  useResetPasswordMutation,
   useProfileInfoQuery,
 } = authApi;

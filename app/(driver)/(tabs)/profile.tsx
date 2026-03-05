@@ -241,7 +241,7 @@ export default function Profile() {
         >
           <View className="flex-1 justify-center items-center bg-black/50">
             <View className="bg-white rounded-2xl p-8 w-[90%]">
-              <Text className="text-black text-[22px] font-bold text-center">
+              <Text className="text-black text-[18px] font-bold text-center">
                 Are you sure Logout your Profile?
               </Text>
 

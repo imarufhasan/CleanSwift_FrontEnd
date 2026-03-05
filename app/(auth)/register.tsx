@@ -234,7 +234,7 @@ const Register = () => {
         <Text className="text-[#7d848d] text-base">
           Already have an account?{" "}
         </Text>
-        <TouchableOpacity onPress={() => router.replace("/")}>
+        <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
           <Text className="text-[#1a1c1e] text-base font-bold">Login</Text>
         </TouchableOpacity>
       </View>

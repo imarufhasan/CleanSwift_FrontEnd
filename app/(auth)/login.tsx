@@ -25,26 +25,24 @@ const Index: React.FC = () => {
 
   const [email, setEmail] = useState("marufhasan60sta@gmail.com"); //customer
   //const [email, setEmail] = useState("maruf.hasan@sparktechagency.com"); //driver
-  const [password, setPassword] = useState("123456");
+  const [password, setPassword] = useState("1234567");
   const [rememberMe, setRememberMe] = useState(false);
   const setRole = useUserInfo((state) => state.setRole);
   const setTokens = useUserInfo((state) => state.setTokens);
+  const setUserInfo = useUserInfo((state) => state.setUserInfo);
   const [loader, setLoader] = useState(false);
+  const { userInfo } = useUserInfo();
 
   const handleLogin = async () => {
     try {
       setLoader(true);
-      // 1️⃣ Check Internet
       const hasInternet = await checkInternetConnection();
       if (!hasInternet) {
         ShowMessage.show("No internet connection");
         return;
       }
-
-      // 2️⃣ Check Server
       const serverUp = await checkServerConnection();
       console.log("serverUp: ", serverUp);
-
       if (!serverUp) {
         ShowMessage.show("Server is unavailable. Please try later.");
         return;
@@ -56,7 +54,8 @@ const Index: React.FC = () => {
       console.log("login_res role: ", login_res_role);
       console.log("login_res token: ", res.data.accessToken);
       setRole(login_res_role as UserRole);
-      setTokens(res.data.accessToken, res.data.refreshToken);
+      setTokens(res?.data?.accessToken, res?.data?.refreshToken);
+      //setUserInfo(res?.data?.user);
 
       await SecureStore.deleteItemAsync("accessToken");
       await SecureStore.deleteItemAsync("refreshToken");

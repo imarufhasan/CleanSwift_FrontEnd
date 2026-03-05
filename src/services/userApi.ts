@@ -3,8 +3,10 @@ import { api } from "./api";
 export const userApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getProfile: builder.query<any, void>({
-      query: () => "/user/profile",
-      providesTags: ["User"],
+      query: () => ({
+        url: "/user/profile",
+        method: "GET",
+      }),
     }),
 
     updateProfile: builder.mutation<any, any>({
@@ -13,12 +15,8 @@ export const userApi = api.injectEndpoints({
         method: "PUT",
         body,
       }),
-      invalidatesTags: ["User"],
     }),
   }),
 });
 
-export const {
-  useGetProfileQuery,
-  useUpdateProfileMutation,
-} = userApi;
+export const { useGetProfileQuery, useUpdateProfileMutation } = userApi;

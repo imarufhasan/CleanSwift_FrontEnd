@@ -19,11 +19,12 @@ import RequestPickupCard from "@/components/home/components/RequestPickupCard";
 import HeaderSection from "@/components/home/components/HeaderSection";
 import ActiveOrderCard from "@/components/home/components/ActiveOrderCard";
 import RecentOrdersList from "@/components/home/components/RecentOrdersList";
+import { getAccessToken } from "@/src/services/storage/tokenStorage";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { data: profileInfo, error, isLoading } = useProfileInfoQuery();
-
+  const userInfo = getAccessToken();
   const [refreshing, setRefreshing] = useState(false);
   const [bottomModal, setBottomModal] = useState(false);
   const [confirmed, setConfirmed] = useState(false);

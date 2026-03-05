@@ -11,18 +11,6 @@ export const checkInternetConnection = async () => {
   return true;
 };
 
-// export const checkServerConnection = async () => {
-//   try {
-//     const response = await fetch("http://10.10.20.30:7000", {
-//       method: "GET",
-//     });
-
-//     return response.ok;
-//   } catch (error) {
-//     return false;
-//   }
-// };
-
 export const checkServerConnection = async () => {
   try {
     // First check internet

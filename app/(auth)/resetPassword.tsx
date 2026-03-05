@@ -9,16 +9,45 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { PasswordInput } from "@/components/shared/PasswordField";
 import ShowMessage from "@/constants/toast";
+import { useResetPasswordMutation } from "@/src/services/authApi";
 
 export default function Index() {
   const router = useRouter();
+  const [resetPassword, { isLoading }] = useResetPasswordMutation();
+  const { resetPasswordToken } = useLocalSearchParams();
   const [isModalVisible, setModalVisible] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passMatch, setpassMatch] = useState(false);
+
+  const handlerResetPassword = async () => {
+    // if (!passMatch) {
+    //   ShowMessage.show("Passwords do not match");
+    //   return;
+    // }
+    // ShowMessage.show("Password updated successfully");
+    // router.replace("/(auth)/login");
+
+    try {
+      const req = {
+        resetPasswordToken: resetPasswordToken,
+        newPassword: newPassword,
+      };
+      const res = await resetPassword(req).unwrap();
+      if (res?.success) {
+        //setPasswordResetToken(res?.data?.token);
+        ShowMessage.success(res?.message);
+        router.replace("/(auth)/login");
+      } else {
+        ShowMessage.error("Something went wrong");
+      }
+    } catch (error: any) {
+      ShowMessage.error(error?.data?.message || "Something went wrong");
+    }
+  };
 
   useEffect(() => {
     if (!newPassword || !confirmPassword) {
@@ -84,15 +113,7 @@ export default function Index() {
           {/* Button INSIDE ScrollView */}
           <TouchableOpacity
             disabled={!passMatch}
-            onPress={() => {
-              if (!passMatch) {
-                ShowMessage.show("Passwords do not match");
-                return;
-              }
-
-              ShowMessage.show("Password updated successfully");
-              router.replace("/(auth)/login")
-            }}
+            onPress={handlerResetPassword}
             className={`py-4 rounded-xl items-center mb-4 ${
               passMatch ? "bg-blue-500" : "bg-blue-300"
             }`}

@@ -12,7 +12,7 @@ interface OTPVerificationModalProps {
   onVerify: (code: string) => void;
   resendTimerSeconds?: number;
   onResend?: () => void;
-  // new prop
+  loading?: boolean;
   setParentCode?: (code: string) => void;
   code?: string; // optional, if parent wants to control
 }
@@ -22,6 +22,7 @@ const OTPVerificationModal: React.FC<OTPVerificationModalProps> = ({
   onClose,
   onVerify,
   resendTimerSeconds = 300,
+  loading,
   onResend,
   setParentCode, // renamed
   code,

@@ -11,8 +11,8 @@ const baseQuery = fetchBaseQuery({
     const token = await SecureStore.getItemAsync(ACCESS_KEY);
     // const token = useUserInfo.getState().accessToken;
 
-    console.log("api call token: ", token);
-    console.log("headers: ", headers);
+    // console.log("api call token: ", token);
+    // console.log("headers: ", headers);
 
     if (token) {
       headers.set("Authorization", `Bearer ${token}`);

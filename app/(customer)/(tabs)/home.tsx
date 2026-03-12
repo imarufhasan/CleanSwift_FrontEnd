@@ -23,7 +23,9 @@ import { getAccessToken } from "@/src/services/storage/tokenStorage";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { data: profileInfo, error, isLoading } = useProfileInfoQuery();
+  const { data: profileInfo, error, isLoading, isFetching, refetch } = useProfileInfoQuery();
+  console.log("profileInfo custom home: ", profileInfo);
+  
   const userInfo = getAccessToken();
   const [refreshing, setRefreshing] = useState(false);
   const [bottomModal, setBottomModal] = useState(false);
@@ -98,6 +100,7 @@ export default function HomeScreen() {
     setRefreshing(true);
     setTimeout(() => {
       setRefreshing(false);
+      refetch();
       ShowMessage.show("updated");
     }, 1500);
   }, []);

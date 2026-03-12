@@ -20,7 +20,7 @@ export default function Index() {
   const isLoggedIn = false;
   const hasSeenOnboarding = false;
 
-  console.log("app token: ", token);
+  // console.log("app token: ", token);
 
   useEffect(() => {
     const prepare = async () => {

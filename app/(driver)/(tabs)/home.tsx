@@ -16,10 +16,18 @@ import RequestPickupModal from "@/components/home/RequestPickupModal";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import ShowMessage from "@/constants/toast";
 import TodayStats from "@/components/driver/home/TodayStats";
+import {
+  getAccessToken,
+  getRefreshToken,
+} from "@/src/services/storage/tokenStorage";
+import { useProfileInfoQuery } from "@/src/services/authApi";
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { data: profileInfo, error, isLoading } = useProfileInfoQuery();
 
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [bottomModal, setBottomModal] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
@@ -89,6 +97,21 @@ export default function HomeScreen() {
       },
     ],
   });
+
+  useEffect(() => {
+    const loadTokens = async () => {
+      const access = await getAccessToken();
+      const refresh = await getRefreshToken();
+
+      // console.log("home_Access:", access);
+      // console.log("home_Refresh:", refresh);
+
+      setAccessToken(access);
+      setRefreshToken(refresh);
+    };
+
+    loadTokens();
+  }, []);
 
   useEffect(() => {
     Animated.timing(progressAnim, {
@@ -197,7 +220,7 @@ export default function HomeScreen() {
             <View className="flex-1">
               <Text className="text-[16px] text-white/80">Welcome back,</Text>
               <Text className="text-[22px] font-bold text-white">
-                {data.user.name}
+                {profileInfo?.data?.name}
               </Text>
             </View>
 

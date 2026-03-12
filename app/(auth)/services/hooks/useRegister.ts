@@ -10,8 +10,7 @@ const useRegister = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-    const router = useRouter();
-  
+  const router = useRouter();
 
   const register = async () => {
     try {

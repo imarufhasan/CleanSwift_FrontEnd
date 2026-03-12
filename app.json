@@ -5,15 +5,10 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/AppIcon.png",
-    "statusBar": {
-      "barStyle": "dark-content",
-      "backgroundColor": "transparent",
-      "translucent": true
-    },
     "splash": {
       "image": "./assets/images/transparent.png",
       "resizeMode": "contain",
-      "backgroundColor": "#fcac21"
+      "backgroundColor": "#ffffff"
     },
     "scheme": "cleanswift",
     "userInterfaceStyle": "automatic",
@@ -28,23 +23,13 @@
       }
     },
     "android": {
-      "navigationBar": {
-        "backgroundColor": "transparent",
-        "translucent": true
-      },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.ayonghosh.CleanSwift",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
-      ],
-      "statusBar": {
-        "backgroundColor": "transparent",
-        "translucent": true
-      }
+        "ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -62,7 +47,8 @@
           "isAndroidBackgroundLocationEnabled": false
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true

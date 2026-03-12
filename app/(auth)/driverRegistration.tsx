@@ -8,10 +8,10 @@ import { useRouter } from "expo-router";
 import ShowMessage from "@/constants/toast";
 import SvgIcon from "@/components/shared/svgIcon";
 import doneIcon from "@/assets/images/auth/done.svg";
-import DriverLicense from "../components/DriverLicense";
-import SelfiePhoto from "../components/SelfiePhoto";
-import CarInsurance from "../components/CarInsurance";
-import VehicleDetails from "../components/VehicleDetails";
+import DriverLicense from "./components/DriverLicense";
+import SelfiePhoto from "./components/SelfiePhoto";
+import CarInsurance from "./components/CarInsurance";
+import VehicleDetails from "./components/VehicleDetails";
 
 const DriverRegistration: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);

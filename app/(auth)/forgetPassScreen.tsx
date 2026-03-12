@@ -13,22 +13,70 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import Colors from "@/constants/color";
 import ShowMessage from "@/constants/toast";
-import OTPVerificationModal from "../components/Modals/Otpverificationmodal";
+import OTPVerificationModal from "./components/Modals/Otpverificationmodal";
+import {
+  useForgetpasswordMutation,
+  useVerifyForgetPassOtpMutation,
+} from "@/src/services/authApi";
 
 export default function ForgetPassScreen() {
   const router = useRouter();
+  const [forgetPassword, { isLoading }] = useForgetpasswordMutation();
+  const [verifyForgetPassOtp, { isLoading: verifyForgetPassOtpLoading }] =
+    useVerifyForgetPassOtpMutation();
   const [email, setEmail] = useState("");
+  const [passwordResetToken, setPasswordResetToken] = useState("");
+  const [otpCode, setOtpCode] = useState("");
   const [isModalVisible, setModalVisible] = useState(false);
-
-  const handleVerify = (code: string) => {
-    setModalVisible(false);
-    router.push("/(auth)/resetPassword");
-  };
 
   const isValidEmail = (value: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
   const emailValid = isValidEmail(email);
+
+  const handleSendOtp = async () => {
+    try {
+      const res = await forgetPassword({ email }).unwrap();
+      if (res?.success) {
+        setPasswordResetToken(res?.data?.token);
+        ShowMessage.success(res?.message || "OTP sent to your email");
+        setModalVisible(true);
+      } else {
+        ShowMessage.error("Something went wrong");
+      }
+    } catch (error: any) {
+      ShowMessage.error(error?.data?.message || "Something went wrong");
+    }
+  };
+
+  const handleVerify = async (code: string) => {
+    try {
+      const req = {
+        token: passwordResetToken,
+        otp: code,
+      };
+      console.log("verifyForgetPassOtp_req_data: ", req);
+      const res = await verifyForgetPassOtp(req).unwrap();
+      if (res?.success) {
+        ShowMessage.success(res?.message || "OTP verified successfully!");
+        setModalVisible(false);
+        router.replace({
+          pathname: "/(auth)/resetPassword",
+          params: {
+            resetPasswordToken: res?.data?.resetPasswordToken,
+          },
+        });
+      } else {
+        ShowMessage.error("Something went wrong");
+      }
+    } catch (error: any) {
+      ShowMessage.error(error?.data?.message || "Something went wrong");
+    }
+  };
+
+  const handleResend = () => {
+    console.log("Resend OTP triggered");
+  };
 
   return (
     <KeyboardAvoidingView
@@ -87,13 +135,19 @@ export default function ForgetPassScreen() {
 
           {/* Button INSIDE ScrollView */}
           <TouchableOpacity
-            disabled={!emailValid}
-            onPress={() => setModalVisible(true)}
+            disabled={!emailValid || isLoading}
+            onPress={handleSendOtp}
             className={`py-4 rounded-xl items-center mb-4 ${
               emailValid ? "bg-blue-500" : "bg-blue-300"
             }`}
           >
-            <Text className="text-white font-semibold text-lg">Send Otp</Text>
+            {isLoading ? (
+              <Text className="text-white font-semibold text-lg">
+                Sending...
+              </Text>
+            ) : (
+              <Text className="text-white font-semibold text-lg">Send OTP</Text>
+            )}
           </TouchableOpacity>
         </ScrollView>
 
@@ -101,8 +155,9 @@ export default function ForgetPassScreen() {
           isVisible={isModalVisible}
           onClose={() => setModalVisible(false)}
           onVerify={handleVerify}
-          onResend={() => console.log("Resend OTP")}
-          resendTimerSeconds={60}
+          loading={verifyForgetPassOtpLoading}
+          onResend={handleResend}
+          resendTimerSeconds={300}
         />
       </SafeAreaView>
     </KeyboardAvoidingView>

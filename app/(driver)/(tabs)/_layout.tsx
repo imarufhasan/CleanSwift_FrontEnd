@@ -10,7 +10,7 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="home/index"
+        name="home"
         options={{
           title: "Home",
           tabBarIcon: ({ color, size }) => (
@@ -20,7 +20,7 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="jobs/index"
+        name="jobs"
         options={{
           title: "Jobs",
           tabBarIcon: ({ color, size }) => (
@@ -29,7 +29,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="routes/index"
+        name="routes"
         options={{
           title: "Routes",
           tabBarIcon: ({ color, size }) => (
@@ -39,7 +39,7 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="message/index"
+        name="message"
         options={{
           title: "Message",
           tabBarIcon: ({ color, size }) => (
@@ -49,7 +49,7 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="profile/index"
+        name="profile"
         options={{
           title: "Profile",
           tabBarIcon: ({ color, size }) => (

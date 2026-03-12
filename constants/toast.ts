@@ -1,17 +1,34 @@
-import ShowToast from "@/components/shared/ShowToast";
 import { Platform, ToastAndroid, Alert } from "react-native";
 
+const formatMessage = (message: any): string => {
+  if (!message) return "Something went wrong";
+
+  if (typeof message === "string") return message;
+
+  if (typeof message === "object") {
+    if (message.message && typeof message.message === "string") {
+      return message.message;
+    }
+
+    return JSON.stringify(message);
+  }
+
+  return String(message);
+};
+
 const ShowMessage = {
-  show: (message : any, duration = "short") => {
+  show: (message: any, duration: "short" | "long" = "short") => {
+    const formattedMessage = formatMessage(message);
+
     if (Platform.OS === "android") {
       ToastAndroid.show(
-        message,
+        formattedMessage,
         duration === "long"
           ? ToastAndroid.LONG
           : ToastAndroid.SHORT
       );
     } else {
-      Alert.alert("", message);
+      Alert.alert("", formattedMessage);
     }
   },
 

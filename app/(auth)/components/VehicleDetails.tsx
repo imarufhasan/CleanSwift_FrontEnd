@@ -7,14 +7,14 @@ import {
   Platform,
 } from "react-native";
 import React, { useState } from "react";
-import BaseContainer from "@/components/shared/BaseContainer";
-import { GeneralText } from "@/components/shared/GeneralText";
-import SvgIcon from "@/components/shared/svgIcon";
 import VehicleDetailsIcon from "@/assets/images/auth/VehicleDetails.svg";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { Upload } from "lucide-react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import BaseContainer from "../../../components/shared/BaseContainer";
+import { GeneralText } from "../../../components/shared/GeneralText";
+import SvgIcon from "../../../components/shared/svgIcon";
 
 interface PickedFile {
   uri: string;

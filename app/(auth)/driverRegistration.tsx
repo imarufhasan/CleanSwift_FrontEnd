@@ -1,12 +1,10 @@
 import React, { useState } from "react";
 import { View, Text, ScrollView, Modal, TouchableOpacity } from "react-native";
-import Pagination from "@/components/shared/Pagination";
-import BaseContainer from "@/components/shared/BaseContainer";
-import { Button } from "@/components/shared/Button";
+import Pagination from "../../components/shared/Pagination";
+import { Button } from "../../components/shared/Button";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import ShowMessage from "@/constants/toast";
-import SvgIcon from "@/components/shared/svgIcon";
+import SvgIcon from "../../components/shared/svgIcon";
 import doneIcon from "@/assets/images/auth/done.svg";
 import DriverLicense from "./components/DriverLicense";
 import SelfiePhoto from "./components/SelfiePhoto";

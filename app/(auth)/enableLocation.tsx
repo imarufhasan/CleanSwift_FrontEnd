@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { View, Alert, AppState, Platform } from "react-native";
-import BaseContainer from "@/components/shared/BaseContainer";
-import { Button } from "@/components/shared/Button";
-import { GeneralText } from "@/components/shared/GeneralText";
-import SvgIcon from "@/components/shared/svgIcon";
+import { Button } from "../../components/shared/Button";
+import { GeneralText } from "../../components/shared/GeneralText";
+import SvgIcon from "../../components/shared/svgIcon";
 import enableLocationSvg from "@/assets/images/auth/enable-location.svg";
 import {
   request,
@@ -15,11 +14,11 @@ import {
 import { Dimensions } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { UserRole, useUserInfo } from "@/src/core/store/userInfo";
-import { useProfileInfoQuery } from "@/src/services/authApi";
+import { useUserInfo } from "../../src/core/store/userInfo";
+import { useProfileInfoQuery } from "../../src/services/authApi";
 import SelectRole from "./selectRole";
 import * as SecureStore from "expo-secure-store";
-import { ACCESS_KEY, REFRESH_KEY } from "@/src/services/storage/tokenStorage";
+import { ACCESS_KEY, REFRESH_KEY } from "../../src/services/storage/tokenStorage";
 
 const EnableLocation: React.FC = () => {
   const router = useRouter();
@@ -159,7 +158,10 @@ const EnableLocation: React.FC = () => {
 
       {/* Bottom button */}
       <View className="pb-6">
-        <Button label={buttonLabel} onPress={requestPermission} />
+        <Button label={buttonLabel} 
+        // onPress={requestPermission} 
+        onPress={() => router.push("/(customer)/(tabs)/home")} 
+        />
       </View>
     </SafeAreaView>
   );

@@ -1,28 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
-import BaseContainer from "@/components/shared/BaseContainer";
-import { FullNameInput } from "@/components/shared/FullNameField";
-import { MobileNumberInput } from "@/components/shared/PhoneNumberField";
-import { EmailInput } from "@/components/shared/EmailField";
-import { PasswordInput } from "@/components/shared/PasswordField";
-import { Button } from "@/components/shared/Button";
-import { AUTH_DATA } from "@/constants/auth";
-import ShowToast from "@/components/shared/ShowToast";
+import BaseContainer from "../../components/shared/BaseContainer";
+import { FullNameInput } from "../../components/shared/FullNameField";
+import { MobileNumberInput } from "../../components/shared/PhoneNumberField";
+import { EmailInput } from "../../components/shared/EmailField";
+import { PasswordInput } from "../../components/shared/PasswordField";
+import { Button } from "../../components/shared/Button";
+import { AUTH_DATA } from "../../constants/auth";
+import ShowToast from "../../components/shared/ShowToast";
 import { Ionicons } from "@expo/vector-icons";
-import { SafeAreaView } from "react-native-safe-area-context";
-import useRegister from "./services/hooks/useRegister";
 import AuthText from "./components/AuthText";
 import OTPVerificationModal from "./components/Modals/Otpverificationmodal";
 import GoogleButton from "./components/GoogleButton";
 import {
   useRegisterMutation,
   useVerifyOTPMutation,
-} from "@/src/services/authApi";
-import ShowMessage from "@/constants/toast";
-import { UserRole, useUserInfo } from "@/src/core/store/userInfo";
+} from "../../src/services/authApi";
+import ShowMessage from "../../constants/toast";
+import { UserRole, useUserInfo } from "../../src/core/store/userInfo";
 import * as SecureStore from "expo-secure-store";
-import { api } from "@/src/services/api";
+import { api } from "../../src/services/api";
 
 const Register = () => {
   const router = useRouter();

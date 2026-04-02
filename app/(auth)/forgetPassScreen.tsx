@@ -11,13 +11,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import Colors from "@/constants/color";
-import ShowMessage from "@/constants/toast";
+import Colors from "../../constants/color";
+import ShowMessage from "../../constants/toast";
 import OTPVerificationModal from "./components/Modals/Otpverificationmodal";
 import {
   useForgetpasswordMutation,
   useVerifyForgetPassOtpMutation,
-} from "@/src/services/authApi";
+} from "../../src/services/authApi";
 
 export default function ForgetPassScreen() {
   const router = useRouter();

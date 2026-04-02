@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import SvgIcon from "@/components/shared/svgIcon";
+import SvgIcon from "../../../components/shared/svgIcon";
 
 interface RoleContainerProps {
   title: string;

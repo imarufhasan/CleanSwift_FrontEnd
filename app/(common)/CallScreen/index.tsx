@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { AntDesign, Entypo, Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Colors from "@/constants/color";
+import Colors from "../../../constants/color";
 
 export default function CallScreen() {
   const router = useRouter();

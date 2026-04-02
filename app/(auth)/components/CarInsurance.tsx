@@ -7,11 +7,10 @@ import {
   Platform,
 } from "react-native";
 import React, { useState } from "react";
-import BaseContainer from "@/components/shared/BaseContainer";
-import { GeneralText } from "@/components/shared/GeneralText";
-import SvgIcon from "@/components/shared/svgIcon";
+import BaseContainer from "../../../components/shared/BaseContainer";
+import { GeneralText } from "../../../components/shared/GeneralText";
+import SvgIcon from "../../../components/shared/svgIcon";
 import SelfiePhotoIcon from "@/assets/images/auth/SelfiePhoto.svg";
-import UniversalFilePicker from "@/components/shared/UniversalFilePicker";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { Upload } from "lucide-react-native";

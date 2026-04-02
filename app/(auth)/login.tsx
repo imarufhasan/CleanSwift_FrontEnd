@@ -1,24 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import BaseContainer from "@/components/shared/BaseContainer";
+import BaseContainer from "../../components/shared/BaseContainer";
 import { useRouter } from "expo-router";
-import { EmailInput } from "@/components/shared/EmailField";
-import { PasswordInput } from "@/components/shared/PasswordField";
-import { Button } from "@/components/shared/Button";
-import AuthText from "@/app/(auth)/components/AuthText";
-import { AUTH_DATA } from "@/constants/auth";
+import { EmailInput } from "../../components/shared/EmailField";
+import { PasswordInput } from "../../components/shared/PasswordField";
+import { Button } from "../../components/shared/Button";
+import AuthText from "../../app/(auth)/components/AuthText";
+import { AUTH_DATA } from "../../constants/auth";
 import { Ionicons } from "@expo/vector-icons";
-import { useLoginMutation } from "@/src/services/authApi";
+import { useLoginMutation } from "../../src/services/authApi";
 import * as SecureStore from "expo-secure-store";
-import ShowMessage from "@/constants/toast";
+import ShowMessage from "../../constants/toast";
 import {
   checkInternetConnection,
   checkServerConnection,
-} from "@/src/utils/networkCheck";
-import { api } from "@/src/services/api";
-import { UserRole, useUserInfo } from "@/src/core/store/userInfo";
+} from "../../src/utils/networkCheck";
+import { api } from "../../src/services/api";
+import { UserRole, useUserInfo } from "../../src/core/store/userInfo";
 import GoogleButton from "./components/GoogleButton";
-import { ACCESS_KEY } from "@/src/services/storage/tokenStorage";
+import { ACCESS_KEY } from "../../src/services/storage/tokenStorage";
 
 const Index: React.FC = () => {
   const router = useRouter();
@@ -147,7 +147,8 @@ const Index: React.FC = () => {
 
         <Button
           label={loader ? "Logging in..." : "Login"}
-          onPress={handleLogin}
+          // onPress={handleLogin}
+          onPress={() => router.push("/(auth)/enableLocation")}
           disabled={loader}
           loading={loader}
         />

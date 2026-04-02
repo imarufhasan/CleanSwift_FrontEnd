@@ -1,41 +1,18 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import Colors from "@/constants/color";
 import { SafeAreaView } from "react-native-safe-area-context";
-import CountryPicker, {
-  Country,
-  CountryCode,
-} from "react-native-country-picker-modal";
 import { useRouter } from "expo-router";
-import Toast from "@/constants/toast";
-import ShowMessage from "@/constants/toast";
 import * as ImagePicker from "expo-image-picker";
+import ShowMessage from "../../../constants/toast";
+import { MobileNumberInput } from "@/components/shared/PhoneNumberField";
 
 export default function ProfileSettings() {
   const router = useRouter();
-  const [countryCode, setCountryCode] = useState<CountryCode>("PK");
-  const [callingCode, setCallingCode] = useState("92");
-  const [phone, setPhone] = useState("");
+
+  const [mobileNumber, setMobileNumber] = useState("");
   const [fullName, setFullName] = useState("Ali Amin");
   const [profileImage, setProfileImage] = useState<string | null>(null);
-
-  const getPhonePlaceholder = (code: CountryCode) => {
-    switch (code) {
-      case "PK":
-        return "301 1234567";
-      case "IN":
-        return "98765 43210";
-      case "US":
-        return "(201) 555-0123";
-      case "GB":
-        return "7400 123456";
-      case "BD":
-        return "01712 345678";
-      default:
-        return "Phone number";
-    }
-  };
 
   const pickImage = async () => {
     const permissionResult =
@@ -115,11 +92,10 @@ export default function ProfileSettings() {
       {/* Mobile Number */}
 
       {/* Mobile Number */}
-      <View className="mb-10">
+      {/* <View className="mb-10">
         <Text className="text-sm text-gray-500 mb-2">Mobile Number</Text>
 
         <View className="flex-row items-center border border-blue-400 rounded-xl px-3 py-2">
-          {/* Country Picker */}
           <CountryPicker
             countryCode={countryCode}
             withFlag
@@ -132,10 +108,8 @@ export default function ProfileSettings() {
             }}
           />
 
-          {/* Divider */}
           <View className="h-6 w-[1px] bg-gray-300 mx-2" />
 
-          {/* Phone Input */}
           <TextInput
             value={phone}
             onChangeText={setPhone}
@@ -145,7 +119,13 @@ export default function ProfileSettings() {
             className="flex-1 text-base"
           />
         </View>
-      </View>
+      </View> */}
+      <MobileNumberInput
+              label="Phone Number"
+              placeholder="123456789"
+              value={mobileNumber}
+              onChangeText={setMobileNumber}
+            />
 
       {/* Save Button */}
       <TouchableOpacity

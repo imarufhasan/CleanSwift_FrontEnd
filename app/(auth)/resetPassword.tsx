@@ -10,9 +10,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { PasswordInput } from "@/components/shared/PasswordField";
-import ShowMessage from "@/constants/toast";
-import { useResetPasswordMutation } from "@/src/services/authApi";
+import { PasswordInput } from "../../components/shared/PasswordField";
+import ShowMessage from "../../constants/toast";
+import { useResetPasswordMutation } from "../../src/services/authApi";
 
 export default function Index() {
   const router = useRouter();

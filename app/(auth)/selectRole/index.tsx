@@ -1,14 +1,13 @@
 import React, { useState } from "react";
 import { View } from "react-native";
-import { Button } from "@/components/shared/Button";
-import BaseContainer from "@/components/shared/BaseContainer";
+import { Button } from "../../../components/shared/Button";
 import CustomerIcon from "@/assets/images/auth/Customer.svg";
 import DriverIcon from "@/assets/images/auth/Driver.svg";
 import { useRouter } from "expo-router"; // Import useRouter from expo-router
 import { SafeAreaView } from "react-native-safe-area-context";
 import AuthText from "../components/AuthText";
 import RoleContainer from "../components/RoleContainer";
-import { useUserInfo } from "@/src/core/store/userInfo";
+import { useUserInfo } from "../../../src/core/store/userInfo";
 
 const SelectRole = () => {
   const [selectedRole, setSelectedRole] = useState<"customer" | "driver">(

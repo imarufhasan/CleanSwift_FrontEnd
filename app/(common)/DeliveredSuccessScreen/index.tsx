@@ -352,7 +352,7 @@ export default function DeliveredSuccessScreen() {
               <TouchableOpacity
                 onPress={() => {
                   setConfirmPaymentModal(false);
-                  router.push("/(tabs)/home");
+                 // router.push("(/(tabs)/home");
                 }}
                 style={{ backgroundColor: Colors.primary }}
                 className=" w-full py-3 rounded-2xl mb-4 flex-row items-center justify-center"

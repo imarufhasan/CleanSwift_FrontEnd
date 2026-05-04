@@ -18,17 +18,21 @@ import { useUserInfo } from "../../src/core/store/userInfo";
 import { useProfileInfoQuery } from "../../src/services/authApi";
 import SelectRole from "./selectRole";
 import * as SecureStore from "expo-secure-store";
-import { ACCESS_KEY, REFRESH_KEY } from "../../src/services/storage/tokenStorage";
+import {
+  ACCESS_KEY,
+  REFRESH_KEY,
+  USER,
+} from "../../src/services/storage/tokenStorage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const EnableLocation: React.FC = () => {
   const router = useRouter();
-  const role = useUserInfo((state) => state.role);
-  const token = useUserInfo((state) => state.accessToken);
+  const [user, setUser] = useState<any>(null);
   const [roleData, setRoleData] = useState("");
   const [tokenData, setTokenData] = useState("");
   const setRole = useUserInfo((state) => state.setRole);
 
-  const { data: profileInfo, error, isLoading } = useProfileInfoQuery();  
+  const { data: profileInfo, error, isLoading } = useProfileInfoQuery();
 
   const { width } = Dimensions.get("window");
   const { height } = Dimensions.get("window");
@@ -41,13 +45,37 @@ const EnableLocation: React.FC = () => {
       : PERMISSIONS.IOS.LOCATION_WHEN_IN_USE;
 
   useEffect(() => {
+    const getData = async () => {
+      try {
+        const accessKey = await AsyncStorage.getItem(ACCESS_KEY);
+        const refreshKey = await AsyncStorage.getItem(REFRESH_KEY);
+        const user = await AsyncStorage.getItem(USER);
+        const userJson = user ? JSON.parse(user) : null;
+        if (accessKey) {
+          //console.log("accessKey local home: ", accessKey);
+        }
+        if (refreshKey) {
+          //console.log("refreshKey local home: ", refreshKey);
+        }
+        if (user) {
+          console.log("user local enable 1: ", userJson);
+          setUser(userJson);
+        }
+      } catch (error) {
+        console.log("Auth check error:", error);
+      }
+    };
 
+    getData();
+  }, []);
+
+  useEffect(() => {
     const getRoleAndToken = async () => {
       const role = await SecureStore.getItemAsync(ACCESS_KEY);
       const token = await SecureStore.getItemAsync(REFRESH_KEY);
       setRoleData(role as string);
       setTokenData(token as string);
-    }
+    };
     const checkPermission = async () => {
       const result = await check(LOCATION_PERMISSION);
       if (result === RESULTS.GRANTED) {
@@ -93,18 +121,13 @@ const EnableLocation: React.FC = () => {
       }
 
       if (currentStatus === RESULTS.GRANTED) {
+        console.log("role local enable: ", user?.role);
 
-        console.log("role local: ", role);
-        //console.log("token local: ", token);
-        
-        
-        //console.log("profile user role: ", profileInfo);
-
-        if (role === "CUSTOMER") {
+        if (user?.role === "CUSTOMER") {
           setRole("CUSTOMER");
           router.push("/(customer)/(tabs)/home");
         }
-        if (role === "DRIVER") {
+        if (user?.role === "DRIVER") {
           setRole("DRIVER");
           router.push("/(driver)/(tabs)/home");
         }
@@ -158,9 +181,9 @@ const EnableLocation: React.FC = () => {
 
       {/* Bottom button */}
       <View className="pb-6">
-        <Button label={buttonLabel} 
-        // onPress={requestPermission} 
-        onPress={() => router.push("/(customer)/(tabs)/home")} 
+        <Button
+          label={buttonLabel}
+          onPress={requestPermission}
         />
       </View>
     </SafeAreaView>

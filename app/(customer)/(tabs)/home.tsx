@@ -19,13 +19,26 @@ import RequestPickupCard from "@/components/home/components/RequestPickupCard";
 import HeaderSection from "@/components/home/components/HeaderSection";
 import ActiveOrderCard from "@/components/home/components/ActiveOrderCard";
 import RecentOrdersList from "@/components/home/components/RecentOrdersList";
-import { getAccessToken } from "@/src/services/storage/tokenStorage";
+import {
+  ACCESS_KEY,
+  getAccessToken,
+  REFRESH_KEY,
+  ROLE,
+  USER,
+} from "@/src/services/storage/tokenStorage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { data: profileInfo, error, isLoading, isFetching, refetch } = useProfileInfoQuery();
-  console.log("profileInfo custom home: ", profileInfo);
-  
+  const {
+    data: profileInfo,
+    error,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useProfileInfoQuery();
+  console.log("profileInfo api home: ", profileInfo?.data?.role);
+
   const userInfo = getAccessToken();
   const [refreshing, setRefreshing] = useState(false);
   const [bottomModal, setBottomModal] = useState(false);
@@ -88,6 +101,30 @@ export default function HomeScreen() {
       },
     ],
   });
+
+  useEffect(() => {
+    const getData = async () => {
+      try {
+        const accessKey = await AsyncStorage.getItem(ACCESS_KEY);
+        const refreshKey = await AsyncStorage.getItem(REFRESH_KEY);
+        const user = await AsyncStorage.getItem(USER);
+        const userJson = user ? JSON.parse(user) : null;
+        if (accessKey) {
+          //console.log("accessKey local home: ", accessKey);
+        }
+        if (refreshKey) {
+          //console.log("refreshKey local home: ", refreshKey);
+        }
+        if (user) {
+          console.log("user local home: ", userJson?.role);
+        }
+      } catch (error) {
+        console.log("Auth check error:", error);
+      }
+    };
+
+    getData();
+  }, []);
 
   useEffect(() => {
     if (!pickupData.asap && !pickupData.date) {

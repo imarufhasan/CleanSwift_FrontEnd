@@ -29,7 +29,7 @@ export const authApi = api.injectEndpoints({
     }),
 
     // forget pass
-    forgetpassword: builder.mutation<any, any>({
+    forgetPassword: builder.mutation<any, any>({
       query: (body) => ({
         url: "/user/forgot-password",
         method: "POST",
@@ -68,7 +68,7 @@ export const {
   useLoginMutation,
   useRegisterMutation,
   useVerifyOTPMutation,
-  useForgetpasswordMutation,
+  useForgetPasswordMutation,
   useVerifyForgetPassOtpMutation,
   useResetPasswordMutation,
   useProfileInfoQuery,

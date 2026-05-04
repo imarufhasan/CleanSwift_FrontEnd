@@ -14,11 +14,17 @@ import { useRouter } from "expo-router";
 import Toast from "@/constants/toast";
 import ShowMessage from "@/constants/toast";
 import { useUserInfo } from "@/src/core/store/userInfo";
-import { clearTokens } from "@/src/services/storage/tokenStorage";
+import {
+  ACCESS_KEY,
+  clearTokens,
+  REFRESH_KEY,
+  USER,
+} from "@/src/services/storage/tokenStorage";
 import { api } from "@/src/services/api";
 import * as SecureStore from "expo-secure-store";
 import { useProfileInfoQuery } from "@/src/services/authApi";
 import { useDispatch } from "react-redux";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 const menuItems = [
   { label: "Profile Setting", icon: "person-outline" },
   { label: "Connect Stripe", icon: "card-outline" },
@@ -37,8 +43,6 @@ export default function Profile() {
 
   const [refreshing, setRefreshing] = useState(false);
   const [logoutModal, setLogoutModal] = useState(false);
-  const role = useUserInfo((state) => state.role);
-  const setRole = useUserInfo((state) => state.setRole);
   const clearUser = useUserInfo((state) => state.clearAuth);
 
   const onRefresh = useCallback(() => {
@@ -50,13 +54,32 @@ export default function Profile() {
   }, []);
 
   const logout = async () => {
-    await SecureStore.deleteItemAsync("accessToken");
-    await SecureStore.deleteItemAsync("refreshToken");
-    dispatch(api.util.resetApiState());
-    setLogoutModal(false);
-    router.replace("/(auth)/login");
-    clearUser();
-    ShowMessage.show("Logged out successfully");
+    try {
+      await AsyncStorage.multiRemove([ACCESS_KEY, REFRESH_KEY, USER]);
+
+      // clear RTK Query cache (VERY IMPORTANT)
+      dispatch(api.util.resetApiState());
+
+      // clear Zustand / local store
+      clearUser();
+
+      setLogoutModal(false);
+
+      ShowMessage.show("Logged out successfully");
+      checkStorage();
+
+      router.replace("/(auth)/login");
+    } catch (error) {
+      console.log("Logout error:", error);
+    }
+  };
+
+  const checkStorage = async () => {
+    const keys = await AsyncStorage.getAllKeys();
+    console.log("Keys:", keys);
+
+    const data = await AsyncStorage.multiGet(keys);
+    console.log("Data:", data);
   };
 
   return (

@@ -15,9 +15,11 @@ import Toast from "@/constants/toast";
 import ShowMessage from "@/constants/toast";
 import { useUserInfo } from "@/src/core/store/userInfo";
 import { useProfileInfoQuery } from "@/src/services/authApi";
-import { clearTokens } from "@/src/services/storage/tokenStorage";
+import { ACCESS_KEY, clearTokens, REFRESH_KEY, USER } from "@/src/services/storage/tokenStorage";
 import { api } from "@/src/services/api";
 import * as SecureStore from "expo-secure-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useDispatch } from "react-redux";
 
 const menuItems = [
   { label: "Profile Setting", icon: "person-outline" },
@@ -32,6 +34,7 @@ const menuItems = [
 export default function Profile() {
   const router = useRouter();
   const { data: profileInfo, error, isLoading } = useProfileInfoQuery();
+  const dispatch = useDispatch();
 
   const [refreshing, setRefreshing] = useState(false);
   const [logoutModal, setLogoutModal] = useState(false);
@@ -48,17 +51,32 @@ export default function Profile() {
   }, []);
 
   const logout = async () => {
-    await SecureStore.deleteItemAsync("accessToken");
-    await SecureStore.deleteItemAsync("refreshToken");
-    setLogoutModal(false);
-    router.replace("/(auth)/login");
-    clearUser();
-    ShowMessage.show("Logged out successfully");
+    try {
+      await AsyncStorage.multiRemove([ACCESS_KEY, REFRESH_KEY, USER]);
 
-    // const token = useUserInfo((state) => state.accessToken);
-    // console.log("logout token: ", token);
-    // const role = useUserInfo((state) => state.role);
-    // console.log("logout role: ", role);
+      // clear RTK Query cache (VERY IMPORTANT)
+      dispatch(api.util.resetApiState());
+
+      // clear Zustand / local store
+      clearUser();
+
+      setLogoutModal(false);
+
+      ShowMessage.show("Logged out successfully");
+      checkStorage();
+
+      router.replace("/(auth)/login");
+    } catch (error) {
+      console.log("Logout error:", error);
+    }
+  };
+
+  const checkStorage = async () => {
+    const keys = await AsyncStorage.getAllKeys();
+    console.log("Keys:", keys);
+
+    const data = await AsyncStorage.multiGet(keys);
+    console.log("Data:", data);
   };
 
   return (

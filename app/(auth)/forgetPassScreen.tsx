@@ -15,13 +15,13 @@ import Colors from "../../constants/color";
 import ShowMessage from "../../constants/toast";
 import OTPVerificationModal from "./components/Modals/Otpverificationmodal";
 import {
-  useForgetpasswordMutation,
+  useForgetPasswordMutation,
   useVerifyForgetPassOtpMutation,
 } from "../../src/services/authApi";
 
 export default function ForgetPassScreen() {
   const router = useRouter();
-  const [forgetPassword, { isLoading }] = useForgetpasswordMutation();
+  const [forgetPassword, { isLoading }] = useForgetPasswordMutation();
   const [verifyForgetPassOtp, { isLoading: verifyForgetPassOtpLoading }] =
     useVerifyForgetPassOtpMutation();
   const [email, setEmail] = useState("");

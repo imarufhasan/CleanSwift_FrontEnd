@@ -205,7 +205,11 @@ export default function HomeScreen() {
     <View className="flex-1 bg-blue-50">
       <ScrollView
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            progressViewOffset={50}
+          />
         }
         className="flex-1 bg-blue-50"
       >

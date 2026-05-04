@@ -45,6 +45,8 @@ const Register = () => {
   const [otpCode, setOtpCode] = useState<string>("");
   const setRole = useUserInfo((state) => state.setRole);
   const setTokens = useUserInfo((state) => state.setTokens);
+    const [countryCode, setCountryCode] = useState("");
+
   useEffect(() => {
     if (successMessage) {
       setModalVisible(true);
@@ -65,25 +67,23 @@ const Register = () => {
     try {
       const req = {
         name: fullName,
-        phone: mobileNumber,
+        phone: countryCode+"-"+mobileNumber,
         email,
         password,
       };
       console.log("register_req_data: ", req);
 
-      const res = await register(req).unwrap();
-      console.log("register_res: ", res);
+      // const res = await register(req).unwrap();
+      // console.log("register_res: ", res);
 
-      const message =
-        typeof res?.message === "string"
-          ? res.message
-          : res?.message?.text || "OTP sent successfully";
+      // const message =
+      //   typeof res?.message === "string"
+      //     ? res.message
+      //     : res?.message?.text || "OTP sent successfully";
+      // ShowMessage.success(message);
+      // setModalVisible(true);
 
-      ShowMessage.success(message);
-
-      setModalVisible(true);
     } catch (err: any) {
-      // RTK Query error format
       let errorMsg = "Registration failed";
 
       if (err?.data) {
@@ -127,7 +127,6 @@ const Register = () => {
       api.util.resetApiState();
 
       ShowMessage.success(message);
-      //router.replace("/(driver)/(tabs)/home");
       router.push("/(auth)/selectRole");
 
       setModalVisible(false);
@@ -171,6 +170,7 @@ const Register = () => {
           placeholder="0123456789"
           value={mobileNumber}
           onChangeText={setMobileNumber}
+          setCountryCode={setCountryCode}
         />
         <EmailInput
           label="Email"

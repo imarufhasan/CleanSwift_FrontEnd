@@ -11,6 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLoginMutation } from "../../src/services/authApi";
 import * as SecureStore from "expo-secure-store";
 import ShowMessage from "../../constants/toast";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   checkInternetConnection,
   checkServerConnection,
@@ -18,15 +19,24 @@ import {
 import { api } from "../../src/services/api";
 import { UserRole, useUserInfo } from "../../src/core/store/userInfo";
 import GoogleButton from "./components/GoogleButton";
-import { ACCESS_KEY } from "../../src/services/storage/tokenStorage";
+import {
+  ACCESS_KEY,
+  REFRESH_KEY,
+  ROLE,
+  USER,
+} from "../../src/services/storage/tokenStorage";
 
 const Index: React.FC = () => {
   const router = useRouter();
   const [login, { isLoading, error, data }] = useLoginMutation();
 
-  const [email, setEmail] = useState("marufhasan60sta@gmail.com"); //customer
+  // driver
+  //fimebe4219@kobace.com
+  //customer
+  //marufhasan60sta@gmail.com
+  const [email, setEmail] = useState("fimebe4219@kobace.com");
   //const [email, setEmail] = useState("maruf.hasan@sparktechagency.com"); //driver
-  const [password, setPassword] = useState("1234567");
+  const [password, setPassword] = useState("123456");
   const [rememberMe, setRememberMe] = useState(false);
   const setRole = useUserInfo((state) => state.setRole);
   const setTokens = useUserInfo((state) => state.setTokens);
@@ -35,6 +45,9 @@ const Index: React.FC = () => {
   const { userInfo } = useUserInfo();
   // const token = useUserInfo((state) => state.accessToken);
   // const role = useUserInfo((state) => state.role);
+
+  //console.log("token login 2: ", token);
+  //console.log("role login 2: ", role);
 
   const handleLogin = async () => {
     try {
@@ -52,24 +65,19 @@ const Index: React.FC = () => {
       }
 
       const res = await login({ email, password }).unwrap();
-      const login_res_role = res?.data?.user?.role;
-
       console.log("login_res: ", res);
-      setRole(login_res_role as UserRole);
-      setTokens(res?.data?.accessToken, res?.data?.refreshToken);
-
-      await SecureStore.deleteItemAsync("accessToken");
-      await SecureStore.deleteItemAsync("refreshToken");
-      await SecureStore.setItemAsync("accessToken", res.data.accessToken);
-      await SecureStore.setItemAsync("refreshToken", res.data.refreshToken);
+      await AsyncStorage.clear();
+      await AsyncStorage.setItem(ACCESS_KEY, res?.data?.accessToken);
+      await AsyncStorage.setItem(REFRESH_KEY, res?.data?.refreshToken);
+      await AsyncStorage.setItem(USER, JSON.stringify(res?.data?.user));
 
       api.util.resetApiState();
 
       ShowMessage.show(res?.message || "Login Success");
 
       router.push("/(auth)/enableLocation");
-      const token = useUserInfo.getState().accessToken;
-      console.log("local token 2: ", token);
+      //const token = useUserInfo.getState().accessToken;
+      //console.log("local token 2: ", token);
     } catch (err: any) {
       ShowMessage.show(err?.data?.message || "Login failed");
     } finally {
@@ -77,25 +85,14 @@ const Index: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    // if (token) {
-    //   console.log("logout token: ", token);
-    // } else {
-    //   console.log("logout token: ", "nothing");
-    // }
-
-    // if (role) {
-    //   console.log("logout role: ", role);
-    // } else {
-    //   console.log("logout role: ", "nothing");
-    // }
-    const getAuthInfo = async () => {
-      const token = await SecureStore.getItemAsync(ACCESS_KEY);
-      console.log("token logout: ", token);
-      
-    }
-    getAuthInfo();
-  }, []);
+  // useEffect(() => {
+  //   const getAuthInfo = async () => {
+  //     const token = await SecureStore.getItemAsync(ACCESS_KEY);
+  //     const user = await SecureStore.getItemAsync(USER);
+  //     console.log("user role login: ", user);
+  //   };
+  //   getAuthInfo();
+  // }, []);
 
   return (
     <BaseContainer>
@@ -147,8 +144,8 @@ const Index: React.FC = () => {
 
         <Button
           label={loader ? "Logging in..." : "Login"}
-          // onPress={handleLogin}
-          onPress={() => router.push("/(auth)/enableLocation")}
+          onPress={handleLogin}
+          //onPress={() => router.push("/(auth)/enableLocation")}
           disabled={loader}
           loading={loader}
         />

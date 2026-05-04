@@ -1,30 +1,30 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import * as SecureStore from "expo-secure-store";
 import { ACCESS_KEY, getAccessToken } from "./storage/tokenStorage";
 import { BASE_URL } from "../constants/api";
-import { useUserInfo } from "../core/store/userInfo";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 const baseQuery = fetchBaseQuery({
   baseUrl: BASE_URL,
-  prepareHeaders: async (headers) => {
-    //const token = getAccessToken();
-    const token = await SecureStore.getItemAsync(ACCESS_KEY);
-    // const token = useUserInfo.getState().accessToken;
-
-    // console.log("api call token: ", token);
-    // console.log("headers: ", headers);
-
-    if (token) {
-      headers.set("Authorization", `Bearer ${token}`);
-    }
-
-    return headers;
-  },
+  timeout: 15000,
 });
+
+const baseQueryWithToken = async (args: any, api: any, extraOptions: any) => {
+  const token = await AsyncStorage.getItem(ACCESS_KEY);
+  if (args.headers) {
+    args.headers.Authorization = `Bearer ${token}`;
+  } else {
+    args.headers = {
+      Authorization: `Bearer ${token}`,
+    };
+  }
+
+  return baseQuery(args, api, extraOptions);
+};
 
 export const api = createApi({
   reducerPath: "api",
-  baseQuery,
+  baseQuery: baseQueryWithToken,
   tagTypes: ["User", "Order", "Location"],
   endpoints: () => ({}),
 });

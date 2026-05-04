@@ -13,6 +13,7 @@ interface InputProps {
   placeholder: string;
   value: string;
   onChangeText: (text: string) => void;
+  setCountryCode?: (countryCode: string) => void;
 }
 
 export const MobileNumberInput: React.FC<InputProps> = ({
@@ -20,6 +21,7 @@ export const MobileNumberInput: React.FC<InputProps> = ({
   placeholder,
   value,
   onChangeText,
+  setCountryCode,
 }) => {
   const [selectedCode, setSelectedCode] = useState(COUNTRY_CODES[17]); // Bangladesh default
   const [modalVisible, setModalVisible] = useState(false);
@@ -35,6 +37,7 @@ export const MobileNumberInput: React.FC<InputProps> = ({
     setSelectedCode(item);
     setModalVisible(false);
     setSearchQuery("");
+    setCountryCode?.(item.code);
   };
 
   return (

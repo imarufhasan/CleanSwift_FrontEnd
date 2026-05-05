@@ -17,31 +17,44 @@ const formatMessage = (message: any): string => {
 };
 
 const ShowMessage = {
-  show: (message: any, duration: "short" | "long" = "short") => {
+  show: (
+    message: any,
+    duration: number | "short" | "long" = "short"
+  ) => {
     const formattedMessage = formatMessage(message);
 
     if (Platform.OS === "android") {
-      ToastAndroid.show(
-        formattedMessage,
-        duration === "long"
-          ? ToastAndroid.LONG
-          : ToastAndroid.SHORT
-      );
+      if (typeof duration === "number") {
+        // fallback mapping
+        ToastAndroid.show(
+          formattedMessage,
+          duration > 3000
+            ? ToastAndroid.LONG
+            : ToastAndroid.SHORT
+        );
+      } else {
+        ToastAndroid.show(
+          formattedMessage,
+          duration === "long"
+            ? ToastAndroid.LONG
+            : ToastAndroid.SHORT
+        );
+      }
     } else {
       Alert.alert("", formattedMessage);
     }
   },
 
-  success: (message: any) => {
-    ShowMessage.show(message);
+  success: (message: any, duration?: number | "short" | "long") => {
+    ShowMessage.show(message, duration);
   },
 
-  error: (message: any) => {
-    ShowMessage.show(message);
+  error: (message: any, duration?: number | "short" | "long") => {
+    ShowMessage.show(message, duration);
   },
 
-  info: (message: any) => {
-    ShowMessage.show(message);
+  info: (message: any, duration?: number | "short" | "long") => {
+    ShowMessage.show(message, duration);
   },
 };
 

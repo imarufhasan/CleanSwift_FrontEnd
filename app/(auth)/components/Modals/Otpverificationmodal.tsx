@@ -4,14 +4,14 @@ import BottomModal from "@/components/shared/Modal/ButtomModal";
 import OTPInput, { OTPInputHandle } from "@/components/shared/OtpInput";
 import { Button } from "@/components/shared/Button";
 import { GeneralText } from "@/components/shared/GeneralText";
-import ResendCode from "@/components/shared/ResentCode";
+import { ResendCode } from "@/components/shared/ResendCode";
 
 interface OTPVerificationModalProps {
   isVisible: boolean;
   onClose: () => void;
   onVerify: (code: string) => void;
   resendTimerSeconds?: number;
-  onResend?: () => void;
+ onResend?: () => Promise<boolean | void>;
   loading?: boolean;
   setParentCode?: (code: string) => void;
   code?: string; // optional, if parent wants to control
@@ -21,7 +21,7 @@ const OTPVerificationModal: React.FC<OTPVerificationModalProps> = ({
   isVisible,
   onClose,
   onVerify,
-  resendTimerSeconds = 300,
+  resendTimerSeconds,
   loading,
   onResend,
   setParentCode, // renamed
@@ -67,7 +67,7 @@ const OTPVerificationModal: React.FC<OTPVerificationModalProps> = ({
 
       <ResendCode
         isVisible={isVisible}
-        timerSeconds={resendTimerSeconds}
+        timerSeconds={resendTimerSeconds ?? 60}
         onResend={onResend}
       />
 

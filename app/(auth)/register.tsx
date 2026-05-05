@@ -15,12 +15,14 @@ import OTPVerificationModal from "./components/Modals/Otpverificationmodal";
 import GoogleButton from "./components/GoogleButton";
 import {
   useRegisterMutation,
+  useResendSignupOTPMutation,
   useVerifyOTPMutation,
 } from "../../src/services/authApi";
 import ShowMessage from "../../constants/toast";
 import { UserRole, useUserInfo } from "../../src/core/store/userInfo";
 import * as SecureStore from "expo-secure-store";
 import { api } from "../../src/services/api";
+import AppLoader from "@/components/shared/AppLoader";
 
 const Register = () => {
   const router = useRouter();
@@ -32,6 +34,11 @@ const Register = () => {
     verifyOTP,
     { data: verifyOtpData, error: verifyOtpError, isLoading: verifyOtpLoading },
   ] = useVerifyOTPMutation();
+
+  const [
+    resendSignupOTP,
+    { isLoading: resendOtpLoading, error: resendOtpError },
+  ] = useResendSignupOTPMutation();
 
   const [fullName, setFullName] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
@@ -45,7 +52,7 @@ const Register = () => {
   const [otpCode, setOtpCode] = useState<string>("");
   const setRole = useUserInfo((state) => state.setRole);
   const setTokens = useUserInfo((state) => state.setTokens);
-    const [countryCode, setCountryCode] = useState("");
+  const [countryCode, setCountryCode] = useState("");
 
   useEffect(() => {
     if (successMessage) {
@@ -67,22 +74,29 @@ const Register = () => {
     try {
       const req = {
         name: fullName,
-        phone: countryCode+"-"+mobileNumber,
+        phone: countryCode + "-" + mobileNumber,
         email,
         password,
       };
-      console.log("register_req_data: ", req);
+      console.log("register_req_data register: ", req);
 
-      // const res = await register(req).unwrap();
-      // console.log("register_res: ", res);
+      const res = await register(req).unwrap();
+      console.log("register_res: ", res);
+      if (res?.success) {
+        const message =
+          typeof res?.message === "string"
+            ? res.message
+            : res?.message?.text || "OTP sent successfully";
+        console.log("message: ", message);
 
-      // const message =
-      //   typeof res?.message === "string"
-      //     ? res.message
-      //     : res?.message?.text || "OTP sent successfully";
-      // ShowMessage.success(message);
-      // setModalVisible(true);
+        setSuccessMessage(message);
 
+        ShowMessage.success(message);
+        setModalVisible(true);
+      } else {
+        console.log("res 11: ", res);
+        ShowMessage.error("Failed to send OTP");
+      }
     } catch (err: any) {
       let errorMsg = "Registration failed";
 
@@ -92,9 +106,14 @@ const Register = () => {
       } else if (err?.error) {
         errorMsg = err.error;
       }
-      console.log("errorMsg: ", errorMsg);
-
       ShowMessage.error(errorMsg);
+      if (!err.data?.isVerified) {
+        console.log("Unverified account detected");
+        setModalVisible(true);
+      } else {
+        setModalVisible(false);
+      }
+
       setError(errorMsg);
     }
   };
@@ -103,9 +122,9 @@ const Register = () => {
     try {
       const req = {
         userEmail: email,
-        otp: otpCode,
+        otp: code,
       };
-      console.log("register_req_data: ", req);
+      console.log("register_req_data verifyOTP: ", req);
 
       const res = await verifyOTP(req).unwrap();
       console.log("verifyOTP_res: ", res);
@@ -140,15 +159,31 @@ const Register = () => {
       } else if (err?.error) {
         errorMsg = err.error;
       }
-      console.log("errorMsg: ", errorMsg);
-
-      ShowMessage.error(errorMsg);
+      console.log("errorMsg22: ", errorMsg);
+      ShowMessage.error(errorMsg, 3000);
       setError(errorMsg);
     }
   };
 
-  const handleResend = () => {
-    console.log("Resend OTP triggered");
+  const handleResend = async () => {
+    try {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        alert("Please enter a valid email");
+        return;
+      }
+
+      const res = await resendSignupOTP({ userEmail: email });
+
+      if (res?.data?.success) {
+        ShowMessage.success(res?.data?.message);
+        console.log("Resend OTP response: ", res?.data?.message);
+      } else {
+        ShowMessage.error(res?.data?.message || "Failed to resend OTP to register");
+      }
+    } catch (err) {
+      console.log("Error resending OTP:", err);
+      ShowMessage.error("Something went wrong");
+    }
   };
 
   return (
@@ -243,25 +278,12 @@ const Register = () => {
         onClose={() => setModalVisible(false)}
         onVerify={handleVerify}
         onResend={handleResend}
-        resendTimerSeconds={300}
+        resendTimerSeconds={60}
         setParentCode={setOtpCode}
         code={otpCode}
       />
 
-      {error || successMessage ? (
-        <ShowToast
-          message={error || successMessage}
-          type={error ? "error" : "success"}
-        />
-      ) : null}
-
-      {/* <OTPVerificationModal
-          isVisible={isModalVisible}
-          onClose={() => setModalVisible(false)}
-          onVerify={handleVerify}
-          onResend={() => console.log("Resend OTP")}
-          resendTimerSeconds={60}
-        /> */}
+      <AppLoader visible={isLoading || verifyOtpLoading} />
     </BaseContainer>
   );
 };

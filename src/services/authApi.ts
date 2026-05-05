@@ -61,6 +61,15 @@ export const authApi = api.injectEndpoints({
         method: "GET",
       }),
     }),
+
+    // {{baseUrl}}/user/send-signup-otp-again
+    resendSignupOTP: builder.mutation<any, any>({
+      query: (body) => ({
+        url: "/user/send-signup-otp-again",
+        method: "POST",
+        body,
+      }),
+    }),
   }),
 });
 
@@ -72,4 +81,5 @@ export const {
   useVerifyForgetPassOtpMutation,
   useResetPasswordMutation,
   useProfileInfoQuery,
+  useResendSignupOTPMutation,
 } = authApi;

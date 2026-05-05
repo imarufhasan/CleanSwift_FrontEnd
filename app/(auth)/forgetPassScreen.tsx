@@ -157,7 +157,7 @@ export default function ForgetPassScreen() {
           onVerify={handleVerify}
           loading={verifyForgetPassOtpLoading}
           onResend={handleResend}
-          resendTimerSeconds={300}
+          resendTimerSeconds={60}
         />
       </SafeAreaView>
     </KeyboardAvoidingView>

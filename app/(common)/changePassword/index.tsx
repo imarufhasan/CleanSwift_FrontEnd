@@ -6,9 +6,14 @@ import Colors from "@/constants/color";
 import { useRouter } from "expo-router";
 import Toast from "@/constants/toast";
 import ShowMessage from "@/constants/toast";
+import { useChangePasswordMutation } from "@/src/services/userApi";
+import AppLoader from "@/components/shared/AppLoader";
 
 export default function ChangePassword() {
   const router = useRouter();
+
+  // api fetch
+  const [changePassword, { isLoading }] = useChangePasswordMutation();
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -17,6 +22,58 @@ export default function ChangePassword() {
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+
+  const handleChangePassword = async () => {
+    console.log("handleChangePassword called");
+    if (newPassword !== confirmPassword) {
+      ShowMessage.error("New password and confirm password do not match");
+      return;
+    }
+    console.log("same new and conf pass");
+
+    try {
+      const reqData = {
+        oldPassword: currentPassword,
+        newPassword: newPassword,
+      };
+      console.log("reqData pass: ", reqData);
+
+      const response: any = await changePassword(reqData).unwrap();
+
+      if (response?.success) {
+        ShowMessage.success(
+          "Success",
+          response.message || "Password changed successfully",
+        );
+        router.back();
+      } else {
+        ShowMessage.error(
+          "Error",
+          response.message || "Failed to change password",
+        );
+      }
+    } catch (error: unknown) {
+      const err = error as any;
+      if (
+        err?.status === "FETCH_ERROR" ||
+        err?.message === "Network request failed"
+      ) {
+        ShowMessage.error(
+          "Server is not reachable. Please check your internet or try again later.",
+        );
+        return;
+      }
+      if (err?.status === "PARSING_ERROR") {
+        ShowMessage.error("Server response error. Please try again.");
+        return;
+      }
+      ShowMessage.error(
+        err?.data?.message ||
+          "An error occurred while updating. Please try again.",
+      );
+      return false;
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-white px-5 mt-4">
@@ -36,7 +93,9 @@ export default function ChangePassword() {
 
       {/* Current Password */}
       <View className="mb-5">
-        <Text className="text-lg text-black font-semibold mb-2">Old Password</Text>
+        <Text className="text-lg text-black font-semibold mb-2">
+          Old Password
+        </Text>
         <View className="flex-row bg-blue-50 items-center border border-blue-400 rounded-xl px-4 py-3">
           <TextInput
             value={currentPassword}
@@ -48,7 +107,7 @@ export default function ChangePassword() {
           />
           <TouchableOpacity onPress={() => setShowCurrent(!showCurrent)}>
             <Ionicons
-              name={showCurrent ? "eye-off-outline" : "eye-outline"}
+              name={!showCurrent ? "eye-off-outline" : "eye-outline"}
               size={20}
               color="gray"
             />
@@ -58,7 +117,9 @@ export default function ChangePassword() {
 
       {/* New Password */}
       <View className="mb-5">
-        <Text className="text-lg text-black font-semibold mb-2">New Password</Text>
+        <Text className="text-lg text-black font-semibold mb-2">
+          New Password
+        </Text>
         <View className="flex-row bg-blue-50 items-center border border-blue-400 rounded-xl px-4 py-3">
           <TextInput
             value={newPassword}
@@ -70,7 +131,7 @@ export default function ChangePassword() {
           />
           <TouchableOpacity onPress={() => setShowNew(!showNew)}>
             <Ionicons
-              name={showNew ? "eye-off-outline" : "eye-outline"}
+              name={!showNew ? "eye-off-outline" : "eye-outline"}
               size={20}
               color="gray"
             />
@@ -80,7 +141,9 @@ export default function ChangePassword() {
 
       {/* Confirm Password */}
       <View className="mb-10">
-        <Text className="text-lg text-black font-semibold mb-2">Confirm New Password</Text>
+        <Text className="text-lg text-black font-semibold mb-2">
+          Confirm New Password
+        </Text>
         <View className="flex-row bg-blue-50 items-center border border-blue-400 rounded-xl px-4 py-3">
           <TextInput
             value={confirmPassword}
@@ -92,7 +155,7 @@ export default function ChangePassword() {
           />
           <TouchableOpacity onPress={() => setShowConfirm(!showConfirm)}>
             <Ionicons
-              name={showConfirm ? "eye-off-outline" : "eye-outline"}
+              name={!showConfirm ? "eye-off-outline" : "eye-outline"}
               size={20}
               color="gray"
             />
@@ -104,14 +167,14 @@ export default function ChangePassword() {
       <TouchableOpacity
         style={{ backgroundColor: Colors.primary }}
         className="py-4 rounded-xl mt-auto mb-10"
-        onPress={() => {
-          ShowMessage.show("Password changed successfully");
-        }}
+        onPress={handleChangePassword}
       >
         <Text className="text-white text-center font-semibold text-[20px]">
           Save
         </Text>
       </TouchableOpacity>
+
+      <AppLoader visible={isLoading} />
     </SafeAreaView>
   );
 }

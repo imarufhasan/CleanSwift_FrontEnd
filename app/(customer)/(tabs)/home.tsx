@@ -10,7 +10,7 @@ import {
 import { AntDesign, Ionicons } from "@expo/vector-icons";
 import Colors from "@/constants/color";
 import Toast from "@/constants/toast";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import RequestPickupModal from "@/components/home/RequestPickupModal";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import ShowMessage from "@/constants/toast";
@@ -142,6 +142,12 @@ export default function HomeScreen() {
     }, 1500);
   }, []);
 
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, []),
+  );
+
   const onDateChange = (_: any, date?: Date) => {
     setShowDatePicker(false);
     if (date) {
@@ -179,8 +185,8 @@ export default function HomeScreen() {
       >
         {/* Header Section */}
         <HeaderSection
-          userName={data?.user?.name}
-          notificationCount={data.notificationCount}
+          userName={data?.user?.name || "User"}
+          notificationCount={100}
           location={data.location}
           profileInfo={profileInfo}
         />

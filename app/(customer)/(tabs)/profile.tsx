@@ -7,33 +7,41 @@ import {
   ScrollView,
   RefreshControl,
   Modal,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import Colors from "@/constants/color";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import Toast from "@/constants/toast";
 import ShowMessage from "@/constants/toast";
 import { useUserInfo } from "@/src/core/store/userInfo";
 import { useProfileInfoQuery } from "@/src/services/authApi";
-import { ACCESS_KEY, clearTokens, REFRESH_KEY, USER } from "@/src/services/storage/tokenStorage";
+import {
+  ACCESS_KEY,
+  clearTokens,
+  REFRESH_KEY,
+  USER,
+} from "@/src/services/storage/tokenStorage";
 import { api } from "@/src/services/api";
 import * as SecureStore from "expo-secure-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useDispatch } from "react-redux";
-
-const menuItems = [
-  { label: "Profile Setting", icon: "person-outline" },
-  { label: "Payment Methods", icon: "card-outline" },
-  { label: "Change password", icon: "lock-closed-outline" },
-  { label: "Support", icon: "help-circle-outline" },
-  { label: "About Us", icon: "information-circle-outline" },
-  { label: "Privacy Policy", icon: "shield-checkmark-outline" },
-  { label: "Terms and Conditions", icon: "document-text-outline" },
-];
+import AppLoader from "@/components/shared/AppLoader";
+import { useUpdateProfilePhotoMutation } from "@/src/services/userApi";
+import * as ImagePicker from "expo-image-picker";
 
 export default function Profile() {
   const router = useRouter();
-  const { data: profileInfo, error, isLoading } = useProfileInfoQuery();
+  const {
+    data: profileInfo,
+    error,
+    isLoading,
+    refetch,
+  } = useProfileInfoQuery();
+  const userRole = profileInfo?.data?.role || "";
+  console.log("profileInfo role: ", profileInfo?.data?.image);
+  const [updateProfilePhoto, { isLoading: photoLoading }] =
+    useUpdateProfilePhotoMutation();
   const dispatch = useDispatch();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -41,14 +49,44 @@ export default function Profile() {
   const role = useUserInfo((state) => state.role);
   const setRole = useUserInfo((state) => state.setRole);
   const clearUser = useUserInfo((state) => state.clearAuth);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => {
+  const [imageLoading, setImageLoading] = useState(false);
+  const [imageVersion, setImageVersion] = useState(Date.now());
+  const onRefresh = useCallback(async () => {
+    try {
+      setRefreshing(true);
+      setImageVersion(Date.now());
+      await refetch();
+      ShowMessage.show("Profile updated");
+    } catch (error) {
+      ShowMessage.error("Failed to refresh");
+    } finally {
       setRefreshing(false);
-      ShowMessage.show("updated");
-    }, 1500);
-  }, []);
+    }
+  }, [refetch]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch]),
+  );
+
+  const menuItems = [
+    { label: "Profile Setting", icon: "person-outline" },
+    { label: "Payment Methods", icon: "card-outline" },
+    ...(userRole === "CUSTOMER"
+      ? [
+          {
+            label: "Make as a Driver",
+            icon: "car-outline",
+          },
+        ]
+      : []),
+    { label: "Change password", icon: "lock-closed-outline" },
+    { label: "Support", icon: "help-circle-outline" },
+    { label: "About Us", icon: "information-circle-outline" },
+    { label: "Privacy Policy", icon: "shield-checkmark-outline" },
+    { label: "Terms and Conditions", icon: "document-text-outline" },
+  ];
 
   const logout = async () => {
     try {
@@ -79,6 +117,47 @@ export default function Profile() {
     console.log("Data:", data);
   };
 
+  const handleUpdatePhoto = async () => {
+    try {
+      const permission =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permission.granted) {
+        ShowMessage.error("Gallery permission required");
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        quality: 0.7,
+        allowsEditing: true,
+        aspect: [1, 1],
+      });
+
+      if (result.canceled) return;
+
+      const image = result.assets[0];
+
+      const formData = new FormData();
+
+      formData.append("user", {
+        uri: image.uri,
+        name: image.fileName || "profile.jpg",
+        type: image.mimeType || "image/jpeg",
+      } as any);
+
+      const res = await updateProfilePhoto(formData).unwrap();
+
+      console.log("upload response:", res);
+      setImageVersion(Date.now());
+      await refetch();
+      ShowMessage.show("Profile photo updated");
+    } catch (error) {
+      console.log("PHOTO UPDATE ERROR:", error);
+      ShowMessage.error("Failed to update photo");
+    }
+  };
+
   return (
     <View className="flex-1 bg-gray-100">
       <ScrollView
@@ -93,16 +172,47 @@ export default function Profile() {
           className="pt-14 pb-20 px-5 rounded-b-[32px]"
         >
           <View className="flex-row items-center">
-            <Image
-              source={{ uri: profileInfo?.data?.image }}
-              className="w-[70px] h-[70px] rounded-full border-2 border-white"
-            />
+            <TouchableOpacity
+              activeOpacity={0.8}
+              //onPress={handleUpdatePhoto}
+              className="relative"
+              disabled={photoLoading}
+            >
+              <View className="relative">
+                <Image
+                  source={
+                    profileInfo?.data?.image
+                      ? {
+                          uri: `${profileInfo?.data?.image}?t=${imageVersion}`,
+                        }
+                      : require("../../../assets/images/profile.png")
+                  }
+                  className="w-[70px] h-[70px] rounded-full border-2 border-white"
+                  onLoadStart={() => setImageLoading(true)}
+                  onLoadEnd={() => setImageLoading(false)}
+                />
+
+                {/* Small Loader */}
+                {imageLoading && (
+                  <View className="absolute inset-0 items-center justify-center bg-transparent rounded-full">
+                    <ActivityIndicator size="small" color="#fff" />
+                  </View>
+                )}
+
+                {/* Camera Icon */}
+                {/* <View className="absolute bottom-0 right-0 bg-white rounded-full p-1">
+                  <Ionicons name="camera" size={16} color={Colors.primary} />
+                </View> */}
+              </View>
+            </TouchableOpacity>
+
             <View className="ml-3 flex-1">
               <Text className="text-white text-[20px] font-bold">
-                {profileInfo?.data?.name}
+                {profileInfo?.data?.name || "User"}
               </Text>
+
               <Text className="text-white/80 text-sm">
-                {profileInfo?.data?.email}
+                {profileInfo?.data?.email || ""}
               </Text>
             </View>
           </View>
@@ -135,6 +245,9 @@ export default function Profile() {
                   ShowMessage.show("Payment Methods is coming soon!");
                 } else if (item.label === "Change password") {
                   router.push("/changePassword");
+                } else if (item.label === "Make as a Driver") {
+                  //router.push("/makeDriver");
+                  console.log("make driver");
                 } else if (item.label === "Support") {
                   router.push("/supportScreen");
                 } else if (item.label === "About Us") {
@@ -189,6 +302,8 @@ export default function Profile() {
             <Text className="text-red-500 font-semibold ml-2">Logout</Text>
           </TouchableOpacity>
         </View>
+
+        <AppLoader visible={photoLoading} />
       </ScrollView>
 
       {logoutModal && (

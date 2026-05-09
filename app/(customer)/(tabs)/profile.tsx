@@ -15,7 +15,6 @@ import { useFocusEffect, useRouter } from "expo-router";
 import Toast from "@/constants/toast";
 import ShowMessage from "@/constants/toast";
 import { useUserInfo } from "@/src/core/store/userInfo";
-import { useProfileInfoQuery } from "@/src/services/authApi";
 import {
   ACCESS_KEY,
   clearTokens,
@@ -27,7 +26,10 @@ import * as SecureStore from "expo-secure-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useDispatch } from "react-redux";
 import AppLoader from "@/components/shared/AppLoader";
-import { useUpdateProfilePhotoMutation } from "@/src/services/userApi";
+import {
+  useProfileInfoQuery,
+  useUpdateProfilePhotoMutation,
+} from "@/src/services/userApi";
 import * as ImagePicker from "expo-image-picker";
 
 export default function Profile() {
@@ -36,10 +38,12 @@ export default function Profile() {
     data: profileInfo,
     error,
     isLoading,
+    isFetching,
     refetch,
   } = useProfileInfoQuery();
+
   const userRole = profileInfo?.data?.role || "";
-  console.log("profileInfo role: ", profileInfo?.data?.image);
+  console.log("profileInfo role: ", profileInfo?.data?.role);
   const [updateProfilePhoto, { isLoading: photoLoading }] =
     useUpdateProfilePhotoMutation();
   const dispatch = useDispatch();
@@ -76,7 +80,7 @@ export default function Profile() {
     ...(userRole === "CUSTOMER"
       ? [
           {
-            label: "Make as a Driver",
+            label: "Be a Driver",
             icon: "car-outline",
           },
         ]
@@ -245,8 +249,8 @@ export default function Profile() {
                   ShowMessage.show("Payment Methods is coming soon!");
                 } else if (item.label === "Change password") {
                   router.push("/changePassword");
-                } else if (item.label === "Make as a Driver") {
-                  //router.push("/makeDriver");
+                } else if (item.label === "Be a Driver") {
+                  router.push("/driverRegistration2");
                   console.log("make driver");
                 } else if (item.label === "Support") {
                   router.push("/supportScreen");

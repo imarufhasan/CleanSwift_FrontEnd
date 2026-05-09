@@ -21,7 +21,7 @@ const SelectRole = () => {
     console.log("Proceeding as:", selectedRole);
     if (selectedRole === "driver") {
       //setRole("driver");
-      router.push("./driverRegistration");
+      router.push("./driverRegistration2");
     }
     if (selectedRole === "customer") {
       //setRole("customer");

@@ -17,10 +17,10 @@ import * as ImagePicker from "expo-image-picker";
 import ShowMessage from "../../../constants/toast";
 import { MobileNumberInput } from "@/components/shared/PhoneNumberField";
 import {
+  useProfileInfoQuery,
   useUpdateProfilePhotoMutation,
   useUpdateUserDataMutation,
 } from "@/src/services/userApi";
-import { useProfileInfoQuery } from "@/src/services/authApi";
 import Colors from "@/constants/color";
 import { PhoneNumberUtil } from "google-libphonenumber";
 import AppLoader from "@/components/shared/AppLoader";

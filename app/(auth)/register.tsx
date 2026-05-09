@@ -206,7 +206,10 @@ const Register = () => {
           value={mobileNumber}
           onChangeText={setMobileNumber}
           setCountryCode={setCountryCode}
+
         />
+
+        <View className="mt-6"/>
         <EmailInput
           label="Email"
           placeholder="aliamin@gmail.com"

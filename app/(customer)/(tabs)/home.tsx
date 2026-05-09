@@ -14,7 +14,6 @@ import { useFocusEffect, useRouter } from "expo-router";
 import RequestPickupModal from "@/components/home/RequestPickupModal";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import ShowMessage from "@/constants/toast";
-import { useProfileInfoQuery } from "@/src/services/authApi";
 import RequestPickupCard from "@/components/home/components/RequestPickupCard";
 import HeaderSection from "@/components/home/components/HeaderSection";
 import ActiveOrderCard from "@/components/home/components/ActiveOrderCard";
@@ -27,6 +26,7 @@ import {
   USER,
 } from "@/src/services/storage/tokenStorage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useProfileInfoQuery } from "@/src/services/userApi";
 
 export default function HomeScreen() {
   const router = useRouter();

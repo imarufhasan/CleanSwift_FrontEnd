@@ -15,7 +15,6 @@ import { Dimensions } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUserInfo } from "../../src/core/store/userInfo";
-import { useProfileInfoQuery } from "../../src/services/authApi";
 import SelectRole from "./selectRole";
 import * as SecureStore from "expo-secure-store";
 import {
@@ -32,7 +31,6 @@ const EnableLocation: React.FC = () => {
   const [tokenData, setTokenData] = useState("");
   const setRole = useUserInfo((state) => state.setRole);
 
-  const { data: profileInfo, error, isLoading } = useProfileInfoQuery();
 
   const { width } = Dimensions.get("window");
   const { height } = Dimensions.get("window");

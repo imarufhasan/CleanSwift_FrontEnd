@@ -22,9 +22,9 @@ import {
 } from "@/src/services/storage/tokenStorage";
 import { api } from "@/src/services/api";
 import * as SecureStore from "expo-secure-store";
-import { useProfileInfoQuery } from "@/src/services/authApi";
 import { useDispatch } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useProfileInfoQuery } from "@/src/services/userApi";
 const menuItems = [
   { label: "Profile Setting", icon: "person-outline" },
   { label: "Connect Stripe", icon: "card-outline" },

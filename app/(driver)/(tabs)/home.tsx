@@ -20,7 +20,7 @@ import {
   getAccessToken,
   getRefreshToken,
 } from "@/src/services/storage/tokenStorage";
-import { useProfileInfoQuery } from "@/src/services/authApi";
+import { useProfileInfoQuery } from "@/src/services/userApi";
 
 export default function HomeScreen() {
   const router = useRouter();

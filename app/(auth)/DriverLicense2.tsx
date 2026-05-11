@@ -5,7 +5,7 @@ import { View, Text, TouchableOpacity, Image } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { Upload } from "lucide-react-native";
-import DriverLicenseIcon from "../../../assets/images/auth/DriverLicense.svg";
+import DriverLicenseIcon from "../../assets/images/auth/DriverLicense.svg";
 import { useDriverForm } from "./DriverRegistrationContext2";
 import BaseContainer from "@/components/shared/BaseContainer";
 import SvgIcon from "@/components/shared/svgIcon";

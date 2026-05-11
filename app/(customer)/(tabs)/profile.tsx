@@ -310,42 +310,40 @@ export default function Profile() {
         <AppLoader visible={photoLoading} />
       </ScrollView>
 
-      {logoutModal && (
-        <Modal
-          transparent
-          visible={logoutModal}
-          animationType="fade"
-          onRequestClose={() => setLogoutModal(false)}
-        >
-          <View className="flex-1 justify-center items-center bg-black/50">
-            <View className="bg-white rounded-2xl p-8 w-[90%]">
-              <Text className="text-black text-[18px] font-bold text-center">
-                Are you sure Logout your Profile?
-              </Text>
+      <Modal
+        transparent
+        visible={logoutModal}
+        animationType="fade"
+        onRequestClose={() => setLogoutModal(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <View className="bg-white rounded-2xl p-8 w-[90%]">
+            <Text className="text-black text-[18px] font-bold text-center">
+              Are you sure Logout your Profile?
+            </Text>
 
-              <View className="flex-row items-center mt-6 gap-4">
-                <TouchableOpacity
-                  onPress={() => setLogoutModal(false)}
-                  className="flex-1 border border-red-500 rounded-2xl py-3"
-                >
-                  <Text className="text-red-500 text-[20px] text-center font-semibold">
-                    No
-                  </Text>
-                </TouchableOpacity>
+            <View className="flex-row items-center mt-6 gap-4">
+              <TouchableOpacity
+                onPress={() => setLogoutModal(false)}
+                className="flex-1 border border-red-500 rounded-2xl py-3"
+              >
+                <Text className="text-red-500 text-[20px] text-center font-semibold">
+                  No
+                </Text>
+              </TouchableOpacity>
 
-                <TouchableOpacity
-                  onPress={() => logout()}
-                  className="flex-1 bg-green-500 rounded-2xl py-3"
-                >
-                  <Text className="text-white text-[20px] text-center font-semibold">
-                    Yes
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity
+                onPress={() => logout()}
+                className="flex-1 bg-green-500 rounded-2xl py-3"
+              >
+                <Text className="text-white text-[20px] text-center font-semibold">
+                  Yes
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
-        </Modal>
-      )}
+        </View>
+      </Modal>
     </View>
   );
 }

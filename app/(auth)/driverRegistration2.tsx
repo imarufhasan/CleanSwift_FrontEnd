@@ -1,7 +1,14 @@
 // ─── DriverRegistration.tsx ──────────────────────────────────────────────────
 
 import React, { useState } from "react";
-import { View, Text, ScrollView, Modal, TouchableOpacity, Alert } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Modal,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Pagination from "../../components/shared/Pagination";
@@ -9,12 +16,18 @@ import { Button } from "../../components/shared/Button";
 import SvgIcon from "../../components/shared/svgIcon";
 import doneIcon from "@/assets/images/auth/done.svg";
 import ShowMessage from "../../constants/toast";
-import DriverLicense from "./components/DriverLicense";
-import SelfiePhoto from "./components/SelfiePhoto";
-import CarInsurance from "./components/CarInsurance";
-import VehicleDetails from "./components/VehicleDetails";
-import { DriverFormProvider, useDriverForm } from "./DriverRegistrationContext2";
-import { useUpdateProfileMutation } from "@/src/services/userApi";
+
+import {
+  DriverFormProvider,
+  useDriverForm,
+} from "./DriverRegistrationContext2";
+import {
+  useCreateDriverProfileMutation,
+} from "@/src/services/userApi";
+import DriverLicense from "./DriverLicense2";
+import SelfiePhoto from "./SelfiePhoto2";
+import CarInsurance from "./CarInsurance2";
+import VehicleDetails from "./VehicleDetails2";
 
 // ── Inner component has access to context ────────────────────────────────────
 function DriverRegistrationInner() {
@@ -26,7 +39,10 @@ function DriverRegistrationInner() {
   const { formData } = useDriverForm();
 
   // ✅ updateProfile mutation
-  const [updateProfile, { isLoading: isSubmitting }] = useUpdateProfileMutation();
+  // const [updateProfile, { isLoading: isSubmitting }] = useUpdateProfileMutation();
+
+  const [createDriverProfile, { isLoading: isSubmitting }] =
+    useCreateDriverProfileMutation();
 
   const nextStep = () => setCurrentStep((s) => s + 1);
   const previousStep = () => {
@@ -39,17 +55,21 @@ function DriverRegistrationInner() {
 
   const renderStep = () => {
     switch (currentStep) {
-      case 1: return <DriverLicense />;
-      case 2: return <SelfiePhoto />;
-      case 3: return <CarInsurance />;
-      case 4: return <VehicleDetails />;
-      default: return <DriverLicense />;
+      case 1:
+        return <DriverLicense />;
+      case 2:
+        return <SelfiePhoto />;
+      case 3:
+        return <CarInsurance />;
+      case 4:
+        return <VehicleDetails />;
+      default:
+        return <DriverLicense />;
     }
   };
 
   const isLastStep = currentStep === totalSteps;
 
-  // ✅ Build FormData and call the API on final submit
   const submit = async () => {
     const {
       driverLicenseFile,
@@ -87,41 +107,72 @@ function DriverRegistrationInner() {
     }
 
     try {
-      // ✅ Build the `data` JSON payload sent as FormData field "data"
+      // const profileData = {
+      //   driverLicense: {
+      //     insuranceProvider,
+      //     policyNumber,
+      //     expirationDate: expirationDate?.toISOString(),
+      //   },
+      //   vehicle: {
+      //     make: vehicleMake,
+      //     model: vehicleModel,
+      //     year: vehicleYear,
+      //     licensePlate: licensePlateNo,
+      //   },
+      // };
+
       const profileData = {
-        driverLicense: {
-          insuranceProvider,
-          policyNumber,
-          expirationDate: expirationDate?.toISOString(),
-        },
-        vehicle: {
-          make: vehicleMake,
-          model: vehicleModel,
-          year: vehicleYear,
-          licensePlate: licensePlateNo,
-        },
+        insuranceProvider,
+        insurancePolicyNumber: policyNumber,
+        insuranceExpiration: expirationDate
+          ? expirationDate.toISOString().split("T")[0]
+          : "",
+
+        vehicleMake: vehicleMake,
+        vehicleModel: vehicleModel,
+        vehicleYear: vehicleYear,
+        vehiclePlate: licensePlateNo,
+
+        role: "DRIVER",
       };
 
-      // ✅ Send the primary selfie as the `image` field (profile image)
-      // Additional files (license, insurance) are appended in the mutation
-      const response = await updateProfile({
+      console.log("profileData:", profileData);
+
+      const response = await createDriverProfile({
         data: profileData,
-        image: {
+
+        license: {
+          uri: driverLicenseFile.uri,
+          type: driverLicenseFile.type || "image/jpeg",
+          name: driverLicenseFile.name || "license.jpg",
+        },
+
+        selfie: {
           uri: selfieFile.uri,
           type: selfieFile.type || "image/jpeg",
           name: selfieFile.name || "selfie.jpg",
         },
-        // Pass extra files if your backend supports them
-        // If your API slice needs extending, see note below
+
+        insuranceDocument: {
+          uri: insuranceFile.uri,
+          type: insuranceFile.type || "image/jpeg",
+          name: insuranceFile.name || "insurance.jpg",
+        },
       }).unwrap();
 
-      console.log("Driver profile update response:", response);
-      ShowMessage.success(response?.message || "Profile updated successfully");
+      console.log("driver response:", response);
+
+      ShowMessage.success(
+        response?.message || "Driver profile created successfully",
+      );
+
       setSuccessModalOpen(true);
     } catch (error: any) {
-      console.log("Driver profile update error:", error);
+      console.log("Driver error:", error);
+
       ShowMessage.error(
-        error?.data?.message || "Failed to update profile. Please try again."
+        error?.data?.message ||
+          "Failed to create driver profile. Please try again.",
       );
     }
   };
@@ -141,7 +192,13 @@ function DriverRegistrationInner() {
 
       <View className="m-4">
         <Button
-          label={isLastStep ? (isSubmitting ? "Submitting..." : "Submit") : "Continue"}
+          label={
+            isLastStep
+              ? isSubmitting
+                ? "Submitting..."
+                : "Submit"
+              : "Continue"
+          }
           onPress={() => {
             if (isLastStep) {
               submit();

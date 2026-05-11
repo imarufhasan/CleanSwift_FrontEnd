@@ -18,13 +18,7 @@ type DriverProfileBody = {
 
 export const userApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    updateProfile: builder.mutation<any, any>({
-      query: (body) => ({
-        url: "/user/update",
-        method: "PUT",
-        body,
-      }),
-    }),
+   
     // {{baseUrl}}/user/change-password
     changePassword: builder.mutation<any, any>({
       query: (body) => {
@@ -95,11 +89,12 @@ export const userApi = api.injectEndpoints({
         };
       },
     }),
+
+    //{{baseUrl}}/user/create-driver-profile
   }),
 });
 
 export const {
-  useUpdateProfileMutation,
   useChangePasswordMutation,
   useUpdateProfilePhotoMutation,
   useUpdateUserDataMutation,

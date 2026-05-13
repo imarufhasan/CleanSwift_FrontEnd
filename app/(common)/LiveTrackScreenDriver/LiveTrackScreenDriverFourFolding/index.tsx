@@ -14,7 +14,7 @@ import { View, Text, Image, TouchableOpacity } from "react-native";
 export default function FoldingStep({ setActiveStep }: any) {
   return (
     <View className="bg-white mb-6 px-4">
-      <CustomerCard name="Ali Amin" address="123 Main Street, Apt 4B" />
+      <CustomerCard name="Customer" address="Live order address" />
 
       <View className="bg-green-100 rounded-2xl px-4 py-6 my-4  w-full items-center justify-center">
         <View className="mb-4">

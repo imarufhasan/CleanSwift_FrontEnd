@@ -3,17 +3,52 @@ import { View, Text, TouchableOpacity, ScrollView, Image } from "react-native";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import Colors from "@/constants/color";
 import RatingStars from "@/components/home/RatingStars";
-import { trackingData } from "@/data/tracking";
 import { useRouter } from "expo-router";
-import MapView, { Marker } from "react-native-maps";
+import { useGetMyOrdersQuery } from "@/src/services/orderApi";
+import { useOrderSocket } from "@/src/hooks/useOrderSocket";
 
 export default function Track() {
   const router = useRouter();
-  const { status, order, driver, orderDetails } = trackingData;
+  const { data: ordersRes, refetch } = useGetMyOrdersQuery();
+  const activeOrder = ordersRes?.data?.find(
+    order => !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
+  );
+  const driver = activeOrder?.driver ?? null;
+  const status = {
+    label: activeOrder?.status?.replaceAll("_", " ") ?? "No active order",
+    etaMinutes: activeOrder?.scheduledPickupAt ? 12 : 0,
+  };
+  const order = {
+    id: activeOrder?._id ?? "-",
+    eta: activeOrder?.scheduledPickupAt
+      ? new Date(activeOrder.scheduledPickupAt).toLocaleString()
+      : "--",
+  };
+  const orderDetails = {
+    service: activeOrder?.serviceType
+      ? activeOrder.serviceType.replaceAll("_", " ")
+      : "Unavailable",
+    address: {
+      street: activeOrder?.address ?? "No address available",
+      city: "",
+    },
+    instructions: activeOrder?.specialInstructions ?? "No special instructions",
+    pricing: {
+      bags: activeOrder?.bags ?? 0,
+      bagPrice: activeOrder?.pricePerBag ?? 0,
+      tip: 0,
+    },
+  };
 
   const total =
     orderDetails.pricing.bags * orderDetails.pricing.bagPrice +
     orderDetails.pricing.tip;
+
+  useOrderSocket({
+    role: 'CUSTOMER',
+    orderId: activeOrder?._id,
+    onCustomerUpdate: refetch,
+  });
 
   return (
     <ScrollView className="flex-1">
@@ -120,7 +155,16 @@ export default function Track() {
 
         <View className="flex-row">
           <TouchableOpacity
-            onPress={() => router.push("/ChatScreen")}
+            onPress={() =>
+              router.push({
+                pathname: "/(common)/ChatScreen" as any,
+                params: {
+                  orderId: String(order.id),
+                  name: driver.name,
+                  avatar: driver.avatar,
+                },
+              })
+            }
             className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center mr-2"
           >
             <Ionicons
@@ -132,7 +176,12 @@ export default function Track() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => router.push("/CallScreen")}
+            onPress={() =>
+              router.push({
+                pathname: "/(common)/CallScreen" as any,
+                params: { name: driver.name, image: driver.avatar },
+              })
+            }
             className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center ml-2"
           >
             <Ionicons name="call-outline" size={18} color={Colors.primary} />

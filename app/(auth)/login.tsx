@@ -104,7 +104,7 @@ const Index: React.FC = () => {
       <View className="mt-10">
         <EmailInput
           label="Email"
-          placeholder="aliamin@gmail.com"
+          placeholder="Enter your email"
           value={email}
           onChangeText={setEmail}
         />

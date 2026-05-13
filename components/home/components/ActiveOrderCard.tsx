@@ -1,13 +1,13 @@
 // home/components/ActiveOrderCard.tsx
 
-import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import Colors from "@/constants/color";
-import { useRouter } from "expo-router";
+import React from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import Colors from '@/constants/color';
+import { useRouter } from 'expo-router';
 
 type ActiveOrder = {
-  id: number;
+  id: string | number;
   status: string;
   quantity: number;
   price: number;
@@ -26,14 +26,14 @@ export default function ActiveOrderCard({ data }: Props) {
 
   const getStatusStyle = (status: string) => {
     switch (status) {
-      case "Washing":
-        return "bg-orange-100 text-orange-500";
-      case "Delivered":
-        return "bg-green-100 text-green-600";
-      case "Delivery":
-        return "bg-blue-100 text-blue-500";
+      case 'Washing':
+        return 'bg-orange-100 text-orange-500';
+      case 'Delivered':
+        return 'bg-green-100 text-green-600';
+      case 'Delivery':
+        return 'bg-blue-100 text-blue-500';
       default:
-        return "bg-gray-100 text-gray-500";
+        return 'bg-gray-100 text-gray-500';
     }
   };
 
@@ -45,7 +45,7 @@ export default function ActiveOrderCard({ data }: Props) {
           <View className="flex-row items-center">
             <View
               className="w-9 h-9 rounded-full justify-center items-center"
-              style={{ backgroundColor: "rgba(37, 99, 235, 0.2)" }}
+              style={{ backgroundColor: 'rgba(37, 99, 235, 0.2)' }}
             >
               <Ionicons name="cube-outline" size={20} color={Colors.primary} />
             </View>
@@ -58,11 +58,7 @@ export default function ActiveOrderCard({ data }: Props) {
             </View>
           </View>
 
-          <Text
-            className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusStyle(
-              data.status,
-            )}`}
-          >
+          <Text className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusStyle(data.status)}`}>
             {data.status}
           </Text>
         </View>
@@ -71,9 +67,7 @@ export default function ActiveOrderCard({ data }: Props) {
           {data.steps.map((step, index) => (
             <Text
               key={step}
-              className={`text-xs ${
-                index <= data.currentStep ? "text-blue-500" : "text-gray-400"
-              }`}
+              className={`text-xs ${index <= data.currentStep ? 'text-blue-500' : 'text-gray-400'}`}
             >
               {step}
             </Text>
@@ -81,24 +75,16 @@ export default function ActiveOrderCard({ data }: Props) {
         </View>
 
         <View className="h-2 bg-gray-200 rounded-full mb-3">
-          <View
-            className="h-2 bg-blue-500 rounded-full"
-            style={{ width: `${data.progress}%` }}
-          />
+          <View className="h-2 bg-blue-500 rounded-full" style={{ width: `${data.progress}%` }} />
         </View>
 
         <View className="flex-row justify-between items-center">
-          <Text className="text-xs text-gray-500">
-            Estimated delivery: {data.estimatedDelivery}
-          </Text>
+          <Text className="text-xs text-gray-500">Estimated delivery: {data.estimatedDelivery}</Text>
           <TouchableOpacity
-            onPress={() => router.push("/LiveTrackingScreen")}
+            onPress={() => router.push('/LiveTrackingScreen')}
             className="flex-row gap-3 items-center"
           >
-            <Text
-              style={{ color: Colors.primary }}
-              className="text-[14px] font-bold"
-            >
+            <Text style={{ color: Colors.primary }} className="text-[14px] font-bold">
               Track Live
             </Text>
             <Ionicons name="arrow-forward" size={16} color={Colors.primary} />

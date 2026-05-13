@@ -37,7 +37,6 @@ export default function ProfileSettings() {
     refetch,
   } = useProfileInfoQuery();
   // const [mobileNumber, setMobileNumber] = useState("");
-  // const [fullName, setFullName] = useState("Ali Amin");
   const [imageVersion, setImageVersion] = useState(Date.now());
   const [imageLoading, setImageLoading] = useState(false);
   const [country, setCountry] = useState("US");

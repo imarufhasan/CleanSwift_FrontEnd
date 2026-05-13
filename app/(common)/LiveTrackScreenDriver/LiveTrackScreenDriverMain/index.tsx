@@ -44,8 +44,8 @@ export default function LiveTrackScreenDriverMain() {
               <Ionicons name="arrow-back-outline" size={18} color={"black"} />
             </TouchableOpacity>
             <View>
-              <Text className="text-white text-2xl font-semibold">
-                Order #1251
+                <Text className="text-white text-2xl font-semibold">
+                Order #LIVE
               </Text>
               <Text className="text-blue-100 text-sm">Washing & Folding</Text>
             </View>
@@ -148,12 +148,8 @@ export default function LiveTrackScreenDriverMain() {
               </Text>
 
               <Text className="text-gray-500 text-sm">Pickup Address</Text>
-              <Text className="text-base font-semibold">
-                123 Main Street, Apt 4B
-              </Text>
-              <Text className="text-sm text-gray-500 mb-3">
-                San Francisco, CA 94102
-              </Text>
+              <Text className="text-base font-semibold">Live order address</Text>
+              <Text className="text-sm text-gray-500 mb-3">Live location</Text>
 
               <Text className="text-gray-500 text-sm">
                 Special Instructions

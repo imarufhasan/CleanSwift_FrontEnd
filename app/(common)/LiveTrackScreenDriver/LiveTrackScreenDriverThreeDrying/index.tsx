@@ -9,7 +9,7 @@ import { View, Text, Image, TouchableOpacity } from "react-native";
 export default function DryingStep({ setActiveStep }: any) {
   return (
     <View className="bg-white mb-6 px-4">
-      <CustomerCard name="Ali Amin" address="123 Main Street, Apt 4B" />
+      <CustomerCard name="Customer" address="Live order address" />
 
       <View className="bg-purple-100 rounded-2xl p-4 my-4 w-full items-center justify-center">
         <CircularProgress />

@@ -15,38 +15,22 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { formatChatTime } from "@/constants/chatTimes";
 import ShowMessage from "@/constants/toast";
-
-const driver = {
-  name: "Ali Amin",
-  avatar: require("@/assets/images/profile.png"),
-  online: true,
-};
-
-const initialMessages = [
-  {
-    id: "1",
-    text: "Hello! I’m on my way 🚗",
-    sender: "driver",
-    time: "10:02 AM",
-  },
-  {
-    id: "2",
-    text: "Great, thank you!",
-    sender: "user",
-    time: "10:03 AM",
-  },
-  {
-    id: "3",
-    text: "I’ll reach in about 10 minutes.",
-    sender: "driver",
-    time: "10:05 AM",
-  },
-];
+import { useProfileInfoQuery } from "@/src/services/userApi";
 
 export default function supportScreen() {
   const router = useRouter();
+  const { data: profileInfo } = useProfileInfoQuery();
+  const driver = {
+    name: profileInfo?.data?.name ?? "Support",
+    avatar: profileInfo?.data?.image
+      ? { uri: profileInfo.data.image }
+      : require("@/assets/images/profile.png"),
+    online: true,
+  };
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState(initialMessages);
+  const [messages, setMessages] = useState<
+    { id: string; text: string; sender: string; time: string }[]
+  >([]);
 
   const flatListRef = useRef<FlatList>(null);
 
@@ -123,11 +107,14 @@ export default function supportScreen() {
             <Ionicons name="arrow-back" size={22} color="#fff" />
           </TouchableOpacity>
 
-          <Image source={driver.avatar} className="w-10 h-10 rounded-full" />
+          <Image
+            source={driver.avatar}
+            className="w-10 h-10 rounded-full"
+          />
 
           <View className="ml-3 flex-1">
             <Text className="text-white font-semibold text-base">
-              {driver.name}
+              {profileInfo?.data?.name ?? "Support"}
             </Text>
             <Text className="text-white/80 text-xs">
               {driver.online ? "Online" : "Offline"}
@@ -151,6 +138,13 @@ export default function supportScreen() {
           }}
           showsVerticalScrollIndicator={false}
           style={{ flex: 1 }}
+          ListEmptyComponent={
+            <View className="items-center mt-20 px-6">
+              <Text className="text-gray-500 text-center">
+                No messages yet. Send a message to start the conversation.
+              </Text>
+            </View>
+          }
         />
 
         {/* Input */}

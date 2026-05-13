@@ -10,7 +10,7 @@ export default function PickupStep({ setActiveStep }: any) {
 
   return (
     <View className="bg-white mb-6 px-4">
-      <CustomerCard name="Ali Amin" address="123 Main Street, Apt 4B" />
+      <CustomerCard name="Customer" address="Live order address" />
 
       <View className="bg-white rounded-2xl p-4 shadow-sm mb-6">
         <Text className="font-bold text-2xl mb-1">Confirm Bag Count</Text>

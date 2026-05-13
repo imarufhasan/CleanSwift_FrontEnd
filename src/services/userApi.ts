@@ -1,4 +1,4 @@
-import { api } from "./api";
+import { api } from './api';
 
 type DriverProfileBody = {
   data: {
@@ -17,29 +17,25 @@ type DriverProfileBody = {
 };
 
 export const userApi = api.injectEndpoints({
-  endpoints: (builder) => ({
-   
+  endpoints: builder => ({
     // {{baseUrl}}/user/change-password
     changePassword: builder.mutation<any, any>({
-      query: (body) => {
-        console.log("🔥 changePassword API called with body: ", body);
+      query: body => {
+        console.log('🔥 changePassword API called with body: ', body);
         return {
-          url: "/user/change-password",
-          method: "PATCH",
+          url: '/user/change-password',
+          method: 'PATCH',
           body,
         };
       },
     }),
     // {{baseUrl}}/user/update-profile-photo
     updateProfilePhoto: builder.mutation<any, FormData>({
-      query: (formData) => {
-        console.log(
-          "🔥 updateProfilePhoto API called with formData: ",
-          formData,
-        );
+      query: formData => {
+        console.log('🔥 updateProfilePhoto API called with formData: ', formData);
         return {
-          url: "/user/update-profile-photo",
-          method: "PUT",
+          url: '/user/update-profile-photo',
+          method: 'PUT',
           body: formData,
         };
       },
@@ -47,11 +43,11 @@ export const userApi = api.injectEndpoints({
 
     //{{baseUrl}}/user/update-user-data
     updateUserData: builder.mutation<any, any>({
-      query: (body) => {
-        console.log("🔥 updateUserData API called with body: ", body);
+      query: body => {
+        console.log('🔥 updateUserData API called with body: ', body);
         return {
-          url: "/user/update-user-data",
-          method: "PATCH",
+          url: '/user/update-user-data',
+          method: 'PATCH',
           body,
         };
       },
@@ -59,35 +55,37 @@ export const userApi = api.injectEndpoints({
 
     profileInfo: builder.query<any, void>({
       query: () => {
-        console.log("🔥 profileInfo API fetching...");
+        console.log('🔥 profileInfo API fetching...');
 
         return {
-          url: "/user/profile",
-          method: "GET",
+          url: '/user/profile',
+          method: 'GET',
         };
       },
+      providesTags: ['User'],
     }),
 
     ///user/create-driver-profile
     createDriverProfile: builder.mutation<any, DriverProfileBody>({
       query: ({ data, license, selfie, insuranceDocument }) => {
         const formData = new FormData();
-        formData.append("data", JSON.stringify(data));
+        formData.append('data', JSON.stringify(data));
         if (license) {
-          formData.append("license", license);
+          formData.append('license', license);
         }
         if (selfie) {
-          formData.append("selfie", selfie);
+          formData.append('selfie', selfie);
         }
         if (insuranceDocument) {
-          formData.append("insuranceDocument", insuranceDocument);
+          formData.append('insuranceDocument', insuranceDocument);
         }
         return {
-          url: "/user/create-driver-profile",
-          method: "POST",
+          url: '/user/create-driver-profile',
+          method: 'POST',
           body: formData,
         };
       },
+      invalidatesTags: ['User', 'Driver'],
     }),
 
     //{{baseUrl}}/user/create-driver-profile

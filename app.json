@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "CleanSwift",
-    "slug": "CleanSwift",
+    "name": "sudsygo",
+    "slug": "sudsygo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/AppIcon.png",
@@ -10,14 +10,14 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "scheme": "cleanswift",
+    "scheme": "sudsygo",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "CleanSwift needs your location to find nearby cleaning services.",
-        "NSLocationAlwaysUsageDescription": "CleanSwift needs your location to provide location-based services.",
+        "NSLocationWhenInUseUsageDescription": "sudsygo needs your location to find nearby cleaning services.",
+        "NSLocationAlwaysUsageDescription": "sudsygo needs your location to provide location-based services.",
         "UIStatusBarStyle": "UIStatusBarStyleLightContent",
         "UIViewControllerBasedStatusBarAppearance": false
       }
@@ -25,7 +25,7 @@
     "android": {
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.ayonghosh.CleanSwift",
+      "package": "com.ayonghosh.sudsygo",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"
@@ -41,9 +41,9 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow CleanSwift to use your location to find nearby cleaning services.",
-          "locationAlwaysPermission": "Allow CleanSwift to use your location.",
-          "locationWhenInUsePermission": "Allow CleanSwift to use your location to find nearby cleaning services.",
+          "locationAlwaysAndWhenInUsePermission": "Allow sudsygo to use your location to find nearby cleaning services.",
+          "locationAlwaysPermission": "Allow sudsygo to use your location.",
+          "locationWhenInUsePermission": "Allow sudsygo to use your location to find nearby cleaning services.",
           "isAndroidBackgroundLocationEnabled": false
         }
       ],

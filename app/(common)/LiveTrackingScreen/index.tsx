@@ -1,33 +1,87 @@
-import React from "react";
-import { View, Text, TouchableOpacity, ScrollView, Image } from "react-native";
-import { Ionicons, Feather, AntDesign } from "@expo/vector-icons";
-import Colors from "@/constants/color";
-import RatingStars from "@/components/home/RatingStars";
-import { liveTrackingData } from "@/data/liveTracking";
-import { useRouter } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
+import React from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { Ionicons, Feather, AntDesign } from '@expo/vector-icons';
+import Colors from '@/constants/color';
+import RatingStars from '@/components/home/RatingStars';
+import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useGetMyOrdersQuery } from '@/src/services/orderApi';
+import { useOrderSocket } from '@/src/hooks/useOrderSocket';
+
+const buildSteps = (status?: string) => {
+  const currentByStatus: Record<string, number> = {
+    REQUESTED: 0,
+    DRIVER_ASSIGNED: 0,
+    PICKED_UP: 1,
+    WASHING_DRYING: 2,
+    OUT_FOR_DELIVERY: 3,
+    DELIVERED: 4,
+    COMPLETED: 4,
+  };
+  const current = currentByStatus[status ?? 'REQUESTED'] ?? 0;
+
+  return [
+    { key: 'requested', title: 'Requested', time: '', status: 'done' },
+    { key: 'picked', title: 'Picked Up', time: '', status: 'done' },
+    { key: 'washing', title: 'Washing', time: '', subtitle: 'Currently in progress', status: 'active' },
+    { key: 'delivery', title: 'Out for Delivery', time: '', status: 'pending', icon: 'truck' },
+    { key: 'delivered', title: 'Delivered', time: '', status: 'pending', icon: 'home' },
+  ].map((step, index) => ({
+    ...step,
+    status:
+      index < current
+        ? 'done'
+        : index === current
+          ? step.status === 'pending'
+            ? 'active'
+            : step.status
+          : 'pending',
+  }));
+};
 
 export default function LiveTrackingScreen() {
   const router = useRouter();
-  const { status, order, driver, orderDetails } = liveTrackingData;
+  const { data: ordersRes, refetch } = useGetMyOrdersQuery();
+  const activeOrder = ordersRes?.data?.find(
+    order => !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(order.status),
+  );
+  const driver = activeOrder?.driver ?? null;
+  const status = {
+    label: activeOrder?.status?.replaceAll('_', ' ') ?? 'No active order',
+    etaMinutes: activeOrder?.scheduledPickupAt ? 12 : 0,
+  };
+  const orderDetails = {
+    service: activeOrder?.serviceType ? activeOrder.serviceType.replaceAll('_', ' ') : 'Unavailable',
+    address: {
+      street: activeOrder?.address ?? 'No address available',
+      city: '',
+    },
+    instructions: activeOrder?.specialInstructions ?? 'No special instructions',
+    pricing: {
+      bags: activeOrder?.bags ?? 0,
+      bagPrice: activeOrder?.pricePerBag ?? 0,
+      tip: 0,
+    },
+  };
 
-  const total =
-    orderDetails.pricing.bags * orderDetails.pricing.bagPrice +
-    orderDetails.pricing.tip;
+  const total = orderDetails.pricing.bags * orderDetails.pricing.bagPrice + orderDetails.pricing.tip;
+
+  useOrderSocket({
+    role: 'CUSTOMER',
+    orderId: activeOrder?._id,
+    onCustomerUpdate: refetch,
+  });
 
   return (
     <ScrollView className="flex-1">
-      <SafeAreaView edges={["bottom"]} className="bg-[#F6F9FF] flex-1">
+      <SafeAreaView edges={['bottom']} className="bg-[#F6F9FF] flex-1">
         {/* Map Placeholder */}
         <View className="h-[300px] bg-blue-100 relative">
           {/* Fake Map Grid Background */}
           <View className="absolute inset-0 opacity-40">
             <View className="flex-1 flex-row flex-wrap">
               {[...Array(100)].map((_, i) => (
-                <View
-                  key={i}
-                  className="w-[10%] h-[10%] border border-blue-200"
-                />
+                <View key={i} className="w-[10%] h-[10%] border border-blue-200" />
               ))}
             </View>
           </View>
@@ -42,13 +96,12 @@ export default function LiveTrackingScreen() {
 
           {/* back icon */}
           <TouchableOpacity
-            onPress={() => {
-              router.back();
-            }}
+            onPress={() => router.back()}
             className="absolute top-12 left-4 bg-white p-2 rounded-full shadow"
           >
             <Ionicons name="arrow-back" size={20} color="#000" />
           </TouchableOpacity>
+
           {/* Status Badge */}
           <View className="absolute top-12 self-center bg-white px-4 py-2 rounded-full flex-row items-center shadow">
             <View className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
@@ -68,7 +121,9 @@ export default function LiveTrackingScreen() {
           {/* ETA Bubble */}
           <View className="absolute left-4 bottom-4 bg-white px-4 py-2 rounded-xl shadow">
             <Text className="text-sm text-gray-500">Estimated Ready Time</Text>
-            <Text className="font-bold text-[22px]">6:30 PM</Text>
+            <Text className="font-bold text-[22px]">
+              {status.etaMinutes ? `${status.etaMinutes} mins` : '--'}
+            </Text>
           </View>
         </View>
 
@@ -81,25 +136,17 @@ export default function LiveTrackingScreen() {
             </Text>
           </View>
           <View className="bg-white rounded-2xl p-4 shadow">
-            {liveTrackingData.progressSteps.map((step, index) => {
-              if (step.status === "done") {
+            {buildSteps(activeOrder?.status).map((step, index) => {
+              if (step.status === 'done') {
                 return (
                   <View key={step.key}>
                     <View className="flex-row">
                       <View className="items-center mr-3">
                         <View className="w-9 h-9 rounded-full bg-green-200 justify-center items-center">
-                          {step.title === "Delivered" ? (
-                            <Ionicons
-                              name="home-outline"
-                              size={22}
-                              color={"green"}
-                            />
+                          {step.title === 'Delivered' ? (
+                            <Ionicons name="home-outline" size={22} color={'green'} />
                           ) : (
-                            <Ionicons
-                              name="checkmark-circle-outline"
-                              size={22}
-                              color={"green"}
-                            />
+                            <Ionicons name="checkmark-circle-outline" size={22} color={'green'} />
                           )}
                         </View>
                         <View className="w-[2px] flex-1 bg-green-500 mt-1" />
@@ -107,40 +154,30 @@ export default function LiveTrackingScreen() {
 
                       <View>
                         <Text className="font-medium">{step.title}</Text>
-                        <Text className="text-xs text-gray-500">
-                          {step.time}
-                        </Text>
+                        <Text className="text-xs text-gray-500">{step.time}</Text>
                       </View>
                     </View>
-                    {step.title !== "Delivered" ? (
+                    {step.title !== 'Delivered' ? (
                       <View className="bg-green-200 h-[30px] w-[1px] ml-4 my-2 rounded-full" />
                     ) : null}
                   </View>
                 );
               }
 
-              if (step.status === "active") {
+              if (step.status === 'active') {
                 return (
                   <View key={step.key} className="flex-row mb-6">
                     <View className="items-center mr-3">
                       {/* loader icon */}
                       <View className="w-9 h-9 rounded-full bg-blue-100 justify-center items-center">
-                        <Ionicons
-                          name="refresh-outline"
-                          size={22}
-                          color="#3B82F6"
-                        />
+                        <Ionicons name="refresh-outline" size={22} color="#3B82F6" />
                       </View>
                     </View>
 
                     <View>
-                      <Text className="font-medium text-black">
-                        {step.title}
-                      </Text>
+                      <Text className="font-medium text-black">{step.title}</Text>
                       <Text className="text-xs text-black">In Progress</Text>
-                      <Text className="text-xs text-blue-500 font-semibold">
-                        {step.subtitle}
-                      </Text>
+                      <Text className="text-xs text-blue-500 font-semibold">{step.subtitle}</Text>
                     </View>
                   </View>
                 );
@@ -150,11 +187,7 @@ export default function LiveTrackingScreen() {
                 <View key={step.key} className="flex-row mb-5 opacity-40">
                   <View className="items-center mr-3">
                     <View className="w-9 h-9 rounded-full bg-gray-300 justify-center items-center">
-                      <AntDesign
-                        name={step.icon as any}
-                        size={16}
-                        color="#000"
-                      />
+                      <AntDesign name={step.icon as any} size={16} color="#000" />
                     </View>
                   </View>
                   <Text className="font-medium">{step.title}</Text>
@@ -168,25 +201,36 @@ export default function LiveTrackingScreen() {
         <View className="bg-white rounded-2xl p-4 shadow mx-5 mb-5 mt-4">
           <View className="flex-row items-center mb-3">
             <Image
-              source={{ uri: driver.avatar }}
+              source={driver?.image ? { uri: driver.image } : require('@/assets/images/profile.png')}
               style={{ width: 40, height: 40, borderRadius: 25 }}
               resizeMode="cover"
             />
             <View className="flex-1 ml-2">
-              <Text className="font-semibold text-base">{driver.name}</Text>
+              <Text className="font-semibold text-base">{driver?.name ?? 'Driver'}</Text>
               <View className="flex-row items-center mt-1">
-                <RatingStars rating={driver.rating} />
+                <RatingStars rating={driver ? 4.9 : 0} />
                 <Text className="text-sm ml-1 text-gray-600">
-                  {driver.rating} ({driver.trips} trips)
+                  {driver ? 'Assigned driver' : 'No driver yet'}
                 </Text>
               </View>
             </View>
 
-            <TouchableOpacity onPress={() => router.push("/DriverDetails")}>
-              <Text
-                style={{ color: Colors.primary }}
-                className="text-sm font-semibold  text-right"
-              >
+            <TouchableOpacity
+              onPress={() =>
+                router.push({
+                  pathname: '/(common)/DriverDetails' as any,
+                  params: {
+                    orderId: String(activeOrder?._id ?? ''),
+                    name: driver?.name ?? 'Driver',
+                    image: driver?.image ?? '',
+                    rating: '4.9',
+                    trips: '0',
+                    vehicle: 'Vehicle info unavailable',
+                  },
+                })
+              }
+            >
+              <Text style={{ color: Colors.primary }} className="text-sm font-semibold text-right">
                 View Details
               </Text>
             </TouchableOpacity>
@@ -194,27 +238,35 @@ export default function LiveTrackingScreen() {
 
           <View className="flex-row">
             <TouchableOpacity
-              onPress={() => router.push("/ChatScreen")}
+              onPress={() =>
+                router.push({
+                  pathname: '/(common)/ChatScreen' as any,
+                  params: {
+                    orderId: String(activeOrder?._id ?? ''),
+                    name: driver?.name ?? 'Driver',
+                    avatar: driver?.image ?? '',
+                  },
+                })
+              }
               className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center mr-2"
             >
               <AntDesign name="message" size={18} color={Colors.primary} />
-              <Text
-                style={{ color: Colors.primary }}
-                className="ml-2  font-semibold"
-              >
+              <Text style={{ color: Colors.primary }} className="ml-2 font-semibold">
                 Message
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => router.push("/CallScreen")}
+              onPress={() =>
+                router.push({
+                  pathname: '/(common)/CallScreen' as any,
+                  params: { name: driver?.name ?? 'Driver', image: driver?.image ?? '' },
+                })
+              }
               className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center ml-2"
             >
               <Ionicons name="call-outline" size={18} color={Colors.primary} />
-              <Text
-                style={{ color: Colors.primary }}
-                className="ml-2  font-semibold"
-              >
+              <Text style={{ color: Colors.primary }} className="ml-2 font-semibold">
                 Call Driver
               </Text>
             </TouchableOpacity>
@@ -234,28 +286,24 @@ export default function LiveTrackingScreen() {
             <View className="mb-3">
               <Text className="text-gray-500 text-xs">Pickup Address</Text>
               <Text className="font-medium">{orderDetails.address.street}</Text>
-              <Text className="text-gray-500 text-sm">
-                {orderDetails.address.city}
-              </Text>
             </View>
 
             <View className="mb-3">
-              <Text className="text-gray-500 text-xs">
-                Special Instructions
-              </Text>
+              <Text className="text-gray-500 text-xs">Special Instructions</Text>
               <Text className="font-medium">{orderDetails.instructions}</Text>
             </View>
 
             <View className="pt-3">
               <View className="border-t border-b border-gray-200 py-3 flex-row justify-between mb-2">
                 <Text className="text-gray-600">
-                  {orderDetails.pricing.bags} bags × $
-                  {orderDetails.pricing.bagPrice}
+                  {orderDetails.pricing.bags} bags × ${orderDetails.pricing.bagPrice}
                 </Text>
+                <Text>${orderDetails.pricing.bags * orderDetails.pricing.bagPrice}</Text>
+              </View>
 
-                <Text>
-                  ${orderDetails.pricing.bags * orderDetails.pricing.bagPrice}
-                </Text>
+              <View className="flex-row justify-between mb-2">
+                <Text className="text-gray-600">Tip</Text>
+                <Text>${orderDetails.pricing.tip}</Text>
               </View>
 
               <View className="flex-row justify-between mt-2">
@@ -269,13 +317,25 @@ export default function LiveTrackingScreen() {
         {/* Mark as Delivered Button */}
         <View className="px-5 mb-5">
           <TouchableOpacity
-            onPress={() => router.push("/DeliveredSuccessScreen")}
+            onPress={() =>
+              router.push({
+                pathname: '/(common)/DeliveredSuccessScreen' as any,
+                params: {
+                  orderId: String(activeOrder?._id ?? ''),
+                  name: driver?.name ?? 'Driver',
+                  image: driver?.image ?? '',
+                  service: orderDetails.service,
+                  address: orderDetails.address.street,
+                  bags: String(orderDetails.pricing.bags),
+                  bagPrice: String(orderDetails.pricing.bagPrice),
+                  tip: String(orderDetails.pricing.tip),
+                },
+              })
+            }
             className="bg-green-600 gap-2 rounded-xl py-3 flex-row justify-center items-center"
           >
             <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
-            <Text className="text-white text-lg font-semibold">
-              Mark as Delivered
-            </Text>
+            <Text className="text-white text-lg font-semibold">Mark as Delivered</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>

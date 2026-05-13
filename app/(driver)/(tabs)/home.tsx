@@ -21,10 +21,29 @@ import {
   getRefreshToken,
 } from "@/src/services/storage/tokenStorage";
 import { useProfileInfoQuery } from "@/src/services/userApi";
+import {
+  useAcceptJobMutation,
+  useDeclineJobMutation,
+  useGetAvailableJobsQuery,
+  useGetMyDriverProfileQuery,
+  useGetMyDriverJobsQuery,
+  useUpdateDriverAvailabilityMutation,
+} from "@/src/services/driverApi";
+import type { Order } from "@/src/services/orderApi";
+import { useOrderSocket } from "@/src/hooks/useOrderSocket";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { data: profileInfo, error, isLoading } = useProfileInfoQuery();
+  const { data: driverProfileRes, refetch: refetchDriverProfile } =
+    useGetMyDriverProfileQuery();
+  const { data: myJobsRes, refetch: refetchMyJobs } = useGetMyDriverJobsQuery();
+  const { data: availableJobsRes, refetch: refetchAvailableJobs } =
+    useGetAvailableJobsQuery();
+  const [updateAvailability, { isLoading: isUpdatingAvailability }] =
+    useUpdateDriverAvailabilityMutation();
+  const [acceptJob, { isLoading: isAcceptingJob }] = useAcceptJobMutation();
+  const [declineJob, { isLoading: isDecliningJob }] = useDeclineJobMutation();
 
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
@@ -39,6 +58,7 @@ export default function HomeScreen() {
 
   const [acceptModal, setAcceptModal] = useState(false);
   const [declineModal, setDeclineModal] = useState(false);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
 
   const [pickupData, setPickupData] = useState({
     asap: true,
@@ -47,56 +67,31 @@ export default function HomeScreen() {
     bags: 1,
   });
 
-  const [data, setData] = useState({
-    user: {
-      name: "Ali Amin",
-    },
+  const driverProfile = driverProfileRes?.data;
+  const driverStatus = driverProfile?.status ?? "PENDING";
+  const driverApproved = driverStatus === "APPROVED";
+  const myJobs = myJobsRes?.data ?? [];
+  const availableJobs = availableJobsRes?.data ?? [];
+  const activeOrder = myJobs.find(
+    (order) => !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
+  );
+  const availableOrder = availableJobs[0];
 
-    location: {
-      title: "Current Location",
-      street: "123 Main Street, Apt 4B",
-      city: "San Francisco",
-      state: "CA 94102",
-    },
+  const refreshJobs = useCallback(() => {
+    refetchAvailableJobs();
+    refetchMyJobs();
+  }, [refetchAvailableJobs, refetchMyJobs]);
 
-    activeOrder: {
-      id: 1248,
-      status: "Washing",
-      quantity: 2,
-      price: 90,
-      progress: 50,
-      estimatedDelivery: "Today, 6:00 PM",
-      steps: ["Picked Up", "Washing", "Delivery"],
-      currentStep: 1,
-    },
-
-    recentOrders: [
-      {
-        id: 1247,
-        quantity: 1,
-        price: 45,
-        rating: 5.0,
-        status: "Delivered",
-        date: "Jan 24, 2026",
-      },
-      {
-        id: 1246,
-        quantity: 2,
-        price: 80,
-        rating: 4.8,
-        status: "Delivered",
-        date: "Jan 18, 2026",
-      },
-      {
-        id: 1248,
-        quantity: 2,
-        price: 90,
-        rating: 5.0,
-        status: "Delivered",
-        date: "Today",
-      },
-    ],
+  useOrderSocket({
+    role: 'DRIVER',
+    onDriverJobsUpdate: refreshJobs,
   });
+
+  useEffect(() => {
+    if (typeof driverProfile?.isAvailable === "boolean") {
+      setSelected(driverProfile.isAvailable);
+    }
+  }, [driverProfile?.isAvailable]);
 
   useEffect(() => {
     const loadTokens = async () => {
@@ -115,11 +110,11 @@ export default function HomeScreen() {
 
   useEffect(() => {
     Animated.timing(progressAnim, {
-      toValue: data.activeOrder.progress,
+      toValue: activeOrder ? getOrderProgress(activeOrder.status) : 0,
       duration: 800, // smooth speed
       useNativeDriver: false, // width animation must be false
     }).start();
-  }, [data.activeOrder.progress]);
+  }, [activeOrder?.status]);
 
   useEffect(() => {
     if (!pickupData.asap && !pickupData.date) {
@@ -165,9 +160,85 @@ export default function HomeScreen() {
       // }));
 
       setRefreshing(false);
+      refetchDriverProfile();
+      refetchMyJobs();
+      refetchAvailableJobs();
       ShowMessage.show("updated");
     }, 1500);
-  }, []);
+  }, [refetchAvailableJobs, refetchDriverProfile, refetchMyJobs]);
+
+  const getOrderProgress = (status: Order["status"]) => {
+    switch (status) {
+      case "REQUESTED":
+        return 10;
+      case "DRIVER_ASSIGNED":
+        return 25;
+      case "PICKED_UP":
+        return 50;
+      case "WASHING_DRYING":
+        return 70;
+      case "OUT_FOR_DELIVERY":
+        return 90;
+      case "DELIVERED":
+      case "COMPLETED":
+        return 100;
+      default:
+        return 0;
+    }
+  };
+
+  const getOrderStep = (status: Order["status"]) => {
+    if (status === "REQUESTED" || status === "DRIVER_ASSIGNED") return 0;
+    if (status === "PICKED_UP" || status === "WASHING_DRYING") return 1;
+    return 2;
+  };
+
+  const handleAcceptJob = async () => {
+    if (!selectedJobId) return;
+    try {
+      await acceptJob(selectedJobId).unwrap();
+      setAcceptModal(false);
+      setSelectedJobId(null);
+      refetchMyJobs();
+      refetchAvailableJobs();
+      ShowMessage.show("Job accepted successfully");
+    } catch (error: any) {
+      ShowMessage.error(error?.data?.message ?? "Failed to accept job");
+    }
+  };
+
+  const handleDeclineJob = async () => {
+    if (!selectedJobId) return;
+    try {
+      await declineJob(selectedJobId).unwrap();
+      setDeclineModal(false);
+      setSelectedJobId(null);
+      refetchAvailableJobs();
+      ShowMessage.show("Job declined successfully");
+    } catch (error: any) {
+      ShowMessage.error(error?.data?.message ?? "Failed to decline job");
+    }
+  };
+
+  const handleToggleAvailability = async () => {
+    if (!driverApproved) {
+      ShowMessage.show("Your driver profile is under approval");
+      return;
+    }
+
+    const nextValue = !selected;
+    setSelected(nextValue);
+
+    try {
+      await updateAvailability(nextValue).unwrap();
+      refetchDriverProfile();
+    } catch (error: any) {
+      setSelected(!nextValue);
+      ShowMessage.error(
+        error?.data?.message ?? "Failed to update availability",
+      );
+    }
+  };
 
   const onDateChange = (_: any, date?: Date) => {
     setShowDatePicker(false);
@@ -261,8 +332,9 @@ export default function HomeScreen() {
                 </View>
 
                 <TouchableOpacity
-                  onPress={() => setSelected((prev) => !prev)}
+                  onPress={handleToggleAvailability}
                   activeOpacity={0.8}
+                  disabled={isUpdatingAvailability}
                   className={`w-[70px] h-[36px] rounded-full justify-center ${
                     selected ? "bg-green-500" : "bg-gray-400"
                   }`}
@@ -276,6 +348,22 @@ export default function HomeScreen() {
             </View>
           </View>
         </View>
+
+        {/* Today's Earnings */}
+        {!driverApproved && (
+          <View className="px-5 -mt-8 z-20">
+            <View className="rounded-2xl border border-yellow-200 bg-yellow-50 p-4">
+              <Text className="text-base font-bold text-yellow-700">
+                Driver profile {driverStatus.toLowerCase()}
+              </Text>
+              <Text className="mt-1 text-sm text-yellow-700">
+                {driverStatus === "PENDING"
+                  ? "Your driver profile is under approval. You can start taking jobs after admin approval."
+                  : "Please contact support for more details."}
+              </Text>
+            </View>
+          </View>
+        )}
 
         {/* Today's Earnings */}
         <View className="px-5 -mt-12 z-10">
@@ -306,8 +394,9 @@ export default function HomeScreen() {
           </>
 
           {/* Active Route */}
-          <>
-            <Text className="text-lg font-bold mb-3">Active Route</Text>
+          <Text className="text-lg font-bold mb-3">Active Route</Text>
+          {activeOrder ? (
+            <>
             <View className="bg-white rounded-2xl px-4 py-6 shadow-sm mb-6 border border-gray-100">
               <View className="flex-row justify-between items-start mb-4">
                 <View className="flex-row items-safe">
@@ -324,11 +413,11 @@ export default function HomeScreen() {
 
                   <View className="ml-2">
                     <Text className="font-semibold">
-                      Order #{data.activeOrder.id}
+                      Order #{activeOrder._id.slice(-6)}
                     </Text>
                     <Text className="text-sm text-gray-500 mb-3">
-                      {data.activeOrder.quantity} bags • $
-                      {data.activeOrder.price}
+                      {activeOrder.bags} bags • $
+                      {activeOrder.total}
                       .00
                     </Text>
                   </View>
@@ -336,20 +425,20 @@ export default function HomeScreen() {
 
                 <Text
                   className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusStyle(
-                    data.activeOrder.status,
+                    activeOrder.status,
                   )}`}
                 >
-                  In Progress
+                  {activeOrder.status.replaceAll("_", " ")}
                 </Text>
               </View>
 
               {/* Steps */}
               <View className="flex-row justify-between mb-2">
-                {data.activeOrder.steps.map((step, index) => (
+                {["Picked Up", "Washing", "Delivery"].map((step, index) => (
                   <Text
                     key={step}
                     className={`text-xs ${
-                      index <= data.activeOrder.currentStep
+                      index <= getOrderStep(activeOrder.status)
                         ? "text-blue-500"
                         : "text-gray-400"
                     }`}
@@ -372,13 +461,14 @@ export default function HomeScreen() {
 
               <View className="flex-row justify-between items-center">
                 <Text className="text-xs text-gray-500">
-                  Estimated delivery: {data.activeOrder.estimatedDelivery}
+                  {activeOrder.address || "Pickup address unavailable"}
                 </Text>
                 <TouchableOpacity
                   onPress={() =>
-                    router.push(
-                      "/LiveTrackScreenDriver/LiveTrackScreenDriverMain",
-                    )
+                    router.push({
+                      pathname: "/(common)/OrderDetailsDriver" as any,
+                      params: { id: activeOrder._id },
+                    })
                   }
                   className="flex-row gap-3 items-center"
                 >
@@ -386,7 +476,7 @@ export default function HomeScreen() {
                     style={{ color: Colors.primary }}
                     className="text-[14px] font-bold"
                   >
-                    Track Live
+                    Details
                   </Text>
                   <Ionicons
                     name="arrow-forward"
@@ -396,7 +486,12 @@ export default function HomeScreen() {
                 </TouchableOpacity>
               </View>
             </View>
-          </>
+            </>
+          ) : (
+            <View className="bg-white rounded-2xl px-4 py-6 shadow-sm mb-6 border border-gray-100">
+              <Text className="text-gray-500">No active route right now</Text>
+            </View>
+          )}
 
           {/* Available Jobs */}
           <>
@@ -412,11 +507,14 @@ export default function HomeScreen() {
                 </Text>
               </TouchableOpacity>
             </View>
+            {availableOrder ? (
             <View className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100">
               <View className="flex-row justify-between items-start mb-3">
                 <View className="flex-row items-safe">
                   <View className="ml-2">
-                    <Text className="font-semibold mb-1">Order #1251</Text>
+                    <Text className="font-semibold mb-1">
+                      Order #{availableOrder._id.slice(-6)}
+                    </Text>
                     <View className="flex-row">
                       <Ionicons
                         name="location-outline"
@@ -424,13 +522,13 @@ export default function HomeScreen() {
                         color={"gray"}
                       />
                       <Text className="text-sm text-gray-500 mb-1">
-                        123 Elm St
+                        {availableOrder.address || "Pickup address unavailable"}
                       </Text>
                     </View>
                     <View className="flex-row">
                       <Ionicons name="time-outline" size={14} color={"gray"} />
                       <Text className="text-sm text-gray-500 mb-1">
-                        Posted 2 mins ago
+                        {availableOrder.pickupType}
                       </Text>
                     </View>
                   </View>
@@ -438,7 +536,7 @@ export default function HomeScreen() {
 
                 <View className="items-end justify-center">
                   <Text className="font-bold text-green-500 text-[24px]">
-                    $45
+                    ${availableOrder.total}
                   </Text>
                   <Text className="font-sm text-gray-500">You earn 70%</Text>
                 </View>
@@ -447,17 +545,24 @@ export default function HomeScreen() {
               <View className="flex-row justify-between bg-blue-50 rounded-[10px] py-4 px-6">
                 <View className="flex-1 items-start justify-center">
                   <Text className="text-base text-gray-500">Begs</Text>
-                  <Text className="text-lg font-bold text-black">2 Begs</Text>
+                  <Text className="text-lg font-bold text-black">
+                    {availableOrder.bags} Bags
+                  </Text>
                 </View>
                 <View className="flex-1 items-start justify-center ml-[20px]">
-                  <Text className="text-base text-gray-500">Distance</Text>
-                  <Text className="text-lg font-bold text-black">1.2 mi</Text>
+                  <Text className="text-base text-gray-500">Service</Text>
+                  <Text className="text-lg font-bold text-black">
+                    {availableOrder.serviceType.replaceAll("_", " ")}
+                  </Text>
                 </View>
               </View>
 
               <View className=" mt-5 flex-row items-center justify-center gap-4">
                 <TouchableOpacity
-                  onPress={() => setDeclineModal(true)}
+                  onPress={() => {
+                    setSelectedJobId(availableOrder._id);
+                    setDeclineModal(true);
+                  }}
                   className="flex-1 border border-red-400 py-2 rounded-xl"
                 >
                   <Text className="text-center text-lg py-1 text-red-500 font-medium">
@@ -465,7 +570,10 @@ export default function HomeScreen() {
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={() => setAcceptModal(true)}
+                  onPress={() => {
+                    setSelectedJobId(availableOrder._id);
+                    setAcceptModal(true);
+                  }}
                   className="flex-1 bg-blue-500 py-2 rounded-xl"
                 >
                   <Text className="text-center text-lg py-1 text-white font-medium">
@@ -474,6 +582,11 @@ export default function HomeScreen() {
                 </TouchableOpacity>
               </View>
             </View>
+            ) : (
+              <View className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100">
+                <Text className="text-gray-500">No available jobs now</Text>
+              </View>
+            )}
           </>
         </View>
       </ScrollView>
@@ -566,14 +679,12 @@ export default function HomeScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={() => {
-                  setDeclineModal(false);
-                  ShowMessage.show("Job Decline successfully");
-                }}
+                onPress={handleDeclineJob}
+                disabled={isDecliningJob}
                 className="flex-1 bg-blue-500 rounded-xl py-3"
               >
                 <Text className="text-white text-lg text-center font-semibold">
-                  Yes
+                  {isDecliningJob ? "Declining..." : "Yes"}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -599,14 +710,12 @@ export default function HomeScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={() => {
-                  setAcceptModal(false);
-                  ShowMessage.show("Job accepted successfully");
-                }}
+                onPress={handleAcceptJob}
+                disabled={isAcceptingJob}
                 className="flex-1 bg-blue-500 rounded-xl py-3"
               >
                 <Text className="text-white text-lg text-center font-semibold">
-                  Yes
+                  {isAcceptingJob ? "Accepting..." : "Yes"}
                 </Text>
               </TouchableOpacity>
             </View>

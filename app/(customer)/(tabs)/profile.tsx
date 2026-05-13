@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -8,51 +8,36 @@ import {
   RefreshControl,
   Modal,
   ActivityIndicator,
-} from "react-native";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import Colors from "@/constants/color";
-import { useFocusEffect, useRouter } from "expo-router";
-import Toast from "@/constants/toast";
-import ShowMessage from "@/constants/toast";
-import { useUserInfo } from "@/src/core/store/userInfo";
-import {
-  ACCESS_KEY,
-  clearTokens,
-  REFRESH_KEY,
-  USER,
-} from "@/src/services/storage/tokenStorage";
-import { api } from "@/src/services/api";
-import * as SecureStore from "expo-secure-store";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useDispatch } from "react-redux";
-import AppLoader from "@/components/shared/AppLoader";
-import {
-  useProfileInfoQuery,
-  useUpdateProfilePhotoMutation,
-} from "@/src/services/userApi";
-import * as ImagePicker from "expo-image-picker";
+} from 'react-native';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import Colors from '@/constants/color';
+import { useFocusEffect, useRouter } from 'expo-router';
+import Toast from '@/constants/toast';
+import ShowMessage from '@/constants/toast';
+import { useUserInfo } from '@/src/core/store/userInfo';
+import { ACCESS_KEY, clearTokens, REFRESH_KEY, USER } from '@/src/services/storage/tokenStorage';
+import { api } from '@/src/services/api';
+import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useDispatch } from 'react-redux';
+import AppLoader from '@/components/shared/AppLoader';
+import { useProfileInfoQuery, useUpdateProfilePhotoMutation } from '@/src/services/userApi';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function Profile() {
   const router = useRouter();
-  const {
-    data: profileInfo,
-    error,
-    isLoading,
-    isFetching,
-    refetch,
-  } = useProfileInfoQuery();
+  const { data: profileInfo, error, isLoading, isFetching, refetch } = useProfileInfoQuery();
 
-  const userRole = profileInfo?.data?.role || "";
-  console.log("profileInfo role: ", profileInfo?.data?.role);
-  const [updateProfilePhoto, { isLoading: photoLoading }] =
-    useUpdateProfilePhotoMutation();
+  const userRole = profileInfo?.data?.role || '';
+  console.log('profileInfo role: ', profileInfo?.data?.role);
+  const [updateProfilePhoto, { isLoading: photoLoading }] = useUpdateProfilePhotoMutation();
   const dispatch = useDispatch();
 
   const [refreshing, setRefreshing] = useState(false);
   const [logoutModal, setLogoutModal] = useState(false);
-  const role = useUserInfo((state) => state.role);
-  const setRole = useUserInfo((state) => state.setRole);
-  const clearUser = useUserInfo((state) => state.clearAuth);
+  const role = useUserInfo(state => state.role);
+  const setRole = useUserInfo(state => state.setRole);
+  const clearUser = useUserInfo(state => state.clearAuth);
   const [imageLoading, setImageLoading] = useState(false);
   const [imageVersion, setImageVersion] = useState(Date.now());
   const onRefresh = useCallback(async () => {
@@ -60,9 +45,9 @@ export default function Profile() {
       setRefreshing(true);
       setImageVersion(Date.now());
       await refetch();
-      ShowMessage.show("Profile updated");
+      ShowMessage.show('Profile updated');
     } catch (error) {
-      ShowMessage.error("Failed to refresh");
+      ShowMessage.error('Failed to refresh');
     } finally {
       setRefreshing(false);
     }
@@ -75,21 +60,21 @@ export default function Profile() {
   );
 
   const menuItems = [
-    { label: "Profile Setting", icon: "person-outline" },
-    { label: "Payment Methods", icon: "card-outline" },
-    ...(userRole === "CUSTOMER"
+    { label: 'Profile Setting', icon: 'person-outline' },
+    { label: 'Payment Methods', icon: 'card-outline' },
+    ...(userRole === 'CUSTOMER'
       ? [
           {
-            label: "Be a Driver",
-            icon: "car-outline",
+            label: 'Be a Driver',
+            icon: 'car-outline',
           },
         ]
       : []),
-    { label: "Change password", icon: "lock-closed-outline" },
-    { label: "Support", icon: "help-circle-outline" },
-    { label: "About Us", icon: "information-circle-outline" },
-    { label: "Privacy Policy", icon: "shield-checkmark-outline" },
-    { label: "Terms and Conditions", icon: "document-text-outline" },
+    { label: 'Change password', icon: 'lock-closed-outline' },
+    { label: 'Support', icon: 'help-circle-outline' },
+    { label: 'About Us', icon: 'information-circle-outline' },
+    { label: 'Privacy Policy', icon: 'shield-checkmark-outline' },
+    { label: 'Terms and Conditions', icon: 'document-text-outline' },
   ];
 
   const logout = async () => {
@@ -104,35 +89,34 @@ export default function Profile() {
 
       setLogoutModal(false);
 
-      ShowMessage.show("Logged out successfully");
+      ShowMessage.show('Logged out successfully');
       checkStorage();
 
-      router.replace("/(auth)/login");
+      router.replace('/(auth)/login');
     } catch (error) {
-      console.log("Logout error:", error);
+      console.log('Logout error:', error);
     }
   };
 
   const checkStorage = async () => {
     const keys = await AsyncStorage.getAllKeys();
-    console.log("Keys:", keys);
+    console.log('Keys:', keys);
 
     const data = await AsyncStorage.multiGet(keys);
-    console.log("Data:", data);
+    console.log('Data:', data);
   };
 
   const handleUpdatePhoto = async () => {
     try {
-      const permission =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (!permission.granted) {
-        ShowMessage.error("Gallery permission required");
+        ShowMessage.error('Gallery permission required');
         return;
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
+        mediaTypes: ['images'],
         quality: 0.7,
         allowsEditing: true,
         aspect: [1, 1],
@@ -144,21 +128,21 @@ export default function Profile() {
 
       const formData = new FormData();
 
-      formData.append("user", {
+      formData.append('user', {
         uri: image.uri,
-        name: image.fileName || "profile.jpg",
-        type: image.mimeType || "image/jpeg",
+        name: image.fileName || 'profile.jpg',
+        type: image.mimeType || 'image/jpeg',
       } as any);
 
       const res = await updateProfilePhoto(formData).unwrap();
 
-      console.log("upload response:", res);
+      console.log('upload response:', res);
       setImageVersion(Date.now());
       await refetch();
-      ShowMessage.show("Profile photo updated");
+      ShowMessage.show('Profile photo updated');
     } catch (error) {
-      console.log("PHOTO UPDATE ERROR:", error);
-      ShowMessage.error("Failed to update photo");
+      console.log('PHOTO UPDATE ERROR:', error);
+      ShowMessage.error('Failed to update photo');
     }
   };
 
@@ -166,15 +150,10 @@ export default function Profile() {
     <View className="flex-1 bg-gray-100">
       <ScrollView
         className="flex-1 bg-[#F6F9FF]"
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         {/* Header */}
-        <View
-          style={{ backgroundColor: Colors.primary }}
-          className="pt-14 pb-20 px-5 rounded-b-[32px]"
-        >
+        <View style={{ backgroundColor: Colors.primary }} className="pt-14 pb-20 px-5 rounded-b-[32px]">
           <View className="flex-row items-center">
             <TouchableOpacity
               activeOpacity={0.8}
@@ -189,7 +168,7 @@ export default function Profile() {
                       ? {
                           uri: `${profileInfo?.data?.image}?t=${imageVersion}`,
                         }
-                      : require("../../../assets/images/profile.png")
+                      : require('../../../assets/images/profile.png')
                   }
                   className="w-[70px] h-[70px] rounded-full border-2 border-white"
                   onLoadStart={() => setImageLoading(true)}
@@ -211,13 +190,9 @@ export default function Profile() {
             </TouchableOpacity>
 
             <View className="ml-3 flex-1">
-              <Text className="text-white text-[20px] font-bold">
-                {profileInfo?.data?.name || "User"}
-              </Text>
+              <Text className="text-white text-[20px] font-bold">{profileInfo?.data?.name || 'User'}</Text>
 
-              <Text className="text-white/80 text-sm">
-                {profileInfo?.data?.email || ""}
-              </Text>
+              <Text className="text-white/80 text-sm">{profileInfo?.data?.email || ''}</Text>
             </View>
           </View>
         </View>
@@ -243,55 +218,47 @@ export default function Profile() {
               key={index}
               className="bg-white flex-row items-center p-4 rounded-xl mb-3 border border-blue-200"
               onPress={() => {
-                if (item.label === "Profile Setting") {
-                  router.push("/profileSettings");
-                } else if (item.label === "Payment Methods") {
-                  ShowMessage.show("Payment Methods is coming soon!");
-                } else if (item.label === "Change password") {
-                  router.push("/changePassword");
-                } else if (item.label === "Be a Driver") {
-                  router.push("/driverRegistration2");
-                  console.log("make driver");
-                } else if (item.label === "Support") {
-                  router.push("/supportScreen");
-                } else if (item.label === "About Us") {
+                if (item.label === 'Profile Setting') {
+                  router.push('/profileSettings');
+                } else if (item.label === 'Payment Methods') {
+                  ShowMessage.show('Payment Methods is coming soon!');
+                } else if (item.label === 'Change password') {
+                  router.push('/changePassword');
+                } else if (item.label === 'Be a Driver') {
+                  router.push('/driverRegistration2');
+                  console.log('make driver');
+                } else if (item.label === 'Support') {
+                  router.push('/supportScreen');
+                } else if (item.label === 'About Us') {
                   router.push({
-                    pathname: "/PrivacyPolicyScreen",
+                    pathname: '/PrivacyPolicyScreen',
                     params: {
-                      title: "About Us",
-                      data: "about",
+                      title: 'About Us',
+                      slug: 'about-us',
                     },
                   });
-                } else if (item.label === "Privacy Policy") {
+                } else if (item.label === 'Privacy Policy') {
                   router.push({
-                    pathname: "/PrivacyPolicyScreen",
+                    pathname: '/PrivacyPolicyScreen',
                     params: {
-                      title: "Privacy Policy",
-                      data: "privacy",
+                      title: 'Privacy Policy',
+                      slug: 'privacy-policy',
                     },
                   });
-                } else if (item.label === "Terms and Conditions") {
+                } else if (item.label === 'Terms and Conditions') {
                   router.push({
-                    pathname: "/PrivacyPolicyScreen",
+                    pathname: '/PrivacyPolicyScreen',
                     params: {
-                      title: "Terms & Conditions",
-                      data: "terms",
+                      title: 'Terms & Conditions',
+                      slug: 'terms-and-conditions',
                     },
                   });
                 }
               }}
             >
-              <Ionicons
-                name={item.icon as any}
-                size={20}
-                color={Colors.primary}
-              />
+              <Ionicons name={item.icon as any} size={20} color={Colors.primary} />
               <Text className="ml-3 flex-1 font-medium">{item.label}</Text>
-              <MaterialIcons
-                name="keyboard-arrow-right"
-                size={22}
-                color="#9CA3AF"
-              />
+              <MaterialIcons name="keyboard-arrow-right" size={22} color="#9CA3AF" />
             </TouchableOpacity>
           ))}
         </View>
@@ -327,18 +294,11 @@ export default function Profile() {
                 onPress={() => setLogoutModal(false)}
                 className="flex-1 border border-red-500 rounded-2xl py-3"
               >
-                <Text className="text-red-500 text-[20px] text-center font-semibold">
-                  No
-                </Text>
+                <Text className="text-red-500 text-[20px] text-center font-semibold">No</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                onPress={() => logout()}
-                className="flex-1 bg-green-500 rounded-2xl py-3"
-              >
-                <Text className="text-white text-[20px] text-center font-semibold">
-                  Yes
-                </Text>
+              <TouchableOpacity onPress={() => logout()} className="flex-1 bg-green-500 rounded-2xl py-3">
+                <Text className="text-white text-[20px] text-center font-semibold">Yes</Text>
               </TouchableOpacity>
             </View>
           </View>

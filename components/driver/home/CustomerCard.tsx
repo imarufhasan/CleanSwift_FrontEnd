@@ -7,7 +7,7 @@ import { router } from "expo-router";
 interface Props {
   name: string;
   address: string;
-  image?: string;
+  image?: string | number;
   instructionTitle?: string;
   instructionSubtitle?: string;
   instructionDescription?: string;
@@ -16,7 +16,7 @@ interface Props {
 export default function CustomerCard({
   name,
   address,
-  image = "https://i.pravatar.cc/150?img=12",
+  image = require("@/assets/images/profile.png"),
   instructionTitle = "Instructions",
   instructionSubtitle = "Delicate Items",
   instructionDescription = "Light wash • Gentle wash for delicate clothes",
@@ -27,7 +27,7 @@ export default function CustomerCard({
       <View className="flex-row justify-between items-center">
         <View className="flex-row items-center">
           <Image
-            source={{ uri: image }}
+            source={typeof image === "string" ? { uri: image } : image}
             className="w-[60px] h-[60px] rounded-full border-2 border-white"
           />
           <View className="ml-3">

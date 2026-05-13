@@ -27,7 +27,7 @@ export default function WashingStep({ setActiveStep }: any) {
 
   return (
     <View className="bg-white mb-6 px-4">
-      <CustomerCard name="Ali Amin" address="123 Main Street, Apt 4B" />
+      <CustomerCard name="Customer" address="Live order address" />
 
       <View className="bg-white rounded-2xl p-4 mb-6  shadow-lg elevation-6">
         <Text className="font-semibold text-xl mb-1">

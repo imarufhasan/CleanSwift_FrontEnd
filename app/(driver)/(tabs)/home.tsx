@@ -511,7 +511,7 @@ export default function HomeScreen() {
             {availableOrder ? (
               <View className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100">
                 <View className="flex-row justify-between items-start mb-3">
-                  <View className="flex-row mr-2 flex-1">
+                  <View className="flex-row mr-2 w-[65%]">
                     <View className="ml-2">
                       <Text className="font-semibold mb-1">
                         Order #{availableOrder._id.slice(-6)}
@@ -540,7 +540,7 @@ export default function HomeScreen() {
                     </View>
                   </View>
 
-                  <View className="items-end justify-center ">
+                  <View className="items-end justify-end w-[35%] ">
                     <Text className="font-bold text-green-500 text-[24px]">
                       ${availableOrder.total}
                     </Text>

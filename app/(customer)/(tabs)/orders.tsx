@@ -102,7 +102,7 @@ export default function Orders() {
         <View className="bg-white rounded-2xl p-4 shadow">
           <View className="flex-row justify-between items-center mb-2">
             <View>
-              <Text className="font-semibold">Order #{activeOrder.id}</Text>
+              <Text className="font-semibold"> 12Order #{activeOrder.id}</Text>
               <Text className="text-gray-500 text-sm">
                 {activeOrder.quantity} bags • ${activeOrder.quantity * activeOrder.bagPrice}
               </Text>

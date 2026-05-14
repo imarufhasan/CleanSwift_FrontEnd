@@ -11,7 +11,7 @@ export const PaginationDots: React.FC<PaginationDotsProps> = ({
   activeIndex,
 }) => (
   <View className="flex-row justify-center items-center mb-8">
-    {Array.from({ length: total }).map((_, i) => (
+    {Array.from({ length: total })?.map((_, i) => (
       <View
         // ADD THE KEY PROP HERE
         key={`dot-${i}`}

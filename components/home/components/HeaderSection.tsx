@@ -67,8 +67,8 @@ export default function HeaderSection({
           style={{ backgroundColor: Colors.primary }}
           className="border w-[100%] border-white/40 rounded-2xl p-4"
         >
-          <View className="flex-row w-[70%] justify-between items-start">
-            <View className="flex-row items-start">
+          <View className="flex-row justify-between items-start">
+            <View className="flex-row items-start flex-1">
               <View className="bg-white/20 w-9 h-9 rounded-full justify-center items-center">
                 <Ionicons name="location-outline" size={18} color="#fff" />
               </View>
@@ -77,14 +77,13 @@ export default function HeaderSection({
                 <Text className="text-white font-semibold">{location.title}</Text>
                 <Text className="text-white text-lg">{location.street}</Text>
                 <Text className="text-white text-sm">
-                  {location.city}, {location.state}
+                  {location?.city}, {location?.state}
                 </Text>
               </View>
             </View>
 
             <TouchableOpacity
               onPress={() => router.push("/(common)/ChangeLocation")}
-              className="w-[30%]"
             >
               <Text className="text-white font-medium">Change</Text>
             </TouchableOpacity>

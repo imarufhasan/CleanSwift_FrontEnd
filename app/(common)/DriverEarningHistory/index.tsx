@@ -14,7 +14,7 @@ export default function Index() {
   const { data: pricingRes } = useGetPricingQuery();
   const driverEarningPercentage = pricingRes?.data?.driverEarningPercentage ?? 70;
   const completedJobs = (jobsRes?.data ?? []).filter(job => ['DELIVERED', 'COMPLETED'].includes(job.status));
-  const recentOrders = completedJobs.slice(0, 5).map(order => ({
+  const recentOrders = completedJobs.slice(0, 5)?.map(order => ({
     id: order._id,
     quantity: order.bags,
     price: order.total,
@@ -69,24 +69,24 @@ export default function Index() {
           </Text>
         </View>
 
-        {recentOrders.map(order => (
+        {recentOrders?.map(order => (
           <TouchableOpacity
             key={order.id}
             className="bg-white items-safe justify-center rounded-2xl p-4 mb-4 border border-gray-200"
           >
             <View className=" flex-row items-center justify-center">
               <View className="justify-between flex-1 mb-1 ml-2">
-                <Text className="font-semibold">Order #{order.id}</Text>
-                <Text className="text-sm text-gray-500 mb-2">{order.quantity} bags</Text>
+                <Text className="font-semibold">Order #{order?.id}</Text>
+                <Text className="text-sm text-gray-500 mb-2">{order?.quantity} bags</Text>
               </View>
 
               <View className="items-end justify-center">
                 <Text className="text-green-600 text-lg font-bold">
-                  ${((Number(order.price) * driverEarningPercentage) / 100).toFixed(2)}
+                  ${((Number(order?.price) * driverEarningPercentage) / 100).toFixed(2)}
                 </Text>
                 <View className="flex-row items-center">
-                  <RatingStars rating={order.rating} />
-                  <Text className="ml-1 text-sm">{order.rating.toFixed(2)}</Text>
+                  <RatingStars rating={order?.rating} />
+                  <Text className="ml-1 text-sm">{order?.rating?.toFixed(2)}</Text>
                 </View>
               </View>
             </View>

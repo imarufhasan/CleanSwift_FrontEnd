@@ -182,7 +182,7 @@ export default function ProfileSettings() {
     }
 
     // Length check
-    if (cleaned.length < 7 || cleaned.length > 15) {
+    if (cleaned?.length < 7 || cleaned?.length > 15) {
       ShowMessage.error("Invalid phone number length");
       return false;
     }

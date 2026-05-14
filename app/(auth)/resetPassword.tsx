@@ -103,7 +103,7 @@ export default function Index() {
               value={confirmPassword}
               onChangeText={setConfirmPassword}
             />
-            {confirmPassword.length > 0 && !passMatch && (
+            {confirmPassword?.length > 0 && !passMatch && (
               <Text className="text-red-500 text-sm -mt-2">
                 Passwords do not match
               </Text>

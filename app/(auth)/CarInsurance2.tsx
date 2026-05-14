@@ -70,7 +70,7 @@ const CarInsurance = () => {
         allowsEditing: true,
         quality: 0.8,
       });
-      if (!result.canceled && result.assets.length > 0) {
+      if (!result.canceled && result.assets?.length > 0) {
         const photo = result.assets[0];
         setInsuranceFile({
           uri: photo.uri,

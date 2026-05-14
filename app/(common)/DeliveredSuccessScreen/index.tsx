@@ -82,7 +82,7 @@ export default function DeliveredSuccessScreen() {
               <Text className="text-black font-semibold text-[20px]">{name ?? 'Driver'}</Text>
 
               <View className="flex-row items-center mt-1">
-                {[1, 2, 3, 4, 5].map(i => (
+                {[1, 2, 3, 4, 5]?.map(i => (
                   <AntDesign key={i} name="star" size={14} color="#FACC15" />
                 ))}
                 <Text className="text-gray-400 text-xs ml-2">4.9 (234 trips)</Text>
@@ -95,7 +95,7 @@ export default function DeliveredSuccessScreen() {
             <Text className="text-black font-semibold mb-3">How was your experience?</Text>
 
             {/* <View className="flex-row mb-2">
-              {[1, 2, 3, 4, 5].map((i) => (
+              {[1, 2, 3, 4, 5]?.map((i) => (
                 <Feather
                   key={i}
                   name="star"
@@ -106,7 +106,7 @@ export default function DeliveredSuccessScreen() {
               ))}
             </View> */}
             <View className="flex-row mb-2">
-              {[1, 2, 3, 4, 5].map(i => {
+              {[1, 2, 3, 4, 5]?.map(i => {
                 const isSelected = i <= rating;
 
                 return (
@@ -134,7 +134,7 @@ export default function DeliveredSuccessScreen() {
             <Text className="text-gray-400 text-sm mb-3">Show your appreciation for great service</Text>
 
             <View className="flex-row justify-between mb-3">
-              {/* {data.tipOptions.map((tip) => (
+              {/* {data.tipOptions?.map((tip) => (
                 <TouchableOpacity
                   key={tip.id}
                   onPress={() => setTipValue(tip.value.toString())}
@@ -144,7 +144,7 @@ export default function DeliveredSuccessScreen() {
                 </TouchableOpacity>
               ))} */}
 
-              {[2, 3, 5, 10].map(value => {
+              {[2, 3, 5, 10]?.map(value => {
                 const isSelected = tipValue === value.toString();
 
                 return (
@@ -191,7 +191,7 @@ export default function DeliveredSuccessScreen() {
               ['Bags', `${bagsCount || 0} bag`],
               ['Tip', `$${tipAmount}`],
               ['Pickup Time', 'ASAP'],
-            ].map(([label, value]) => (
+            ]?.map(([label, value]) => (
               <View key={label} className="flex-row justify-between mb-2">
                 <Text className="text-gray-500">{label}</Text>
                 <Text className="text-black">{value}</Text>
@@ -260,7 +260,7 @@ export default function DeliveredSuccessScreen() {
                   Your feedback helps us serve you better.
                 </Text>
                 <View className="flex-row mt-2">
-                  {[1, 2, 3, 4, 5].map(i => (
+                  {[1, 2, 3, 4, 5]?.map(i => (
                     <AntDesign key={i} name="star" size={30} color="#FACC15" className="mr-2" />
                   ))}
                 </View>

@@ -450,7 +450,7 @@ export default function HomeScreen() {
 
                 {/* Steps */}
                 <View className="flex-row justify-between mb-2">
-                  {["Picked Up", "Washing", "Delivery"].map((step, index) => (
+                  {["Picked Up", "Washing", "Delivery"]?.map((step, index) => (
                     <Text
                       key={step}
                       className={`text-xs ${

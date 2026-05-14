@@ -152,7 +152,7 @@ export default function Profile() {
 
         {/* Menu */}
         <View className="px-5 mt-6">
-          {menuItems.map((item, index) => (
+          {menuItems?.map((item, index) => (
             <TouchableOpacity
               key={index}
               className="bg-white flex-row items-center p-4 rounded-xl mb-3 border border-blue-200"

@@ -105,7 +105,7 @@ const OTPInput = forwardRef<OTPInputHandle, OTPInputProps>(
     // ── Render ──────────────────────────────────────────────────────────
     return (
       <View className="flex-row gap-2.5">
-        {digits.map((digit, i) => {
+        {digits?.map((digit, i) => {
           const isFocus = focusIndex === i;
           const hasDigit = digit !== "";
           const borderColor =

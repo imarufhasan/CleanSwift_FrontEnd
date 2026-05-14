@@ -39,10 +39,10 @@ const OTPVerificationModal: React.FC<OTPVerificationModalProps> = ({
   }, [isVisible]);
 
   const handleContinue = () => {
-    if (internalCode.length === 6) onVerify(internalCode);
+    if (internalCode?.length === 6) onVerify(internalCode);
   };
 
-  const isFilled = internalCode.length === 6;
+  const isFilled = internalCode?.length === 6;
 
   return (
     <BottomModal isVisible={isVisible} onClose={onClose}>

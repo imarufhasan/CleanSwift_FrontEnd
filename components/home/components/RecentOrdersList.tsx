@@ -22,9 +22,9 @@ export default function RecentOrdersList({ orders, onOrderPress }: Props) {
   return (
     <>
       <Text className="text-lg font-bold mb-3">Recent Orders</Text>
-      {orders.map(order => (
+      {orders?.map(order => (
         <TouchableOpacity
-          key={order.id}
+          key={order?.id}
           className="bg-white flex-row items-safe justify-center rounded-2xl p-4 mb-4 border border-gray-100"
         >
           <View
@@ -34,20 +34,20 @@ export default function RecentOrdersList({ orders, onOrderPress }: Props) {
             <Ionicons name="cube-outline" size={20} color={'black'} />
           </View>
           <View className="justify-between flex-1 mb-1 ml-2">
-            <Text className="font-semibold">Order #{order.id}</Text>
+            <Text className="font-semibold">Order #{order?.id}</Text>
             <Text className="text-sm text-gray-500 mb-2">
-              {order.quantity} bag • Estimate cost ${order.price}
+              {order?.quantity} bag • Estimate cost ${order?.price}
             </Text>
             <View className="flex-row items-center">
               <Ionicons name="checkmark-circle-outline" size={16} color="green" />
-              <Text className="ml-1 text-green-600 text-sm">{order.status}</Text>
+              <Text className="ml-1 text-green-600 text-sm">{order?.status}</Text>
             </View>
           </View>
 
           <View className="items-end justify-center">
             <View className="flex-row items-center">
               <Ionicons name="star" size={14} color="#FACC15" />
-              <Text className="ml-1 text-sm">{order.rating.toFixed(2)}</Text>
+              <Text className="ml-1 text-sm">{order?.rating?.toFixed(2)}</Text>
             </View>
 
             <TouchableOpacity onPress={() => onOrderPress(order)} className="my-2">
@@ -56,7 +56,7 @@ export default function RecentOrdersList({ orders, onOrderPress }: Props) {
               </Text>
             </TouchableOpacity>
 
-            <Text className="text-xs text-gray-400">{order.date}</Text>
+            <Text className="text-xs text-gray-400">{order?.date}</Text>
           </View>
         </TouchableOpacity>
       ))}

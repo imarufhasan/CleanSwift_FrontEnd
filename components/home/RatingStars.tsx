@@ -13,9 +13,19 @@ export default function RatingStars({
   size = 14,
   color = "#FACC15",
 }: RatingStarsProps) {
-  const fullStars = Math.floor(rating);
-  const hasHalfStar = rating - fullStars >= 0.5;
-  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+  // Prevent invalid values
+  const safeRating = Number.isFinite(rating)
+    ? Math.min(Math.max(rating, 0), 5)
+    : 0;
+
+  const fullStars = Math.floor(safeRating);
+
+  const hasHalfStar = safeRating - fullStars >= 0.5;
+
+  const emptyStars = Math.max(
+    0,
+    5 - fullStars - (hasHalfStar ? 1 : 0)
+  );
 
   return (
     <View className="flex-row items-center">
@@ -30,6 +40,7 @@ export default function RatingStars({
 
       {hasHalfStar && (
         <Ionicons
+          key="half"
           name="star-half"
           size={size}
           color={color}

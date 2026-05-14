@@ -75,7 +75,7 @@ export default function Track() {
         {/* Fake Map Grid Background */}
         <View className="absolute inset-0 opacity-40">
           <View className="flex-1 flex-row flex-wrap">
-            {[...Array(100)].map((_, i) => (
+            {[...Array(100)]?.map((_, i) => (
               <View
                 key={i}
                 className="w-[10%] h-[10%] border border-blue-200"
@@ -127,9 +127,9 @@ export default function Track() {
           <View className="flex-1 ml-2">
             <Text className="font-semibold text-base">{driver?.name}</Text>
             <View className="flex-row items-center mt-1">
-              <RatingStars rating={driver.rating} />
+              <RatingStars rating={driver?.rating} />
               <Text className="text-sm ml-1 text-gray-600">
-                {driver.rating} ({driver.trips} trips)
+                {driver?.rating} ({driver?.trips} trips)
               </Text>
             </View>
           </View>

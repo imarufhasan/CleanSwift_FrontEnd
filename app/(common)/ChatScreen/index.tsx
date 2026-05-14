@@ -52,7 +52,7 @@ export default function ChatScreen() {
 
   useEffect(() => {
     flatListRef.current?.scrollToEnd({ animated: true });
-  }, [messages.length]);
+  }, [messages?.length]);
 
   const sendMessage = async () => {
     const content = message.trim();

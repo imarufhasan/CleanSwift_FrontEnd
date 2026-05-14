@@ -26,7 +26,7 @@ const buildSteps = (status?: string) => {
     { key: 'washing', title: 'Washing', time: '', subtitle: 'Currently in progress', status: 'active' },
     { key: 'delivery', title: 'Out for Delivery', time: '', status: 'pending', icon: 'truck' },
     { key: 'delivered', title: 'Delivered', time: '', status: 'pending', icon: 'home' },
-  ].map((step, index) => ({
+  ]?.map((step, index) => ({
     ...step,
     status:
       index < current
@@ -80,7 +80,7 @@ export default function LiveTrackingScreen() {
           {/* Fake Map Grid Background */}
           <View className="absolute inset-0 opacity-40">
             <View className="flex-1 flex-row flex-wrap">
-              {[...Array(100)].map((_, i) => (
+              {[...Array(100)]?.map((_, i) => (
                 <View key={i} className="w-[10%] h-[10%] border border-blue-200" />
               ))}
             </View>
@@ -136,7 +136,7 @@ export default function LiveTrackingScreen() {
             </Text>
           </View>
           <View className="bg-white rounded-2xl p-4 shadow">
-            {buildSteps(activeOrder?.status).map((step, index) => {
+            {buildSteps(activeOrder?.status)?.map((step, index) => {
               if (step.status === 'done') {
                 return (
                   <View key={step.key}>

@@ -68,7 +68,7 @@ export default function ActiveOrderCard({ data }: Props) {
         </View>
 
         <View className="flex-row justify-between mb-2">
-          {data.steps.map((step, index) => (
+          {data.steps?.map((step, index) => (
             <Text
               key={step}
               className={`text-xs ${index <= data.currentStep ? "text-blue-500" : "text-gray-400"}`}

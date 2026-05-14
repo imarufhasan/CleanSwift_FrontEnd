@@ -48,7 +48,7 @@ const DriverLicense = () => {
         allowsEditing: true,
         quality: 0.8,
       });
-      if (!result.canceled && result.assets.length > 0) {
+      if (!result.canceled && result.assets?.length > 0) {
         const photo = result.assets[0];
         setDriverLicense({
           uri: photo.uri,

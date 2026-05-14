@@ -147,7 +147,7 @@ export default function RequestPickupModal({
 
         {/* Progress Bar */}
         <View className="px-5 flex-row mb-5">
-          {[0, 1, 2, 3, 4].map(i => (
+          {[0, 1, 2, 3, 4]?.map(i => (
             <View
               key={i}
               className={`flex-1 h-1 mx-1 rounded-full ${step >= i ? 'bg-blue-500' : 'bg-gray-200'}`}
@@ -238,7 +238,7 @@ export default function RequestPickupModal({
               Add any specific care instructions for your laundry? (optional)
             </Text>
 
-            {dataLoal.spacialInstructions.map((item) => (
+            {dataLoal.spacialInstructions?.map((item) => (
               <View
                 key={item.id}
                 className="border border-gray-100 bg-white rounded-xl p-3 mb-2"
@@ -270,7 +270,7 @@ export default function RequestPickupModal({
               Add any specific care instructions for your laundry? (optional)
             </Text>
 
-            {dataLoal.spacialInstructions.map(item => {
+            {dataLoal.spacialInstructions?.map(item => {
               const isSelected = selectedInstruction === item.id;
 
               return (

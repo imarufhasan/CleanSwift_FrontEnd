@@ -63,7 +63,7 @@ const mapOrderToRecent = (order: Order) => ({
 const parseAddress = (address?: string) => {
   const parts = (address ?? '')
     .split(',')
-    .map(part => part.trim())
+    ?.map(part => part.trim())
     .filter(Boolean);
 
   return {
@@ -97,7 +97,7 @@ export default function HomeScreen() {
   const activeOrders = orders.filter(order => !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(order.status));
   const completedOrders = orders.filter(order => ['DELIVERED', 'COMPLETED'].includes(order.status));
   const activeOrder = activeOrders[0] ? mapOrderToCard(activeOrders[0]) : null;
-  const recentOrders = (completedOrders.length ? completedOrders : orders).slice(0, 5).map(mapOrderToRecent);
+  const recentOrders = (completedOrders?.length ? completedOrders : orders).slice(0, 5)?.map(mapOrderToRecent);
   const pricePerBag = pricingRes?.data?.pricePerBag ?? 0;
   const location = parseAddress(profileInfo?.data?.address);
 

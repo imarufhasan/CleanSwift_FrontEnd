@@ -60,7 +60,7 @@ export default function FoldingStep({
           "All items dried",
           "Bag count matched",
           "Ready for delivery handoff",
-        ].map(item => (
+        ]?.map(item => (
           <View key={item} className="bg-green-50 rounded-2xl px-2 py-2 w-full mb-2">
             <View className="flex-row gap-3 my-2">
               <AntDesign name="check-circle" size={18} color="green" />

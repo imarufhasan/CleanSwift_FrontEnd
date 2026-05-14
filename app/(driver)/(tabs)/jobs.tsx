@@ -155,8 +155,8 @@ export default function JobsScreen() {
     onDriverJobsUpdate: refreshJobs,
   });
 
-  const availableJobs = (availableRes?.data ?? []).map(mapOrderToJob);
-  const myJobs = (myJobsRes?.data ?? []).map(mapOrderToJob);
+  const availableJobs = (availableRes?.data ?? [])?.map(mapOrderToJob);
+  const myJobs = (myJobsRes?.data ?? [])?.map(mapOrderToJob);
   const activeJobs = myJobs.filter(job => !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(job.status));
   const completedJobs = myJobs.filter(job => ['DELIVERED', 'COMPLETED'].includes(job.status));
 
@@ -197,9 +197,9 @@ export default function JobsScreen() {
     if (activeTab === 'Available') {
       return (
         <>
-          <Text className="mb-3 text-lg font-bold text-black">Available Jobs ({availableJobs.length})</Text>
+          <Text className="mb-3 text-lg font-bold text-black">Available Jobs ({availableJobs?.length})</Text>
           {isAvailableLoading && <Text className="mb-3 text-gray-500">Loading jobs...</Text>}
-          {availableJobs.map(item => (
+          {availableJobs?.map(item => (
             <JobCard
               key={item.id}
               item={item}
@@ -222,9 +222,9 @@ export default function JobsScreen() {
     if (activeTab === 'Active') {
       return (
         <>
-          <Text className="mb-3 text-lg font-bold text-black">Active Jobs ({activeJobs.length})</Text>
+          <Text className="mb-3 text-lg font-bold text-black">Active Jobs ({activeJobs?.length})</Text>
           {isMyJobsLoading && <Text className="mb-3 text-gray-500">Loading jobs...</Text>}
-          {activeJobs.map(item => (
+          {activeJobs?.map(item => (
             <JobCard
               key={item.id}
               item={item}
@@ -243,8 +243,8 @@ export default function JobsScreen() {
 
     return (
       <>
-        <Text className="mb-3 text-lg font-bold">Completed ({completedJobs.length})</Text>
-        {completedJobs.map(order => (
+        <Text className="mb-3 text-lg font-bold">Completed ({completedJobs?.length})</Text>
+        {completedJobs?.map(order => (
           <View key={order.id} className="mb-4 rounded-2xl border border-gray-200 bg-white p-4">
             <View className="flex-row items-center justify-center">
               <View className="mb-1 ml-2 flex-1 justify-between">
@@ -307,7 +307,7 @@ export default function JobsScreen() {
           shadowRadius: 6,
         }}
       >
-        {(['Available', 'Active', 'Completed'] as const).map(item => (
+        {(['Available', 'Active', 'Completed'] as const)?.map(item => (
           <TopTab
             key={item}
             label={item}

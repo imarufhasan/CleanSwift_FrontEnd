@@ -10,7 +10,7 @@ import { router } from "expo-router";
 
 const OnboardingScreen: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<number>(0);
-  const totalSteps = ONBOARDING_DATA.length;
+  const totalSteps = ONBOARDING_DATA?.length;
   const content = ONBOARDING_DATA[currentStep];
 
   const fadeAnim = useRef(new Animated.Value(0)).current;

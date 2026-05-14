@@ -34,7 +34,7 @@ const Pagination: React.FC<PaginationProps> = ({
       </View>
 
       <View className="flex-row justify-between w-full">
-        {[...Array(totalSteps)].map((_, index) => (
+        {[...Array(totalSteps)]?.map((_, index) => (
           <View
             key={index}
             className={`h-2 rounded-full ${index < currentStep ? "bg-[#1da1f2]" : "bg-gray-200"}`}

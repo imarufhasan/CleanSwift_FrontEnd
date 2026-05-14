@@ -171,7 +171,7 @@ export default function LiveTrackScreenDriverMain() {
 
       <View className="mx-4 -mt-10 bg-white rounded-2xl p-4 shadow-lg">
         <View className="flex-row justify-between items-center">
-          {steps.map((step, index) => {
+          {steps?.map((step, index) => {
             const isActive = index <= activeStep;
 
             return (
@@ -203,7 +203,7 @@ export default function LiveTrackScreenDriverMain() {
           <View
             className="h-1 bg-blue-500 rounded-full"
             style={{
-              width: `${((activeStep + 1) / steps.length) * 100}%`,
+              width: `${((activeStep + 1) / steps?.length) * 100}%`,
             }}
           />
         </View>

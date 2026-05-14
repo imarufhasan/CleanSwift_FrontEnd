@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import RatingStars from '@/components/home/RatingStars';
 import { useGetMyOrdersQuery, type Order } from '@/src/services/orderApi';
 import { useOrderSocket } from '@/src/hooks/useOrderSocket';
+import { formatOrderNumber } from '@/src/utils/orderNumber';
 
 const statusLabel = (status?: string) => (status ?? '').replaceAll('_', ' ');
 
@@ -32,7 +33,7 @@ const buildSteps = (status?: string) => {
     { key: 'washing', title: 'Washing', icon: 'sync' },
     { key: 'delivery', title: 'Delivery', icon: 'car' },
     { key: 'delivered', title: 'Delivered', icon: 'home' },
-  ]?.map((step, index) => ({
+  ].map((step, index) => ({
     ...step,
     status: index < current ? 'done' : index === current ? 'active' : 'pending',
     time: index < current ? 'Completed' : '',
@@ -42,17 +43,17 @@ const buildSteps = (status?: string) => {
 
 const toActiveOrder = (order?: Order) => {
   return {
-    id: order?._id ?? '-',
-    status: order ? statusLabel(order?.status) : 'No active order',
-    quantity: order?.bags ?? 0,
-    bagPrice: order?.pricePerBag ?? 0,
+    id: order ? order._id : '-',
+    status: order ? statusLabel(order.status) : 'No active order',
+    quantity: order ? order.bags ?? 0 : 0,
+    bagPrice: order ? order.pricePerBag ?? 0 : 0,
     tip: 0,
     estimatedDelivery: order
-      ? order?.scheduledPickupAt
-        ? new Date(order?.scheduledPickupAt).toLocaleString()
+      ? order.scheduledPickupAt
+        ? new Date(order.scheduledPickupAt).toLocaleString()
         : 'As soon as possible'
       : '--',
-    progressSteps: order ? buildSteps(order?.status) : [],
+    progressSteps: order ? buildSteps(order.status) : [],
   };
 };
 
@@ -62,31 +63,37 @@ export default function Orders() {
 
   useOrderSocket({
     role: 'CUSTOMER',
-    orderId: ordersRes?.data?.find(order => !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(order?.status))
-      ?._id,
+    orderId:
+      ordersRes && ordersRes.data
+        ? (
+            ordersRes.data.find(order =>
+              !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(order.status),
+            ) || {}
+          )._id
+        : undefined,
     onCustomerUpdate: refetch,
   });
 
-  const orders = ordersRes?.data ?? [];
+  const orders = ordersRes && ordersRes.data ? ordersRes.data : [];
   const activeOrderFromApi = orders.find(
-    order => !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(order?.status),
+    order => !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(order.status),
   );
   const activeOrder = toActiveOrder(activeOrderFromApi);
   const pastOrders = orders
-    .filter(order => ['DELIVERED', 'COMPLETED'].includes(order?.status))
-    ?.map(order => ({
-      id: order?._id,
-      quantity: order?.bags,
-      price: order?.total,
-      status: statusLabel(order?.status),
+    .filter(order => ['DELIVERED', 'COMPLETED'].includes(order.status))
+    .map(order => ({
+      id: order._id,
+      quantity: order.bags,
+      price: order.total,
+      status: statusLabel(order.status),
       rating: 5,
-      date: order?.createdAt ? new Date(order?.createdAt).toLocaleDateString() : '',
+      date: order.createdAt ? new Date(order.createdAt).toLocaleDateString() : '',
     }));
 
-  const totalAmount = activeOrder?.quantity * activeOrder?.bagPrice + activeOrder?.tip;
+  const totalAmount = activeOrder.quantity * activeOrder.bagPrice + activeOrder.tip;
 
   const activeChatOrder = activeOrderFromApi;
-  const driver = activeChatOrder?.driver ?? null;
+  const driver = activeChatOrder ? activeChatOrder.driver : null;
   const orderDetails = activeChatOrder ?? null;
 
   return (
@@ -102,20 +109,20 @@ export default function Orders() {
         <View className="bg-white rounded-2xl p-4 shadow">
           <View className="flex-row justify-between items-center mb-2">
             <View>
-              <Text className="font-semibold">Order #{activeOrder?.id}</Text>
+              <Text className="font-semibold">Order #{formatOrderNumber(activeOrder.id)}</Text>
               <Text className="text-gray-500 text-sm">
-                {activeOrder?.quantity} bags • ${activeOrder?.quantity * activeOrder?.bagPrice}
+                {activeOrder.quantity} bags • ${activeOrder.quantity * activeOrder.bagPrice}
               </Text>
             </View>
 
             <View className="bg-orange-100 px-3 py-1 rounded-full">
-              <Text className="text-orange-500 text-xs font-semibold">{activeOrder?.status}</Text>
+              <Text className="text-orange-500 text-xs font-semibold">{activeOrder.status}</Text>
             </View>
           </View>
 
           <View className="bg-blue-50 rounded-xl p-3 mt-3">
             <Text className="text-xs text-gray-500">Estimated Delivery</Text>
-            <Text className="font-semibold mt-1">{activeOrder?.estimatedDelivery}</Text>
+            <Text className="font-semibold mt-1">{activeOrder.estimatedDelivery}</Text>
           </View>
         </View>
       </View>
@@ -125,7 +132,7 @@ export default function Orders() {
         <Text className="font-bold text-lg mb-4">Order Progress</Text>
 
         <View className="bg-white rounded-2xl p-4 shadow">
-          {activeOrder?.progressSteps?.map((step, index) => {
+          {activeOrder.progressSteps.map((step, index) => {
             if (step.status === 'done') {
               return (
                 <View key={step.key}>
@@ -142,18 +149,18 @@ export default function Orders() {
                     </View>
 
                     <View>
-                      <Text className="font-medium">{step?.title}</Text>
+                      <Text className="font-medium">{step.title}</Text>
                       <Text className="text-xs text-gray-500">{step.time}</Text>
                     </View>
                   </View>
-                  {step?.title !== 'Delivered' ? (
+                  {step.title !== 'Delivered' ? (
                     <View className="bg-green-200 h-[30px] w-[1px] ml-4 my-2 rounded-full" />
                   ) : null}
                 </View>
               );
             }
 
-            if (step?.status === 'active') {
+            if (step.status === 'active') {
               return (
                 <View key={step.key}>
                   <View className="flex-row">
@@ -203,11 +210,11 @@ export default function Orders() {
         <View className="bg-white rounded-2xl p-4 shadow">
           <View className="flex-row items-center mb-4">
             <Image
-              source={driver?.image ? { uri: driver.image } : require('@/assets/images/profile.png')}
+              source={driver && driver.image ? { uri: driver.image } : require('@/assets/images/profile.png')}
               className="w-12 h-12 rounded-full mr-3"
             />
             <View className="flex-1">
-              <Text className="font-semibold">{driver?.name ?? 'Driver not assigned'}</Text>
+              <Text className="font-semibold">{driver && driver.name ? driver.name : 'Driver not assigned'}</Text>
               <View className="flex-row items-center mt-1">
                 <RatingStars rating={driver ? 4.9 : 0} size={14} />
                 <Text className="text-sm ml-1 text-gray-600">
@@ -220,13 +227,23 @@ export default function Orders() {
           <View className="flex-row">
             <TouchableOpacity
               onPress={() =>
-                activeChatOrder?.driver
+                activeChatOrder && activeChatOrder.driver
                   ? router.push({
                       pathname: '/(common)/ChatScreen' as any,
                       params: {
                         orderId: activeChatOrder._id,
-                        name: activeChatOrder.driver?.name ?? activeChatOrder.customer?.name ?? 'Chat',
-                        avatar: activeChatOrder.driver?.image ?? activeChatOrder.customer?.image ?? '',
+                        name:
+                          activeChatOrder.driver && activeChatOrder.driver.name
+                            ? activeChatOrder.driver.name
+                            : activeChatOrder.customer && activeChatOrder.customer.name
+                              ? activeChatOrder.customer.name
+                              : 'Chat',
+                        avatar:
+                          activeChatOrder.driver && activeChatOrder.driver.image
+                            ? activeChatOrder.driver.image
+                            : activeChatOrder.customer && activeChatOrder.customer.image
+                              ? activeChatOrder.customer.image
+                              : '',
                       },
                     })
                   : router.push('/(common)/MessagesScreen')
@@ -242,8 +259,8 @@ export default function Orders() {
                 router.push({
                   pathname: '/(common)/CallScreen' as any,
                   params: {
-                    name: driver?.name ?? 'Driver',
-                    image: driver?.image ?? '',
+                    name: driver && driver.name ? driver.name : 'Driver',
+                    image: driver && driver.image ? driver.image : '',
                   },
                 })
               }
@@ -265,7 +282,7 @@ export default function Orders() {
           <View className="mb-3">
             <Text className="text-gray-500 text-xs">Service</Text>
             <Text className="font-medium">
-              {activeOrderFromApi?.serviceType
+              {activeOrderFromApi && activeOrderFromApi.serviceType
                 ? (serviceLabel[activeOrderFromApi.serviceType] ?? activeOrderFromApi.serviceType)
                 : 'Unavailable'}
             </Text>
@@ -273,23 +290,23 @@ export default function Orders() {
 
           <View className="mb-3">
             <Text className="text-gray-500 text-xs">Pickup Address</Text>
-            <Text className="font-medium">{activeOrderFromApi?.address || 'No address available'}</Text>
+            <Text className="font-medium">{activeOrderFromApi && activeOrderFromApi.address ? activeOrderFromApi.address : 'No address available'}</Text>
           </View>
 
           <View className="mb-3">
             <Text className="text-gray-500 text-xs">Special Instructions</Text>
             <Text className="font-medium">
-              {activeOrderFromApi?.specialInstructions || 'No special instructions'}
+              {activeOrderFromApi && activeOrderFromApi.specialInstructions ? activeOrderFromApi.specialInstructions : 'No special instructions'}
             </Text>
           </View>
 
           <View className="border-t border-gray-200 pt-3">
             <View className="flex-row justify-between mb-2">
               <Text className="text-gray-600">
-                {activeOrderFromApi?.bags ?? 0} bags × ${activeOrderFromApi?.pricePerBag ?? 0}
+                {activeOrderFromApi ? activeOrderFromApi.bags ?? 0 : 0} bags × ${activeOrderFromApi ? activeOrderFromApi.pricePerBag ?? 0 : 0}
               </Text>
               <Text>
-                ${Number((activeOrderFromApi?.bags ?? 0) * (activeOrderFromApi?.pricePerBag ?? 0)).toFixed(2)}
+                ${Number((activeOrderFromApi ? activeOrderFromApi.bags ?? 0 : 0) * (activeOrderFromApi ? activeOrderFromApi.pricePerBag ?? 0 : 0)).toFixed(2)}
               </Text>
             </View>
             <View className="flex-row justify-between mb-2">
@@ -299,7 +316,7 @@ export default function Orders() {
             <View className="flex-row justify-between mt-2">
               <Text className="font-bold">Total</Text>
               <Text className="font-bold text-blue-600">
-                ${Number(activeOrderFromApi?.total ?? 0).toFixed(2)}
+                ${Number(activeOrderFromApi ? activeOrderFromApi.total ?? 0 : 0).toFixed(2)}
               </Text>
             </View>
           </View>
@@ -312,7 +329,7 @@ export default function Orders() {
 
         {isLoading && <Text className="text-gray-500 mb-3">Loading orders...</Text>}
 
-        {pastOrders?.map(order => (
+        {pastOrders.map(order => (
           <TouchableOpacity
             key={order.id}
             className="bg-white rounded-2xl p-4 mb-2 border border-gray-100 flex-row"
@@ -328,21 +345,21 @@ export default function Orders() {
             </View>
 
             <View className="flex-1 ml-3">
-              <Text className="font-semibold">Order #{order?.id}</Text>
+              <Text className="font-semibold">Order #{formatOrderNumber(order.id)}</Text>
               <Text className="text-sm text-gray-500">
-                {order?.quantity} bag • Estimate cost ${order?.price}
+                {order.quantity} bag • Estimate cost ${order.price}
               </Text>
 
               <View className="flex-row items-center mt-1">
                 <Ionicons name="checkmark-circle-outline" size={14} color="green" />
-                <Text className="ml-1 text-green-600 text-sm">{order?.status}</Text>
+                <Text className="ml-1 text-green-600 text-sm">{order.status}</Text>
               </View>
             </View>
 
             <View className="items-end justify-between">
               <View className="flex-row items-center">
                 <Ionicons name="star" size={14} color="#FACC15" />
-                <Text className="ml-1 text-sm">{order?.rating?.toFixed(1)}</Text>
+                <Text className="ml-1 text-sm">{order.rating.toFixed(1)}</Text>
               </View>
 
               <TouchableOpacity
@@ -350,7 +367,7 @@ export default function Orders() {
                   console.log('recet_item: ', order);
                   router.push({
                     pathname: '/(common)/OrderDetails',
-                    params: { id: String(order?.id) },
+                    params: { id: String(order.id) },
                   });
                 }}
                 className="my-2"
@@ -360,7 +377,7 @@ export default function Orders() {
                 </Text>
               </TouchableOpacity>
 
-              <Text className="text-xs text-gray-400">{order?.date}</Text>
+              <Text className="text-xs text-gray-400">{order.date}</Text>
             </View>
           </TouchableOpacity>
         ))}

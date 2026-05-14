@@ -5,6 +5,7 @@ import { Feather, FontAwesome6, Ionicons } from "@expo/vector-icons";
 import CustomerCard from "@/components/driver/home/CustomerCard";
 import Colors from "@/constants/color";
 import type { Order } from "@/src/services/orderApi";
+import { formatOrderNumber } from "@/src/utils/orderNumber";
 
 type Props = {
   order?: Order;
@@ -28,7 +29,7 @@ export default function WashingStep({
 }: Props) {
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [selectedTime, setSelectedTime] = useState<Date | null>(null);
-  const customer = order?.customer;
+  const customer = order ? order.customer : undefined;
 
   const onTimeChange = (_: any, time?: Date) => {
     setShowTimePicker(false);
@@ -48,12 +49,26 @@ export default function WashingStep({
   return (
     <View className="bg-white mb-6 px-4">
       <CustomerCard
-        orderId={order?._id}
-        name={customer?.name ?? "Customer"}
-        address={order?.address ?? customer?.address ?? "Pickup address unavailable"}
-        image={customer?.image}
-        instructionSubtitle={order?.serviceType?.replaceAll("_", " ") ?? "Service"}
-        instructionDescription={order?.specialInstructions ?? "No special instructions"}
+        orderId={order ? order._id : undefined}
+        name={customer && customer.name ? customer.name : "Customer"}
+        address={
+          order && order.address
+            ? order.address
+            : customer && customer.address
+              ? customer.address
+              : "Pickup address unavailable"
+        }
+        image={customer ? customer.image : undefined}
+        instructionSubtitle={
+          order && order.serviceType
+            ? order.serviceType.replaceAll("_", " ")
+            : "Service"
+        }
+        instructionDescription={
+          order && order.specialInstructions
+            ? order.specialInstructions
+            : "No special instructions"
+        }
       />
 
       <View className="bg-white rounded-2xl p-4 mb-6 shadow-lg elevation-6">
@@ -84,14 +99,14 @@ export default function WashingStep({
           Washing Status
         </Text>
         <Text className="text-sm text-center text-gray-500 mb-4">
-          Order #{order?._id ? order._id.slice(-6) : "LIVE"}
+          Order #{formatOrderNumber(order ? order._id : undefined)}
         </Text>
 
         <View className="bg-blue-50 rounded-2xl p-4 mt-4 w-[100%]">
           <View className="flex-row items-center justify-between mb-2">
             <Text className="text-sm text-gray-500 font-medium">Status</Text>
             <Text className="text-sm text-blue-500 font-medium">
-              {order?.status?.replaceAll("_", " ") ?? "Waiting"}
+              {order && order.status ? order.status.replaceAll("_", " ") : "Waiting"}
             </Text>
           </View>
           <View className="flex-row items-center justify-between">
@@ -99,7 +114,7 @@ export default function WashingStep({
               Picked Up At
             </Text>
             <Text className="text-sm text-black font-semibold">
-              {formatDateTime(order?.timeline?.pickedUpAt)}
+              {formatDateTime(order && order.timeline ? order.timeline.pickedUpAt : undefined)}
             </Text>
           </View>
         </View>

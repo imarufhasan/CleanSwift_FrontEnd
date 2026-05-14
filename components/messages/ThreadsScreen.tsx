@@ -12,6 +12,7 @@ import Colors from "@/constants/color";
 import { useRouter } from "expo-router";
 import { useGetChatThreadsQuery, type ChatThread } from "@/src/services/chatApi";
 import { useProfileInfoQuery } from "@/src/services/userApi";
+import { formatOrderNumber } from "@/src/utils/orderNumber";
 
 const fallbackAvatar = require("@/assets/images/profile.png");
 
@@ -31,14 +32,16 @@ export default function ThreadsScreen() {
   const router = useRouter();
   const { data: profileInfo } = useProfileInfoQuery();
   const { data, isLoading, refetch, isFetching } = useGetChatThreadsQuery();
-  const currentRole = profileInfo?.data?.role;
+  const currentRole =
+    profileInfo && profileInfo.data ? profileInfo.data.role : undefined;
 
   const getPeer = (item: ChatThread) =>
     currentRole === "DRIVER" ? item.customer : item.driver ?? item.customer;
 
   const renderItem = ({ item }: { item: ChatThread }) => {
     const peer = getPeer(item);
-    const name = peer?.name ?? `Order #${String(item.orderId).slice(-6)}`;
+    const name = peer && peer.name ? peer.name : `Order #${formatOrderNumber(item.orderId)}`;
+    const avatar = peer && peer.image ? peer.image : "";
 
     return (
       <TouchableOpacity
@@ -46,12 +49,12 @@ export default function ThreadsScreen() {
         onPress={() =>
           router.push({
             pathname: "/(common)/ChatScreen" as any,
-            params: { orderId: item.orderId, name, avatar: peer?.image ?? "" },
+            params: { orderId: item.orderId, name, avatar },
           })
         }
       >
         <Image
-          source={peer?.image ? { uri: peer.image } : fallbackAvatar}
+          source={avatar ? { uri: avatar } : fallbackAvatar}
           className="w-12 h-12 rounded-full"
         />
 
@@ -74,7 +77,9 @@ export default function ThreadsScreen() {
             >
               {item.lastContentType === "IMAGE"
                 ? "Sent an image"
-                : item.lastMessage || item.order?.status || "No messages yet"}
+                : item.lastMessage ||
+                  (item.order ? item.order.status : "") ||
+                  "No messages yet"}
             </Text>
 
             {!!item.unreadCount && (
@@ -115,7 +120,7 @@ export default function ThreadsScreen() {
           </View>
         ) : (
           <FlatList
-            data={data?.data ?? []}
+            data={data && data.data ? data.data : []}
             keyExtractor={(item) => String(item.orderId)}
             renderItem={renderItem}
             refreshing={isFetching}

@@ -32,6 +32,7 @@ import {
 import type { Order } from "@/src/services/orderApi";
 import { useOrderSocket } from "@/src/hooks/useOrderSocket";
 import { useGetPricingQuery } from "@/src/services/pricingApi";
+import { formatOrderNumber } from "@/src/utils/orderNumber";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -69,13 +70,15 @@ export default function HomeScreen() {
     bags: 1,
   });
 
-  const driverProfile = driverProfileRes?.data;
-  const driverStatus = driverProfile?.status ?? "PENDING";
+  const driverProfile = driverProfileRes && driverProfileRes.data ? driverProfileRes.data : undefined;
+  const driverStatus = driverProfile && driverProfile.status ? driverProfile.status : "PENDING";
   const driverApproved = driverStatus === "APPROVED";
-  const myJobs = myJobsRes?.data ?? [];
-  const availableJobs = availableJobsRes?.data ?? [];
+  const myJobs = myJobsRes && myJobsRes.data ? myJobsRes.data : [];
+  const availableJobs = availableJobsRes && availableJobsRes.data ? availableJobsRes.data : [];
   const driverEarningPercentage =
-    pricingRes?.data?.driverEarningPercentage ?? 70;
+    pricingRes && pricingRes.data
+      ? pricingRes.data.driverEarningPercentage
+      : 70;
   const activeOrder = myJobs.find(
     (order) => !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
   );
@@ -105,10 +108,10 @@ export default function HomeScreen() {
   });
 
   useEffect(() => {
-    if (typeof driverProfile?.isAvailable === "boolean") {
+    if (driverProfile && typeof driverProfile.isAvailable === "boolean") {
       setSelected(driverProfile.isAvailable);
     }
-  }, [driverProfile?.isAvailable]);
+  }, [driverProfile ? driverProfile.isAvailable : undefined]);
 
   useEffect(() => {
     const loadTokens = async () => {
@@ -131,7 +134,7 @@ export default function HomeScreen() {
       duration: 800, // smooth speed
       useNativeDriver: false, // width animation must be false
     }).start();
-  }, [activeOrder?.status]);
+  }, [activeOrder ? activeOrder.status : undefined]);
 
   useEffect(() => {
     if (!pickupData.asap && !pickupData.date) {
@@ -220,7 +223,11 @@ export default function HomeScreen() {
       refetchAvailableJobs();
       ShowMessage.show("Job accepted successfully");
     } catch (error: any) {
-      ShowMessage.error(error?.data?.message ?? "Failed to accept job");
+      ShowMessage.error(
+        error && error.data && error.data.message
+          ? error.data.message
+          : "Failed to accept job",
+      );
     }
   };
 
@@ -233,7 +240,11 @@ export default function HomeScreen() {
       refetchAvailableJobs();
       ShowMessage.show("Job declined successfully");
     } catch (error: any) {
-      ShowMessage.error(error?.data?.message ?? "Failed to decline job");
+      ShowMessage.error(
+        error && error.data && error.data.message
+          ? error.data.message
+          : "Failed to decline job",
+      );
     }
   };
 
@@ -252,7 +263,9 @@ export default function HomeScreen() {
     } catch (error: any) {
       setSelected(!nextValue);
       ShowMessage.error(
-        error?.data?.message ?? "Failed to update availability",
+        error && error.data && error.data.message
+          ? error.data.message
+          : "Failed to update availability",
       );
     }
   };
@@ -312,7 +325,7 @@ export default function HomeScreen() {
             <View className="flex-1">
               <Text className="text-[16px] text-white/80">Welcome back,</Text>
               <Text className="text-[22px] font-bold text-white">
-                {profileInfo?.data?.name}
+                {profileInfo && profileInfo.data ? profileInfo.data.name : ""}
               </Text>
             </View>
 
@@ -430,7 +443,7 @@ export default function HomeScreen() {
 
                     <View className="ml-2">
                       <Text className="font-semibold">
-                        Order #{activeOrder._id.slice(-6)}
+                        Order #{formatOrderNumber(activeOrder._id)}
                       </Text>
                       <Text className="text-sm text-gray-500 mb-3">
                         {activeOrder.bags} bags • ${activeOrder.total}
@@ -450,7 +463,7 @@ export default function HomeScreen() {
 
                 {/* Steps */}
                 <View className="flex-row justify-between mb-2">
-                  {["Picked Up", "Washing", "Delivery"]?.map((step, index) => (
+                  {["Picked Up", "Washing", "Delivery"].map((step, index) => (
                     <Text
                       key={step}
                       className={`text-xs ${
@@ -531,7 +544,7 @@ export default function HomeScreen() {
                   <View className="flex-row mr-2 w-[65%]">
                     <View className="ml-2">
                       <Text className="font-semibold mb-1">
-                        Order #{availableOrder._id.slice(-6)}
+                        Order #{formatOrderNumber(availableOrder._id)}
                       </Text>
                       <View className="flex-row">
                         <Ionicons

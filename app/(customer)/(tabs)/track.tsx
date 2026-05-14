@@ -6,6 +6,7 @@ import RatingStars from "@/components/home/RatingStars";
 import { useRouter } from "expo-router";
 import { useGetMyOrdersQuery } from "@/src/services/orderApi";
 import { useOrderSocket } from "@/src/hooks/useOrderSocket";
+import { formatOrderNumber } from "@/src/utils/orderNumber";
 
 export default function Track() {
   const router = useRouter();
@@ -140,7 +141,7 @@ export default function Track() {
             <Feather name="box" size={18} color={Colors.primary} />
             <View>
               <Text className="text-xs text-gray-500">Order</Text>
-              <Text className="font-semibold">#{order.id}</Text>
+              <Text className="font-semibold">#{formatOrderNumber(order.id)}</Text>
             </View>
           </View>
 

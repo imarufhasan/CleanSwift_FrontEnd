@@ -8,10 +8,7 @@ type ApiResponse<T> = {
 
 export const paymentApi = api.injectEndpoints({
   endpoints: builder => ({
-    confirmPayment: builder.mutation<
-      ApiResponse<unknown>,
-      { orderId: string; amount?: number }
-    >({
+    confirmPayment: builder.mutation<ApiResponse<unknown>, { orderId: string; tipAmount?: number }>({
       query: body => ({
         url: '/payments/confirm',
         method: 'POST',

@@ -4,7 +4,6 @@ import { Ionicons, AntDesign, FontAwesome } from '@expo/vector-icons';
 import Colors from '@/constants/color';
 import { useLocalSearchParams, router } from 'expo-router';
 import ShowMessage from '@/constants/toast';
-import { useMarkOrderDeliveredMutation } from '@/src/services/orderApi';
 import { useConfirmPaymentMutation } from '@/src/services/paymentApi';
 
 export default function DeliveredSuccessScreen() {
@@ -22,7 +21,6 @@ export default function DeliveredSuccessScreen() {
   const [tipValueCustom, setTipValueCustom] = useState('');
   const [confirmPaymentModal, setConfirmPaymentModal] = useState(false);
   const [rating, setRating] = useState(0);
-  const [markOrderDelivered, { isLoading: isDelivering }] = useMarkOrderDeliveredMutation();
   const [confirmPayment, { isLoading }] = useConfirmPaymentMutation();
 
   const bagsCount = Number(bags ?? 0);
@@ -37,10 +35,9 @@ export default function DeliveredSuccessScreen() {
     }
 
     try {
-      await markOrderDelivered({ orderId: String(orderId) }).unwrap();
       await confirmPayment({
         orderId: String(orderId),
-        amount: total,
+        tipAmount,
       }).unwrap();
       setConfirmPaymentModal(true);
     } catch (error: any) {
@@ -221,12 +218,12 @@ export default function DeliveredSuccessScreen() {
           {/* Button */}
           <TouchableOpacity
             onPress={handleCompletePayment}
-            disabled={isLoading || isDelivering}
+            disabled={isLoading}
             className="bg-[#0A8CFF] py-4 rounded-2xl mb-[50px] flex-row items-center justify-center"
           >
             <Ionicons name="checkmark-circle-outline" size={22} color="#fff" className="mx-2" />
             <Text className="text-white text-center font-bold text-lg">
-              {isLoading || isDelivering ? 'Processing...' : `Complete Payment $${total.toFixed(2)}`}
+              {isLoading ? 'Processing...' : `Complete Payment $${total.toFixed(2)}`}
             </Text>
           </TouchableOpacity>
         </View>

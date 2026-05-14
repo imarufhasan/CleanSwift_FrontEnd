@@ -83,7 +83,7 @@ export default function HomeScreen() {
   }, [refetchAvailableJobs, refetchMyJobs]);
 
   useOrderSocket({
-    role: 'DRIVER',
+    role: "DRIVER",
     onDriverJobsUpdate: refreshJobs,
   });
 
@@ -397,95 +397,96 @@ export default function HomeScreen() {
           <Text className="text-lg font-bold mb-3">Active Route</Text>
           {activeOrder ? (
             <>
-            <View className="bg-white rounded-2xl px-4 py-6 shadow-sm mb-6 border border-gray-100">
-              <View className="flex-row justify-between items-start mb-4">
-                <View className="flex-row items-safe">
-                  <View
-                    className="w-9 h-9 rounded-full justify-center items-center"
-                    style={{ backgroundColor: "rgba(37, 99, 235, 0.2)" }}
-                  >
-                    <Ionicons
-                      name="cube-outline"
-                      size={20}
-                      color={Colors.primary}
-                    />
+              <View className="bg-white rounded-2xl px-4 py-6 shadow-sm mb-6 border border-gray-100">
+                <View className="flex-row justify-between items-start mb-4">
+                  <View className="flex-row items-safe">
+                    <View
+                      className="w-9 h-9 rounded-full justify-center items-center"
+                      style={{ backgroundColor: "rgba(37, 99, 235, 0.2)" }}
+                    >
+                      <Ionicons
+                        name="cube-outline"
+                        size={20}
+                        color={Colors.primary}
+                      />
+                    </View>
+
+                    <View className="ml-2">
+                      <Text className="font-semibold">
+                        Order #{activeOrder._id.slice(-6)}
+                      </Text>
+                      <Text className="text-sm text-gray-500 mb-3">
+                        {activeOrder.bags} bags • ${activeOrder.total}
+                        .00
+                      </Text>
+                    </View>
                   </View>
 
-                  <View className="ml-2">
-                    <Text className="font-semibold">
-                      Order #{activeOrder._id.slice(-6)}
-                    </Text>
-                    <Text className="text-sm text-gray-500 mb-3">
-                      {activeOrder.bags} bags • $
-                      {activeOrder.total}
-                      .00
-                    </Text>
-                  </View>
+                  <Text
+                    className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusStyle(
+                      activeOrder.status,
+                    )}`}
+                  >
+                    {activeOrder.status.replaceAll("_", " ")}
+                  </Text>
                 </View>
 
-                <Text
-                  className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusStyle(
-                    activeOrder.status,
-                  )}`}
-                >
-                  {activeOrder.status.replaceAll("_", " ")}
-                </Text>
-              </View>
-
-              {/* Steps */}
-              <View className="flex-row justify-between mb-2">
-                {["Picked Up", "Washing", "Delivery"].map((step, index) => (
-                  <Text
-                    key={step}
-                    className={`text-xs ${
-                      index <= getOrderStep(activeOrder.status)
-                        ? "text-blue-500"
-                        : "text-gray-400"
-                    }`}
-                  >
-                    {step}
-                  </Text>
-                ))}
-              </View>
-              <View className="h-2 bg-gray-200 rounded-full mb-3 overflow-hidden">
-                <Animated.View
-                  className="h-2 bg-blue-500 rounded-full"
-                  style={{
-                    width: progressAnim.interpolate({
-                      inputRange: [0, 100],
-                      outputRange: ["0%", "100%"],
-                    }),
-                  }}
-                />
-              </View>
-
-              <View className="flex-row justify-between items-center">
-                <Text className="text-xs text-gray-500">
-                  {activeOrder.address || "Pickup address unavailable"}
-                </Text>
-                <TouchableOpacity
-                  onPress={() =>
-                    router.push({
-                      pathname: "/(common)/OrderDetailsDriver" as any,
-                      params: { id: activeOrder._id },
-                    })
-                  }
-                  className="flex-row gap-3 items-center"
-                >
-                  <Text
-                    style={{ color: Colors.primary }}
-                    className="text-[14px] font-bold"
-                  >
-                    Details
-                  </Text>
-                  <Ionicons
-                    name="arrow-forward"
-                    size={16}
-                    color={Colors.primary}
+                {/* Steps */}
+                <View className="flex-row justify-between mb-2">
+                  {["Picked Up", "Washing", "Delivery"].map((step, index) => (
+                    <Text
+                      key={step}
+                      className={`text-xs ${
+                        index <= getOrderStep(activeOrder.status)
+                          ? "text-blue-500"
+                          : "text-gray-400"
+                      }`}
+                    >
+                      {step}
+                    </Text>
+                  ))}
+                </View>
+                <View className="h-2 bg-gray-200 rounded-full mb-3 overflow-hidden">
+                  <Animated.View
+                    className="h-2 bg-blue-500 rounded-full"
+                    style={{
+                      width: progressAnim.interpolate({
+                        inputRange: [0, 100],
+                        outputRange: ["0%", "100%"],
+                      }),
+                    }}
                   />
-                </TouchableOpacity>
+                </View>
+
+                <View className="flex-row justify-between items-center">
+                  <View className="flex-1">
+                    <Text className="text-xs  text-gray-500">
+                      {activeOrder.address || "Pickup address unavailable"}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() =>
+                      router.push({
+                        pathname: "/(common)/OrderDetailsDriver" as any,
+                        params: { id: activeOrder._id },
+                      })
+                    }
+                    className="flex-row gap-3 items-center"
+                  >
+                    <Text
+                      style={{ color: Colors.primary }}
+                      className="text-[14px] font-bold"
+                    >
+                      Details
+                    </Text>
+                    <Ionicons
+                      name="arrow-forward"
+                      size={16}
+                      color={Colors.primary}
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
             </>
           ) : (
             <View className="bg-white rounded-2xl px-4 py-6 shadow-sm mb-6 border border-gray-100">
@@ -508,80 +509,85 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
             {availableOrder ? (
-            <View className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100">
-              <View className="flex-row justify-between items-start mb-3">
-                <View className="flex-row items-safe">
-                  <View className="ml-2">
-                    <Text className="font-semibold mb-1">
-                      Order #{availableOrder._id.slice(-6)}
+              <View className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100">
+                <View className="flex-row justify-between items-start mb-3">
+                  <View className="flex-row mr-2 flex-1">
+                    <View className="ml-2">
+                      <Text className="font-semibold mb-1">
+                        Order #{availableOrder._id.slice(-6)}
+                      </Text>
+                      <View className="flex-row">
+                        <Ionicons
+                          name="location-outline"
+                          size={14}
+                          color="gray"
+                        />
+
+                        <Text className="text-sm text-gray-500 mb-1 ml-1 flex-shrink flex-wrap">
+                          {availableOrder.address ||
+                            "Pickup address unavailable"}
+                        </Text>
+                      </View>
+
+                      {/* Pickup type row */}
+                      <View className="flex-row">
+                        <Ionicons name="time-outline" size={14} color="gray" />
+
+                        <Text className="text-sm text-gray-500 mb-1 ml-1">
+                          {availableOrder.pickupType}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  <View className="items-end justify-center ">
+                    <Text className="font-bold text-green-500 text-[24px]">
+                      ${availableOrder.total}
                     </Text>
-                    <View className="flex-row">
-                      <Ionicons
-                        name="location-outline"
-                        size={14}
-                        color={"gray"}
-                      />
-                      <Text className="text-sm text-gray-500 mb-1">
-                        {availableOrder.address || "Pickup address unavailable"}
-                      </Text>
-                    </View>
-                    <View className="flex-row">
-                      <Ionicons name="time-outline" size={14} color={"gray"} />
-                      <Text className="text-sm text-gray-500 mb-1">
-                        {availableOrder.pickupType}
-                      </Text>
-                    </View>
+                    <Text className="font-sm text-gray-500">You earn 70%</Text>
                   </View>
                 </View>
 
-                <View className="items-end justify-center">
-                  <Text className="font-bold text-green-500 text-[24px]">
-                    ${availableOrder.total}
-                  </Text>
-                  <Text className="font-sm text-gray-500">You earn 70%</Text>
+                <View className="flex-row justify-between bg-blue-50 rounded-[10px] py-4 px-6">
+                  <View className="flex-1 items-start justify-center">
+                    <Text className="text-base text-gray-500">Begs</Text>
+                    <Text className="text-lg font-bold text-black">
+                      {availableOrder.bags} Bags
+                    </Text>
+                  </View>
+                  <View className="flex-1 items-start justify-center ml-[20px]">
+                    <Text className="text-base text-gray-500">Service</Text>
+                    <Text className="text-lg font-bold text-black">
+                      {availableOrder.serviceType.replaceAll("_", " ")}
+                    </Text>
+                  </View>
                 </View>
-              </View>
 
-              <View className="flex-row justify-between bg-blue-50 rounded-[10px] py-4 px-6">
-                <View className="flex-1 items-start justify-center">
-                  <Text className="text-base text-gray-500">Begs</Text>
-                  <Text className="text-lg font-bold text-black">
-                    {availableOrder.bags} Bags
-                  </Text>
-                </View>
-                <View className="flex-1 items-start justify-center ml-[20px]">
-                  <Text className="text-base text-gray-500">Service</Text>
-                  <Text className="text-lg font-bold text-black">
-                    {availableOrder.serviceType.replaceAll("_", " ")}
-                  </Text>
+                <View className=" mt-5 flex-row items-center justify-center gap-4">
+                  <TouchableOpacity
+                    onPress={() => {
+                      setSelectedJobId(availableOrder._id);
+                      setDeclineModal(true);
+                    }}
+                    className="flex-1 border border-red-400 py-2 rounded-xl"
+                  >
+                    <Text className="text-center text-lg py-1 text-red-500 font-medium">
+                      Decline
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setSelectedJobId(availableOrder._id);
+                      setAcceptModal(true);
+                    }}
+                    className="flex-1 bg-blue-500 py-2 rounded-xl"
+                  >
+                    <Text className="text-center text-lg py-1 text-white font-medium">
+                      Accept
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               </View>
-
-              <View className=" mt-5 flex-row items-center justify-center gap-4">
-                <TouchableOpacity
-                  onPress={() => {
-                    setSelectedJobId(availableOrder._id);
-                    setDeclineModal(true);
-                  }}
-                  className="flex-1 border border-red-400 py-2 rounded-xl"
-                >
-                  <Text className="text-center text-lg py-1 text-red-500 font-medium">
-                    Decline
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => {
-                    setSelectedJobId(availableOrder._id);
-                    setAcceptModal(true);
-                  }}
-                  className="flex-1 bg-blue-500 py-2 rounded-xl"
-                >
-                  <Text className="text-center text-lg py-1 text-white font-medium">
-                    Accept
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
             ) : (
               <View className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100">
                 <Text className="text-gray-500">No available jobs now</Text>

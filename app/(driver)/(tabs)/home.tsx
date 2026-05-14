@@ -483,8 +483,8 @@ export default function HomeScreen() {
                   </View>
                   <TouchableOpacity
                     onPress={() =>
-                      router.push({
-                        pathname: "/(common)/OrderDetailsDriver" as any,
+                       router.push({
+                        pathname: "/(common)/LiveTrackScreenDriver/LiveTrackScreenDriverMain" as any,
                         params: { id: activeOrder._id },
                       })
                     }
@@ -494,7 +494,7 @@ export default function HomeScreen() {
                       style={{ color: Colors.primary }}
                       className="text-[14px] font-bold"
                     >
-                      Details
+                      Live Track
                     </Text>
                     <Ionicons
                       name="arrow-forward"

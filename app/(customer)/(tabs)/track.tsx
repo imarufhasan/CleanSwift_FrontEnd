@@ -120,12 +120,12 @@ export default function Track() {
       <View className="bg-white rounded-2xl p-4 shadow mx-5 mb-5">
         <View className="flex-row items-center mb-3">
           <Image
-            source={{ uri: driver.avatar }}
+            source={{ uri: driver?.avatar }}
             style={{ width: 40, height: 40, borderRadius: 25 }}
             resizeMode="cover"
           />
           <View className="flex-1 ml-2">
-            <Text className="font-semibold text-base">{driver.name}</Text>
+            <Text className="font-semibold text-base">{driver?.name}</Text>
             <View className="flex-row items-center mt-1">
               <RatingStars rating={driver.rating} />
               <Text className="text-sm ml-1 text-gray-600">
@@ -160,8 +160,8 @@ export default function Track() {
                 pathname: "/(common)/ChatScreen" as any,
                 params: {
                   orderId: String(order.id),
-                  name: driver.name,
-                  avatar: driver.avatar,
+                  name: driver?.name,
+                  avatar: driver?.avatar,
                 },
               })
             }
@@ -179,7 +179,7 @@ export default function Track() {
             onPress={() =>
               router.push({
                 pathname: "/(common)/CallScreen" as any,
-                params: { name: driver.name, image: driver.avatar },
+                params: { name: driver?.name, image: driver?.avatar },
               })
             }
             className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center ml-2"

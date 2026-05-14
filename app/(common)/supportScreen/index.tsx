@@ -96,7 +96,7 @@ export default function supportScreen() {
       >
         {!isUser && (
           <Image
-            source={driver.avatar}
+            source={driver?.avatar}
             className="w-8 h-8 rounded-full mr-2 self-end"
           />
         )}
@@ -150,7 +150,7 @@ export default function supportScreen() {
           </TouchableOpacity>
 
           <Image
-            source={driver.avatar}
+            source={driver?.avatar}
             className="w-10 h-10 rounded-full"
           />
 

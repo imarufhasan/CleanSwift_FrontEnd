@@ -23,6 +23,20 @@ export type Order = {
   status: OrderStatus;
   pricePerBag: number;
   total: number;
+  bagCountAtPickup?: number;
+  bagCountAtDelivery?: number;
+  timeline?: {
+    requestedAt?: string;
+    driverAssignedAt?: string;
+    pickedUpAt?: string;
+    washingDryingAt?: string;
+    dryingAt?: string;
+    foldingAt?: string;
+    outForDeliveryAt?: string;
+    deliveredAt?: string;
+    completedAt?: string;
+    canceledAt?: string;
+  };
   createdAt?: string;
   updatedAt?: string;
 };

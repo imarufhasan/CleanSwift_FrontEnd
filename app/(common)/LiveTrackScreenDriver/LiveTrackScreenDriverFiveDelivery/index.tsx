@@ -1,48 +1,25 @@
 import React from 'react';
 import { ActivityIndicator, View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
-import { Ionicons, Feather, AntDesign } from '@expo/vector-icons';
+import { Ionicons, Feather } from '@expo/vector-icons';
 import Colors from '@/constants/color';
-import RatingStars from '@/components/home/RatingStars';
-import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGetMyDriverJobsQuery } from '@/src/services/driverApi';
-import { useMarkOrderDeliveredMutation } from '@/src/services/orderApi';
+import { useMarkOrderDeliveredMutation, type Order } from '@/src/services/orderApi';
 import ShowMessage from '@/constants/toast';
 import { useGetPricingQuery } from '@/src/services/pricingApi';
 
-const buildSteps = (status?: string) => {
-  const currentByStatus: Record<string, number> = {
-    REQUESTED: 0,
-    DRIVER_ASSIGNED: 0,
-    PICKED_UP: 1,
-    WASHING_DRYING: 2,
-    OUT_FOR_DELIVERY: 3,
-    DELIVERED: 4,
-    COMPLETED: 4,
-  };
-  const current = currentByStatus[status ?? 'REQUESTED'] ?? 0;
-
-  return [
-    { key: 'requested', title: 'Requested', time: '', status: 'done' },
-    { key: 'assigned', title: 'Driver Assigned', time: '', status: 'done' },
-    { key: 'picked', title: 'Picked Up', time: '', status: 'done' },
-    { key: 'washing', title: 'Washing', time: '', subtitle: 'Currently in progress', status: 'done' },
-    { key: 'delivery', title: 'Out for Delivery', time: '', status: 'done', icon: 'truck' },
-    { key: 'delivered', title: 'Delivered', time: '', status: 'done', icon: 'home' },
-  ].map((step, index) => ({
-    ...step,
-    status: index < current ? 'done' : index === current ? 'active' : 'pending',
-  }));
+type Props = {
+  order?: Order;
+  setDeliverySuccessModal: (value: boolean) => void;
 };
 
-export default function DeliveryStep({ setDeliverySuccessModal }: any) {
-  const router = useRouter();
+export default function DeliveryStep({ order, setDeliverySuccessModal }: Props) {
   const { data: myJobsRes } = useGetMyDriverJobsQuery();
   const { data: pricingRes } = useGetPricingQuery();
   const [markOrderDelivered, { isLoading: isCompletingDelivery }] =
     useMarkOrderDeliveredMutation();
   const driverEarningPercentage = pricingRes?.data?.driverEarningPercentage ?? 70;
-  const activeJob = myJobsRes?.data?.find(
+  const activeJob = order ?? myJobsRes?.data?.find(
     order => !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(order.status),
   );
   const customer = activeJob?.customer ?? null;
@@ -58,7 +35,7 @@ export default function DeliveryStep({ setDeliverySuccessModal }: any) {
     },
     instructions: activeJob?.specialInstructions ?? 'No special instructions',
     pricing: {
-      bags: activeJob?.bags ?? 0,
+      bags: activeJob?.bagCountAtPickup ?? activeJob?.bags ?? 0,
       bagPrice: activeJob?.pricePerBag ?? 0,
       tip: 0,
     },

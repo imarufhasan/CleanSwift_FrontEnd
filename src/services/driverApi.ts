@@ -65,6 +65,25 @@ export const driverApi = api.injectEndpoints({
       }),
       invalidatesTags: ['Order'],
     }),
+
+    updateDriverJobStage: builder.mutation<
+      ApiResponse<Order>,
+      {
+        orderId: string;
+        stage: 'PICKUP' | 'WASHING' | 'DRYING' | 'FOLDING' | 'DELIVERY';
+        bagCount?: number;
+      }
+    >({
+      query: ({ orderId, ...body }) => ({
+        url: `/drivers/jobs/${orderId}/stage`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: (_result, _error, arg) => [
+        'Order',
+        { type: 'Order', id: arg.orderId },
+      ],
+    }),
   }),
 });
 
@@ -75,4 +94,5 @@ export const {
   useGetMyDriverJobsQuery,
   useAcceptJobMutation,
   useDeclineJobMutation,
+  useUpdateDriverJobStageMutation,
 } = driverApi;

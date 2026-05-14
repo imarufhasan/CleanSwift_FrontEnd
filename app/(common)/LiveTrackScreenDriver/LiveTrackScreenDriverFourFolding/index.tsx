@@ -1,30 +1,52 @@
-import CircularProgress from "@/components/driver/home/CircularProgress";
+import React from "react";
+import { ActivityIndicator, View, Text, TouchableOpacity } from "react-native";
+import { AntDesign, Entypo, FontAwesome6 } from "@expo/vector-icons";
 import CustomerCard from "@/components/driver/home/CustomerCard";
 import Colors from "@/constants/color";
-import {
-  AntDesign,
-  Entypo,
-  Feather,
-  FontAwesome6,
-  Ionicons,
-} from "@expo/vector-icons";
-import React from "react";
-import { View, Text, Image, TouchableOpacity } from "react-native";
+import type { Order } from "@/src/services/orderApi";
 
-export default function FoldingStep({ setActiveStep }: any) {
+type Props = {
+  order?: Order;
+  isUpdating?: boolean;
+  onStartDelivery: () => Promise<void> | void;
+};
+
+const formatDateTime = (value?: string) => {
+  if (!value) return "--";
+
+  return new Date(value).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+export default function FoldingStep({
+  order,
+  isUpdating,
+  onStartDelivery,
+}: Props) {
+  const customer = order?.customer;
+
   return (
     <View className="bg-white mb-6 px-4">
-      <CustomerCard name="Customer" address="Live order address" />
+      <CustomerCard
+        orderId={order?._id}
+        name={customer?.name ?? "Customer"}
+        address={order?.address ?? customer?.address ?? "Pickup address unavailable"}
+        image={customer?.image}
+        instructionSubtitle={order?.serviceType?.replaceAll("_", " ") ?? "Service"}
+        instructionDescription={order?.specialInstructions ?? "No special instructions"}
+      />
 
-      <View className="bg-green-100 rounded-2xl px-4 py-6 my-4  w-full items-center justify-center">
+      <View className="bg-green-100 rounded-2xl px-4 py-6 my-4 w-full items-center justify-center">
         <View className="mb-4">
-          <Entypo name="check" size={22} color={"green"} />
+          <Entypo name="check" size={22} color="green" />
         </View>
         <Text className="font-bold text-2xl text-black">
           Folding & Packaging
         </Text>
         <Text className="text-base text-gray-500">
-          Almost ready for delivery
+          {order?.bagCountAtPickup ?? order?.bags ?? 0} bags almost ready for delivery
         </Text>
       </View>
 
@@ -32,39 +54,32 @@ export default function FoldingStep({ setActiveStep }: any) {
         <Text className="font-bold text-black text-lg mb-4">
           Quality Checklist
         </Text>
-        <View className="bg-green-50 rounded-2xl px-2 py-2 w-full mb-2">
-          <View className="flex-row gap-3 my-2">
-            <AntDesign name="check-circle" size={18} color={"green"} />
-            <Text className="font-semibold text-black text-sm">
-              All items washed and dried
-            </Text>
-          </View>
-        </View>
 
-        {/* next */}
-        <View className="bg-green-50 rounded-2xl px-2 py-2 w-full mb-2">
-          <View className="flex-row gap-3 my-2">
-            <AntDesign name="check-circle" size={18} color={"green"} />
-            <Text className="font-semibold text-black text-sm">
-              All items washed and dried
+        {[
+          "All items washed",
+          "All items dried",
+          "Bag count matched",
+          "Ready for delivery handoff",
+        ].map(item => (
+          <View key={item} className="bg-green-50 rounded-2xl px-2 py-2 w-full mb-2">
+            <View className="flex-row gap-3 my-2">
+              <AntDesign name="check-circle" size={18} color="green" />
+              <Text className="font-semibold text-black text-sm">{item}</Text>
+            </View>
+          </View>
+        ))}
+
+        <View className="bg-blue-50 rounded-2xl p-4 mt-2">
+          <View className="flex-row items-center justify-between mb-2">
+            <Text className="text-sm text-gray-500 font-medium">Drying Started</Text>
+            <Text className="text-sm text-black font-semibold">
+              {formatDateTime(order?.timeline?.dryingAt)}
             </Text>
           </View>
-        </View>
-        {/* next */}
-        <View className="bg-green-50 rounded-2xl px-2 py-2 w-full mb-2">
-          <View className="flex-row gap-3 my-2">
-            <AntDesign name="check-circle" size={18} color={"green"} />
-            <Text className="font-semibold text-black text-sm">
-              All items washed and dried
-            </Text>
-          </View>
-        </View>
-        {/* next */}
-        <View className="bg-green-50 rounded-2xl px-2 py-2 w-full mb-2">
-          <View className="flex-row gap-3 my-2">
-            <AntDesign name="check-circle" size={18} color={"green"} />
-            <Text className="font-semibold text-black text-sm">
-              All items washed and dried
+          <View className="flex-row items-center justify-between">
+            <Text className="text-sm text-gray-500 font-medium">Status</Text>
+            <Text className="text-sm text-blue-500 font-medium">
+              {order?.status?.replaceAll("_", " ") ?? "Waiting"}
             </Text>
           </View>
         </View>
@@ -72,14 +87,21 @@ export default function FoldingStep({ setActiveStep }: any) {
 
       <View className="pb-6 mt-[50px]">
         <TouchableOpacity
-          onPress={() => setActiveStep(4)}
+          onPress={onStartDelivery}
+          disabled={isUpdating}
           style={{ backgroundColor: Colors.primary }}
           className="py-4 rounded-xl flex-row justify-center items-center gap-3"
         >
-          <Text className="text-white font-semibold ml-2">
-            Mark as "Now Folding"
-          </Text>
-          <FontAwesome6 name="arrow-right-long" size={18} color="white" />
+          {isUpdating ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <>
+              <Text className="text-white font-semibold ml-2">
+                Start Delivery
+              </Text>
+              <FontAwesome6 name="arrow-right-long" size={18} color="white" />
+            </>
+          )}
         </TouchableOpacity>
       </View>
     </View>

@@ -6,10 +6,13 @@ import { useRouter } from 'expo-router';
 import RatingStars from '@/components/home/RatingStars';
 import Colors from '@/constants/color';
 import { useGetMyDriverJobsQuery } from '@/src/services/driverApi';
+import { useGetPricingQuery } from '@/src/services/pricingApi';
 
 export default function Index() {
   const router = useRouter();
   const { data: jobsRes } = useGetMyDriverJobsQuery();
+  const { data: pricingRes } = useGetPricingQuery();
+  const driverEarningPercentage = pricingRes?.data?.driverEarningPercentage ?? 70;
   const completedJobs = (jobsRes?.data ?? []).filter(job => ['DELIVERED', 'COMPLETED'].includes(job.status));
   const recentOrders = completedJobs.slice(0, 5).map(order => ({
     id: order._id,
@@ -21,8 +24,11 @@ export default function Index() {
   }));
   const todayEarning = completedJobs
     .filter(job => job.createdAt && new Date(job.createdAt).toDateString() === new Date().toDateString())
-    .reduce((sum, job) => sum + Number(job.total ?? 0) * 0.7, 0);
-  const weeklyEarning = completedJobs.reduce((sum, job) => sum + Number(job.total ?? 0) * 0.7, 0);
+    .reduce((sum, job) => sum + (Number(job.total ?? 0) * driverEarningPercentage) / 100, 0);
+  const weeklyEarning = completedJobs.reduce(
+    (sum, job) => sum + (Number(job.total ?? 0) * driverEarningPercentage) / 100,
+    0,
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-white px-5">
@@ -75,7 +81,9 @@ export default function Index() {
               </View>
 
               <View className="items-end justify-center">
-                <Text className="text-green-600 text-lg font-bold">$ {order.price}</Text>
+                <Text className="text-green-600 text-lg font-bold">
+                  ${((Number(order.price) * driverEarningPercentage) / 100).toFixed(2)}
+                </Text>
                 <View className="flex-row items-center">
                   <RatingStars rating={order.rating} />
                   <Text className="ml-1 text-sm">{order.rating.toFixed(2)}</Text>

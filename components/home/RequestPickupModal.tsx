@@ -41,7 +41,7 @@ export default function RequestPickupModal({
   setPickupData,
   openDatePicker,
   openTimePicker,
-  pricePerBag = 45,
+  pricePerBag = 0,
   isSubmitting = false,
   onConfirmRequest,
 }: Props) {

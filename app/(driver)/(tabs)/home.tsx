@@ -31,6 +31,7 @@ import {
 } from "@/src/services/driverApi";
 import type { Order } from "@/src/services/orderApi";
 import { useOrderSocket } from "@/src/hooks/useOrderSocket";
+import { useGetPricingQuery } from "@/src/services/pricingApi";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -40,6 +41,7 @@ export default function HomeScreen() {
   const { data: myJobsRes, refetch: refetchMyJobs } = useGetMyDriverJobsQuery();
   const { data: availableJobsRes, refetch: refetchAvailableJobs } =
     useGetAvailableJobsQuery();
+  const { data: pricingRes } = useGetPricingQuery();
   const [updateAvailability, { isLoading: isUpdatingAvailability }] =
     useUpdateDriverAvailabilityMutation();
   const [acceptJob, { isLoading: isAcceptingJob }] = useAcceptJobMutation();
@@ -72,10 +74,25 @@ export default function HomeScreen() {
   const driverApproved = driverStatus === "APPROVED";
   const myJobs = myJobsRes?.data ?? [];
   const availableJobs = availableJobsRes?.data ?? [];
+  const driverEarningPercentage =
+    pricingRes?.data?.driverEarningPercentage ?? 70;
   const activeOrder = myJobs.find(
     (order) => !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
   );
   const availableOrder = availableJobs[0];
+  const completedTodayEarnings = myJobs
+    .filter(
+      (order) =>
+        ["DELIVERED", "COMPLETED"].includes(order.status) &&
+        order.createdAt &&
+        new Date(order.createdAt).toDateString() === new Date().toDateString(),
+    )
+    .reduce(
+      (sum, order) =>
+        sum +
+        (Number(order.total ?? 0) * driverEarningPercentage) / 100,
+      0,
+    );
 
   const refreshJobs = useCallback(() => {
     refetchAvailableJobs();
@@ -376,7 +393,7 @@ export default function HomeScreen() {
             <View>
               <Text className="text-white text-base">Today's Earnings</Text>
               <Text className="text-white/90 text-2xl font-bold mt-1">
-                $156
+                ${completedTodayEarnings.toFixed(2)}
               </Text>
             </View>
 
@@ -542,9 +559,11 @@ export default function HomeScreen() {
 
                   <View className="items-end justify-end w-[35%] ">
                     <Text className="font-bold text-green-500 text-[24px]">
-                      ${availableOrder.total}
+                      ${Number(availableOrder.total ?? 0).toFixed(2)}
                     </Text>
-                    <Text className="font-sm text-gray-500">You earn 70%</Text>
+                    <Text className="font-sm text-gray-500">
+                      You earn {driverEarningPercentage}%
+                    </Text>
                   </View>
                 </View>
 

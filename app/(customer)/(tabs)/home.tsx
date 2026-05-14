@@ -98,7 +98,7 @@ export default function HomeScreen() {
   const completedOrders = orders.filter(order => ['DELIVERED', 'COMPLETED'].includes(order.status));
   const activeOrder = activeOrders[0] ? mapOrderToCard(activeOrders[0]) : null;
   const recentOrders = (completedOrders.length ? completedOrders : orders).slice(0, 5).map(mapOrderToRecent);
-  const pricePerBag = pricingRes?.data?.pricePerBag ?? 45;
+  const pricePerBag = pricingRes?.data?.pricePerBag ?? 0;
   const location = parseAddress(profileInfo?.data?.address);
 
   useOrderSocket({

@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGetMyDriverJobsQuery } from '@/src/services/driverApi';
 import { useMarkOrderDeliveredMutation } from '@/src/services/orderApi';
 import ShowMessage from '@/constants/toast';
+import { useGetPricingQuery } from '@/src/services/pricingApi';
 
 const buildSteps = (status?: string) => {
   const currentByStatus: Record<string, number> = {
@@ -37,8 +38,10 @@ const buildSteps = (status?: string) => {
 export default function DeliveryStep({ setDeliverySuccessModal }: any) {
   const router = useRouter();
   const { data: myJobsRes } = useGetMyDriverJobsQuery();
+  const { data: pricingRes } = useGetPricingQuery();
   const [markOrderDelivered, { isLoading: isCompletingDelivery }] =
     useMarkOrderDeliveredMutation();
+  const driverEarningPercentage = pricingRes?.data?.driverEarningPercentage ?? 70;
   const activeJob = myJobsRes?.data?.find(
     order => !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(order.status),
   );
@@ -179,7 +182,9 @@ export default function DeliveryStep({ setDeliverySuccessModal }: any) {
 
               <View className="bg-orange-50 flex-1 rounded-2xl p-4 mt-4">
                 <Text className="text-gray-500 font-medium text-base mb-2">Your Earnings</Text>
-                <Text className="font-bold text-xl text-green-500">${Number(total * 0.7).toFixed(2)}</Text>
+                <Text className="font-bold text-xl text-green-500">
+                  ${Number((total * driverEarningPercentage) / 100).toFixed(2)}
+                </Text>
               </View>
             </View>
           </View>

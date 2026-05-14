@@ -13,6 +13,7 @@ import {
   useGetMyDriverJobsQuery,
 } from '@/src/services/driverApi';
 import type { Order } from '@/src/services/orderApi';
+import { useGetPricingQuery } from '@/src/services/pricingApi';
 
 type JobTab = 'Available' | 'Active' | 'Completed';
 type JobCardData = {
@@ -54,12 +55,14 @@ const TopTab = ({ label, active, onPress }: { label: JobTab; active: boolean; on
 /* -------------------- Job Card -------------------- */
 const JobCard = ({
   item,
+  driverEarningPercentage,
   showActions,
   onAccept,
   onDecline,
   onDetails,
 }: {
   item: JobCardData;
+  driverEarningPercentage: number;
   showActions?: boolean;
   onAccept?: () => void;
   onDecline?: () => void;
@@ -86,7 +89,7 @@ const JobCard = ({
 
       <View className="items-end">
         <Text className="text-lg font-bold text-green-600">{item.price}</Text>
-        <Text className="text-xs text-gray-400">You earn 70%</Text>
+        <Text className="text-xs text-gray-400">You earn {driverEarningPercentage}%</Text>
       </View>
     </View>
 
@@ -137,8 +140,10 @@ export default function JobsScreen() {
     refetch: refetchAvailableJobs,
   } = useGetAvailableJobsQuery();
   const { data: myJobsRes, isFetching: isMyJobsLoading, refetch: refetchMyJobs } = useGetMyDriverJobsQuery();
+  const { data: pricingRes } = useGetPricingQuery();
   const [acceptJob, { isLoading: isAccepting }] = useAcceptJobMutation();
   const [declineJob, { isLoading: isDeclining }] = useDeclineJobMutation();
+  const driverEarningPercentage = pricingRes?.data?.driverEarningPercentage ?? 70;
 
   const refreshJobs = useCallback(() => {
     refetchAvailableJobs();
@@ -198,6 +203,7 @@ export default function JobsScreen() {
             <JobCard
               key={item.id}
               item={item}
+              driverEarningPercentage={driverEarningPercentage}
               showActions
               onAccept={() => {
                 setSelectedJob(item);
@@ -222,6 +228,7 @@ export default function JobsScreen() {
             <JobCard
               key={item.id}
               item={item}
+              driverEarningPercentage={driverEarningPercentage}
               onDetails={() =>
                 router.push({
                   pathname: '/(common)/OrderDetailsDriver',

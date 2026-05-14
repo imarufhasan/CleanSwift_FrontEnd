@@ -1,5 +1,5 @@
 import NetInfo from "@react-native-community/netinfo";
-import { BASE_URL } from "../constants/api";
+import { BASE_URL, SOCKET_URL } from "../constants/api";
 
 export const checkInternetConnection = async () => {
   const state = await NetInfo.fetch();
@@ -21,7 +21,7 @@ export const checkServerConnection = async () => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
 
-    const response = await fetch("http://10.10.20.30:7000", {
+    const response = await fetch(SOCKET_URL, {
       method: "GET",
       signal: controller.signal,
     });

@@ -4,8 +4,7 @@ import { BASE_URL } from '../constants/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: BASE_URL,
-  timeout: 15000,
+  baseUrl: BASE_URL
 });
 
 const baseQueryWithToken = async (args: any, api: any, extraOptions: any) => {

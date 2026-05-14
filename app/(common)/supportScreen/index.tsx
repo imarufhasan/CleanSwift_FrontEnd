@@ -16,6 +16,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { formatChatTime } from "@/constants/chatTimes";
 import ShowMessage from "@/constants/toast";
 import { useProfileInfoQuery } from "@/src/services/userApi";
+import * as ImagePicker from "expo-image-picker";
+
+type SupportMessage = {
+  id: string;
+  text?: string;
+  imageUri?: string;
+  sender: string;
+  time: string;
+};
 
 export default function supportScreen() {
   const router = useRouter();
@@ -28,9 +37,7 @@ export default function supportScreen() {
     online: true,
   };
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<
-    { id: string; text: string; sender: string; time: string }[]
-  >([]);
+  const [messages, setMessages] = useState<SupportMessage[]>([]);
 
   const flatListRef = useRef<FlatList>(null);
 
@@ -53,6 +60,33 @@ export default function supportScreen() {
     setMessage("");
   };
 
+  const sendImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      ShowMessage.error("Gallery permission required");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 0.7,
+      allowsEditing: true,
+    });
+
+    if (result.canceled) return;
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        imageUri: result.assets[0].uri,
+        sender: "user",
+        time: formatChatTime(new Date()),
+      },
+    ]);
+  };
+
   const renderItem = ({ item }: any) => {
     const isUser = item.sender === "user";
 
@@ -73,11 +107,19 @@ export default function supportScreen() {
           }`}
           style={isUser ? { backgroundColor: Colors.primary } : undefined}
         >
-          <Text
-            className={`text-sm ${isUser ? "text-white" : "text-gray-800"}`}
-          >
-            {item.text}
-          </Text>
+          {item.imageUri ? (
+            <Image
+              source={{ uri: item.imageUri }}
+              className="w-[180px] h-[180px] rounded-xl"
+              resizeMode="cover"
+            />
+          ) : (
+            <Text
+              className={`text-sm ${isUser ? "text-white" : "text-gray-800"}`}
+            >
+              {item.text}
+            </Text>
+          )}
 
           <Text
             className={`text-[10px] mt-1 ${
@@ -159,7 +201,7 @@ export default function supportScreen() {
               multiline
             />
 
-            <TouchableOpacity onPress={() => ShowMessage.show("send image")}>
+            <TouchableOpacity onPress={sendImage}>
               <Ionicons name="image-outline" size={22} color={Colors.primary} />
             </TouchableOpacity>
           </View>

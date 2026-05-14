@@ -1,11 +1,13 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { ActivityIndicator, View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { Ionicons, Feather, AntDesign } from '@expo/vector-icons';
 import Colors from '@/constants/color';
 import RatingStars from '@/components/home/RatingStars';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGetMyDriverJobsQuery } from '@/src/services/driverApi';
+import { useMarkOrderDeliveredMutation } from '@/src/services/orderApi';
+import ShowMessage from '@/constants/toast';
 
 const buildSteps = (status?: string) => {
   const currentByStatus: Record<string, number> = {
@@ -35,6 +37,8 @@ const buildSteps = (status?: string) => {
 export default function DeliveryStep({ setDeliverySuccessModal }: any) {
   const router = useRouter();
   const { data: myJobsRes } = useGetMyDriverJobsQuery();
+  const [markOrderDelivered, { isLoading: isCompletingDelivery }] =
+    useMarkOrderDeliveredMutation();
   const activeJob = myJobsRes?.data?.find(
     order => !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(order.status),
   );
@@ -58,6 +62,20 @@ export default function DeliveryStep({ setDeliverySuccessModal }: any) {
   };
 
   const total = orderDetails.pricing.bags * orderDetails.pricing.bagPrice + orderDetails.pricing.tip;
+
+  const handleCompleteDelivery = async () => {
+    if (!activeJob?._id) {
+      ShowMessage.error('No active job found');
+      return;
+    }
+
+    try {
+      await markOrderDelivered({ orderId: activeJob._id }).unwrap();
+      setDeliverySuccessModal(true);
+    } catch (error: any) {
+      ShowMessage.error(error?.data?.message ?? 'Failed to complete delivery');
+    }
+  };
 
   return (
     <ScrollView className="flex-1">
@@ -124,7 +142,7 @@ export default function DeliveryStep({ setDeliverySuccessModal }: any) {
                 <View className="ml-3">
                   <Text className="text-sm text-gray-500">Picking up from</Text>
                   <Text className="text-2xl font-semibold">{customer?.name ?? 'Customer'}</Text>
-                  <Text className="text-sm text-gray-500">order #{String(order.id).slice(-4)}</Text>
+                  <Text className="text-sm text-gray-500">order #{String(activeJob?._id ?? '').slice(-4)}</Text>
                 </View>
               </View>
             </View>
@@ -171,12 +189,19 @@ export default function DeliveryStep({ setDeliverySuccessModal }: any) {
         <View className="px-5 mb-2 mt-[50px]">
           <TouchableOpacity
             //onPress={() => router.push("/DeliveredSuccessScreen")}
-            onPress={() => setDeliverySuccessModal(true)}
+            onPress={handleCompleteDelivery}
+            disabled={isCompletingDelivery}
             style={{ backgroundColor: Colors.primary }}
             className="gap-2 rounded-xl py-3 flex-row justify-center items-center"
           >
-            <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
-            <Text className="text-white text-lg font-semibold">Complete Delivery</Text>
+            {isCompletingDelivery ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
+                <Text className="text-white text-lg font-semibold">Complete Delivery</Text>
+              </>
+            )}
           </TouchableOpacity>
         </View>
       </SafeAreaView>

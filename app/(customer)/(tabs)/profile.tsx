@@ -157,7 +157,7 @@ export default function Profile() {
           <View className="flex-row items-center">
             <TouchableOpacity
               activeOpacity={0.8}
-              //onPress={handleUpdatePhoto}
+              onPress={handleUpdatePhoto}
               className="relative"
               disabled={photoLoading}
             >
@@ -183,9 +183,9 @@ export default function Profile() {
                 )}
 
                 {/* Camera Icon */}
-                {/* <View className="absolute bottom-0 right-0 bg-white rounded-full p-1">
+                <View className="absolute bottom-0 right-0 bg-white rounded-full p-1">
                   <Ionicons name="camera" size={16} color={Colors.primary} />
-                </View> */}
+                </View>
               </View>
             </TouchableOpacity>
 

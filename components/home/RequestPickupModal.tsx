@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Modal, TouchableOpacity, Animated, Dimensions, TextInput } from 'react-native';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/color';
+import ShowMessage from '@/constants/toast';
 
 const { height } = Dimensions.get('window');
 
@@ -304,6 +305,8 @@ export default function RequestPickupModal({
                 placeholder="Or write custom instructions..."
                 multiline
                 textAlignVertical="top"
+                value={customInstruction}
+                onChangeText={setCustomInstruction}
                 className="text-sm text-gray-500 min-h-[80px]"
               />
             </View>
@@ -465,8 +468,14 @@ export default function RequestPickupModal({
           <TouchableOpacity
             disabled={isSubmitting}
             onPress={async () => {
-              if (step < 4) setStep(prev => (prev + 1) as Step);
-              else {
+              if (step === 3 && !selectAsap && (!pickupData.date || !pickupData.time)) {
+                ShowMessage.error('Please select pickup date and time');
+                return;
+              }
+
+              if (step < 4) {
+                setStep(prev => (prev + 1) as Step);
+              } else {
                 const selectedPreset = dataLoal.spacialInstructions.find(
                   item => item.id === selectedInstruction,
                 );

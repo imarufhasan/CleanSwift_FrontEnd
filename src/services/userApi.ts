@@ -51,6 +51,16 @@ export const userApi = api.injectEndpoints({
           body,
         };
       },
+      invalidatesTags: ['User'],
+    }),
+
+    updateAddress: builder.mutation<any, { address: string }>({
+      query: body => ({
+        url: '/addresses',
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: ['User'],
     }),
 
     profileInfo: builder.query<any, void>({
@@ -96,6 +106,7 @@ export const {
   useChangePasswordMutation,
   useUpdateProfilePhotoMutation,
   useUpdateUserDataMutation,
+  useUpdateAddressMutation,
   useProfileInfoQuery,
   useCreateDriverProfileMutation,
 } = userApi;

@@ -14,6 +14,7 @@ import {
 } from '@/src/services/driverApi';
 import type { Order } from '@/src/services/orderApi';
 import { useGetPricingQuery } from '@/src/services/pricingApi';
+import { formatOrderNumber } from '@/src/utils/orderNumber';
 
 type JobTab = 'Available' | 'Active' | 'Completed';
 type JobCardData = {
@@ -73,7 +74,7 @@ const JobCard = ({
     <View className="mb-2 flex-row items-start justify-between">
       <View className="flex-1 pr-3">
         <View className="flex-row items-center gap-2">
-          <Text className="font-semibold text-black">Order #{item.id.slice(-6)}</Text>
+          <Text className="font-semibold text-black">Order #{formatOrderNumber(item.id)}</Text>
           {showActions && (
             <Text className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-600">New</Text>
           )}
@@ -143,7 +144,10 @@ export default function JobsScreen() {
   const { data: pricingRes } = useGetPricingQuery();
   const [acceptJob, { isLoading: isAccepting }] = useAcceptJobMutation();
   const [declineJob, { isLoading: isDeclining }] = useDeclineJobMutation();
-  const driverEarningPercentage = pricingRes?.data?.driverEarningPercentage ?? 70;
+  const driverEarningPercentage =
+    pricingRes && pricingRes.data
+      ? pricingRes.data.driverEarningPercentage
+      : 70;
 
   const refreshJobs = useCallback(() => {
     refetchAvailableJobs();
@@ -155,8 +159,8 @@ export default function JobsScreen() {
     onDriverJobsUpdate: refreshJobs,
   });
 
-  const availableJobs = (availableRes?.data ?? [])?.map(mapOrderToJob);
-  const myJobs = (myJobsRes?.data ?? [])?.map(mapOrderToJob);
+  const availableJobs = (availableRes && availableRes.data ? availableRes.data : []).map(mapOrderToJob);
+  const myJobs = (myJobsRes && myJobsRes.data ? myJobsRes.data : []).map(mapOrderToJob);
   const activeJobs = myJobs.filter(job => !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(job.status));
   const completedJobs = myJobs.filter(job => ['DELIVERED', 'COMPLETED'].includes(job.status));
 
@@ -171,12 +175,12 @@ export default function JobsScreen() {
 
     try {
       const res = await acceptJob(selectedJob.id).unwrap();
-      ShowMessage.success(res?.message ?? 'Job accepted successfully');
+      ShowMessage.success(res && res.message ? res.message : 'Job accepted successfully');
       setAcceptModal(false);
       setSelectedJob(null);
       router.setParams({ tab: 'Active' });
     } catch (error: any) {
-      ShowMessage.error(error?.data?.message ?? 'Failed to accept job');
+      ShowMessage.error(error && error.data && error.data.message ? error.data.message : 'Failed to accept job');
     }
   };
 
@@ -185,11 +189,11 @@ export default function JobsScreen() {
 
     try {
       const res = await declineJob(selectedJob.id).unwrap();
-      ShowMessage.success(res?.message ?? 'Job declined successfully');
+      ShowMessage.success(res && res.message ? res.message : 'Job declined successfully');
       setDeclineModal(false);
       setSelectedJob(null);
     } catch (error: any) {
-      ShowMessage.error(error?.data?.message ?? 'Failed to decline job');
+      ShowMessage.error(error && error.data && error.data.message ? error.data.message : 'Failed to decline job');
     }
   };
 
@@ -197,9 +201,9 @@ export default function JobsScreen() {
     if (activeTab === 'Available') {
       return (
         <>
-          <Text className="mb-3 text-lg font-bold text-black">Available Jobs ({availableJobs?.length})</Text>
+          <Text className="mb-3 text-lg font-bold text-black">Available Jobs ({availableJobs.length})</Text>
           {isAvailableLoading && <Text className="mb-3 text-gray-500">Loading jobs...</Text>}
-          {availableJobs?.map(item => (
+          {availableJobs.map(item => (
             <JobCard
               key={item.id}
               item={item}
@@ -222,9 +226,9 @@ export default function JobsScreen() {
     if (activeTab === 'Active') {
       return (
         <>
-          <Text className="mb-3 text-lg font-bold text-black">Active Jobs ({activeJobs?.length})</Text>
+          <Text className="mb-3 text-lg font-bold text-black">Active Jobs ({activeJobs.length})</Text>
           {isMyJobsLoading && <Text className="mb-3 text-gray-500">Loading jobs...</Text>}
-          {activeJobs?.map(item => (
+          {activeJobs.map(item => (
             <JobCard
               key={item.id}
               item={item}
@@ -243,12 +247,12 @@ export default function JobsScreen() {
 
     return (
       <>
-        <Text className="mb-3 text-lg font-bold">Completed ({completedJobs?.length})</Text>
-        {completedJobs?.map(order => (
+        <Text className="mb-3 text-lg font-bold">Completed ({completedJobs.length})</Text>
+        {completedJobs.map(order => (
           <View key={order.id} className="mb-4 rounded-2xl border border-gray-200 bg-white p-4">
             <View className="flex-row items-center justify-center">
               <View className="mb-1 ml-2 flex-1 justify-between">
-                <Text className="font-semibold">Order #{order.id.slice(-6)}</Text>
+                <Text className="font-semibold">Order #{formatOrderNumber(order.id)}</Text>
                 <Text className="mb-2 text-sm text-gray-500">{order.quantity} bags</Text>
               </View>
 
@@ -307,7 +311,7 @@ export default function JobsScreen() {
           shadowRadius: 6,
         }}
       >
-        {(['Available', 'Active', 'Completed'] as const)?.map(item => (
+        {(['Available', 'Active', 'Completed'] as const).map(item => (
           <TopTab
             key={item}
             label={item}

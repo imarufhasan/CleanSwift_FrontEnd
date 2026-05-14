@@ -7,6 +7,7 @@ import { useGetMyDriverJobsQuery } from '@/src/services/driverApi';
 import { useMarkOrderDeliveredMutation, type Order } from '@/src/services/orderApi';
 import ShowMessage from '@/constants/toast';
 import { useGetPricingQuery } from '@/src/services/pricingApi';
+import { formatOrderNumber } from '@/src/utils/orderNumber';
 
 type Props = {
   order?: Order;
@@ -16,27 +17,29 @@ type Props = {
 export default function DeliveryStep({ order, setDeliverySuccessModal }: Props) {
   const { data: myJobsRes } = useGetMyDriverJobsQuery();
   const { data: pricingRes } = useGetPricingQuery();
-  const [markOrderDelivered, { isLoading: isCompletingDelivery }] =
-    useMarkOrderDeliveredMutation();
+  const [markOrderDelivered, { isLoading: isCompletingDelivery }] = useMarkOrderDeliveredMutation();
   const driverEarningPercentage = pricingRes?.data?.driverEarningPercentage ?? 70;
-  const activeJob = order ?? myJobsRes?.data?.find(
-    order => !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(order.status),
-  );
-  const customer = activeJob?.customer ?? null;
+  const activeJob =
+    order ??
+    (myJobsRes && myJobsRes.data
+      ? myJobsRes.data.find(order => !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(order.status))
+      : undefined);
+  const customer = activeJob ? activeJob.customer : null;
   const status = {
-    label: activeJob?.status?.replaceAll('_', ' ') ?? 'No active job',
-    etaMinutes: activeJob?.scheduledPickupAt ? 6 : 0,
+    label: activeJob && activeJob.status ? activeJob.status.replaceAll('_', ' ') : 'No active job',
+    etaMinutes: activeJob && activeJob.scheduledPickupAt ? 6 : 0,
   };
   const orderDetails = {
-    service: activeJob?.serviceType ? activeJob.serviceType.replaceAll('_', ' ') : 'Unavailable',
+    service: activeJob && activeJob.serviceType ? activeJob.serviceType.replaceAll('_', ' ') : 'Unavailable',
     address: {
-      street: activeJob?.address ?? 'No address available',
+      street: activeJob && activeJob.address ? activeJob.address : 'No address available',
       city: '',
     },
-    instructions: activeJob?.specialInstructions ?? 'No special instructions',
+    instructions:
+      activeJob && activeJob.specialInstructions ? activeJob.specialInstructions : 'No special instructions',
     pricing: {
-      bags: activeJob?.bagCountAtPickup ?? activeJob?.bags ?? 0,
-      bagPrice: activeJob?.pricePerBag ?? 0,
+      bags: activeJob ? (activeJob.bagCountAtPickup ?? activeJob.bags ?? 0) : 0,
+      bagPrice: activeJob && activeJob.pricePerBag !== undefined ? activeJob.pricePerBag : 0,
       tip: 0,
     },
   };
@@ -44,7 +47,7 @@ export default function DeliveryStep({ order, setDeliverySuccessModal }: Props) 
   const total = orderDetails.pricing.bags * orderDetails.pricing.bagPrice + orderDetails.pricing.tip;
 
   const handleCompleteDelivery = async () => {
-    if (!activeJob?._id) {
+    if (!activeJob || !activeJob._id) {
       ShowMessage.error('No active job found');
       return;
     }
@@ -53,7 +56,9 @@ export default function DeliveryStep({ order, setDeliverySuccessModal }: Props) 
       await markOrderDelivered({ orderId: activeJob._id }).unwrap();
       setDeliverySuccessModal(true);
     } catch (error: any) {
-      ShowMessage.error(error?.data?.message ?? 'Failed to complete delivery');
+      ShowMessage.error(
+        error && error.data && error.data.message ? error.data.message : 'Failed to complete delivery',
+      );
     }
   };
 
@@ -65,7 +70,7 @@ export default function DeliveryStep({ order, setDeliverySuccessModal }: Props) 
           {/* Fake Map Grid Background */}
           <View className="absolute inset-0 opacity-40">
             <View className="flex-1 flex-row flex-wrap">
-              {[...Array(100)]?.map((_, i) => (
+              {[...Array(100)].map((_, i) => (
                 <View key={i} className="w-[10%] h-[10%] border border-blue-200" />
               ))}
             </View>
@@ -116,13 +121,21 @@ export default function DeliveryStep({ order, setDeliverySuccessModal }: Props) 
             <View className="flex-row justify-between items-center">
               <View className="flex-row items-center">
                 <Image
-                  source={customer?.image ? { uri: customer.image } : require('@/assets/images/profile.png')}
+                  source={
+                    customer && customer.image
+                      ? { uri: customer.image }
+                      : require('@/assets/images/profile.png')
+                  }
                   className="w-[60px] h-[60px] rounded-full border-2 border-white"
                 />
                 <View className="ml-3">
                   <Text className="text-sm text-gray-500">Picking up from</Text>
-                  <Text className="text-2xl font-semibold">{customer?.name ?? 'Customer'}</Text>
-                  <Text className="text-sm text-gray-500">order #{String(activeJob?._id ?? '').slice(-4)}</Text>
+                  <Text className="text-2xl font-semibold">
+                    {customer && customer.name ? customer.name : 'Customer'}
+                  </Text>
+                  <Text className="text-sm text-gray-500">
+                    Order #{formatOrderNumber(activeJob ? activeJob._id : undefined)}
+                  </Text>
                 </View>
               </View>
             </View>

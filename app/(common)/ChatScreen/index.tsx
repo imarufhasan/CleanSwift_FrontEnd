@@ -24,10 +24,12 @@ import {
   type ChatMessage,
 } from '@/src/services/chatApi';
 import { useProfileInfoQuery } from '@/src/services/userApi';
+import { formatOrderNumber } from '@/src/utils/orderNumber';
 
 const fallbackAvatar = require('@/assets/images/profile.png');
 
-const getUserId = (value: ChatMessage['from']) => (typeof value === 'string' ? value : value?._id);
+const getUserId = (value: ChatMessage['from']) =>
+  typeof value === 'string' ? value : value ? value._id : undefined;
 
 export default function ChatScreen() {
   const router = useRouter();
@@ -40,7 +42,8 @@ export default function ChatScreen() {
   const flatListRef = useRef<FlatList>(null);
 
   const { data: profileInfo } = useProfileInfoQuery();
-  const currentUserId = profileInfo?.data?._id;
+  const currentUserId =
+    profileInfo && profileInfo.data ? profileInfo.data._id : undefined;
   const { data, isLoading, refetch } = useGetChatMessagesQuery(orderId ?? '', {
     skip: !orderId,
     pollingInterval: orderId ? 7000 : 0,
@@ -48,11 +51,13 @@ export default function ChatScreen() {
   const [sendChatMessage, { isLoading: isSending }] = useSendChatMessageMutation();
   const [sendChatImage, { isLoading: isUploadingImage }] = useSendChatImageMutation();
 
-  const messages = data?.data ?? [];
+  const messages = data && data.data ? data.data : [];
 
   useEffect(() => {
-    flatListRef.current?.scrollToEnd({ animated: true });
-  }, [messages?.length]);
+    if (flatListRef.current) {
+      flatListRef.current.scrollToEnd({ animated: true });
+    }
+  }, [messages.length]);
 
   const sendMessage = async () => {
     const content = message.trim();
@@ -63,7 +68,11 @@ export default function ChatScreen() {
       setMessage('');
       refetch();
     } catch (error: any) {
-      ShowMessage.show(error?.data?.message ?? 'Failed to send message');
+      ShowMessage.show(
+        error && error.data && error.data.message
+          ? error.data.message
+          : 'Failed to send message',
+      );
     }
   };
 
@@ -80,7 +89,11 @@ export default function ChatScreen() {
       await sendChatImage({ orderId, image: formData }).unwrap();
       refetch();
     } catch (error: any) {
-      ShowMessage.show(error?.data?.message ?? 'Failed to send image');
+      ShowMessage.show(
+        error && error.data && error.data.message
+          ? error.data.message
+          : 'Failed to send image',
+      );
     }
   };
 
@@ -170,7 +183,7 @@ export default function ChatScreen() {
             <Text className="text-white font-semibold text-2xl" numberOfLines={1}>
               {name ?? 'Chat'}
             </Text>
-            <Text className="text-white/80 text-sm">Order #{orderId.slice(-6)}</Text>
+            <Text className="text-white/80 text-sm">Order #{formatOrderNumber(orderId)}</Text>
           </View>
 
           {/* <TouchableOpacity onPress={() => router.push("/(common)/CallScreen")}>

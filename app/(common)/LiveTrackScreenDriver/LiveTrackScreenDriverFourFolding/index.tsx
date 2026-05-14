@@ -25,17 +25,31 @@ export default function FoldingStep({
   isUpdating,
   onStartDelivery,
 }: Props) {
-  const customer = order?.customer;
+  const customer = order ? order.customer : undefined;
 
   return (
     <View className="bg-white mb-6 px-4">
       <CustomerCard
-        orderId={order?._id}
-        name={customer?.name ?? "Customer"}
-        address={order?.address ?? customer?.address ?? "Pickup address unavailable"}
-        image={customer?.image}
-        instructionSubtitle={order?.serviceType?.replaceAll("_", " ") ?? "Service"}
-        instructionDescription={order?.specialInstructions ?? "No special instructions"}
+        orderId={order ? order._id : undefined}
+        name={customer && customer.name ? customer.name : "Customer"}
+        address={
+          order && order.address
+            ? order.address
+            : customer && customer.address
+              ? customer.address
+              : "Pickup address unavailable"
+        }
+        image={customer ? customer.image : undefined}
+        instructionSubtitle={
+          order && order.serviceType
+            ? order.serviceType.replaceAll("_", " ")
+            : "Service"
+        }
+        instructionDescription={
+          order && order.specialInstructions
+            ? order.specialInstructions
+            : "No special instructions"
+        }
       />
 
       <View className="bg-green-100 rounded-2xl px-4 py-6 my-4 w-full items-center justify-center">
@@ -46,7 +60,7 @@ export default function FoldingStep({
           Folding & Packaging
         </Text>
         <Text className="text-base text-gray-500">
-          {order?.bagCountAtPickup ?? order?.bags ?? 0} bags almost ready for delivery
+          {order ? order.bagCountAtPickup ?? order.bags ?? 0 : 0} bags almost ready for delivery
         </Text>
       </View>
 
@@ -60,7 +74,7 @@ export default function FoldingStep({
           "All items dried",
           "Bag count matched",
           "Ready for delivery handoff",
-        ]?.map(item => (
+        ].map(item => (
           <View key={item} className="bg-green-50 rounded-2xl px-2 py-2 w-full mb-2">
             <View className="flex-row gap-3 my-2">
               <AntDesign name="check-circle" size={18} color="green" />
@@ -73,13 +87,13 @@ export default function FoldingStep({
           <View className="flex-row items-center justify-between mb-2">
             <Text className="text-sm text-gray-500 font-medium">Drying Started</Text>
             <Text className="text-sm text-black font-semibold">
-              {formatDateTime(order?.timeline?.dryingAt)}
+              {formatDateTime(order && order.timeline ? order.timeline.dryingAt : undefined)}
             </Text>
           </View>
           <View className="flex-row items-center justify-between">
             <Text className="text-sm text-gray-500 font-medium">Status</Text>
             <Text className="text-sm text-blue-500 font-medium">
-              {order?.status?.replaceAll("_", " ") ?? "Waiting"}
+              {order && order.status ? order.status.replaceAll("_", " ") : "Waiting"}
             </Text>
           </View>
         </View>

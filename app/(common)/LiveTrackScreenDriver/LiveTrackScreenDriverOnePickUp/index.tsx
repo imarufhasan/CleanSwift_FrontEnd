@@ -16,28 +16,44 @@ export default function PickupStep({
   isUpdating,
   onCompletePickup,
 }: Props) {
-  const [bags, setBags] = useState(order?.bagCountAtPickup ?? order?.bags ?? 1);
-  const customer = order?.customer;
+  const [bags, setBags] = useState(
+    order ? order.bagCountAtPickup ?? order.bags ?? 1 : 1,
+  );
+  const customer = order ? order.customer : undefined;
 
   useEffect(() => {
-    setBags(order?.bagCountAtPickup ?? order?.bags ?? 1);
-  }, [order?.bagCountAtPickup, order?.bags]);
+    setBags(order ? order.bagCountAtPickup ?? order.bags ?? 1 : 1);
+  }, [order ? order.bagCountAtPickup : undefined, order ? order.bags : undefined]);
 
   return (
     <View className="bg-white mb-6 px-4">
       <CustomerCard
-        orderId={order?._id}
-        name={customer?.name ?? "Customer"}
-        address={order?.address ?? customer?.address ?? "Pickup address unavailable"}
-        image={customer?.image}
-        instructionSubtitle={order?.serviceType?.replaceAll("_", " ") ?? "Service"}
-        instructionDescription={order?.specialInstructions ?? "No special instructions"}
+        orderId={order ? order._id : undefined}
+        name={customer && customer.name ? customer.name : "Customer"}
+        address={
+          order && order.address
+            ? order.address
+            : customer && customer.address
+              ? customer.address
+              : "Pickup address unavailable"
+        }
+        image={customer ? customer.image : undefined}
+        instructionSubtitle={
+          order && order.serviceType
+            ? order.serviceType.replaceAll("_", " ")
+            : "Service"
+        }
+        instructionDescription={
+          order && order.specialInstructions
+            ? order.specialInstructions
+            : "No special instructions"
+        }
       />
 
       <View className="bg-white rounded-2xl p-4 shadow-sm mb-6">
         <Text className="font-bold text-2xl mb-1">Confirm Bag Count</Text>
         <Text className="text-sm text-gray-500 mb-4">
-          Expected {order?.bags ?? 0} bags. Update it if pickup count differs.
+          Expected {order ? order.bags ?? 0 : 0} bags. Update it if pickup count differs.
         </Text>
 
         <View className="flex-row justify-center items-center">

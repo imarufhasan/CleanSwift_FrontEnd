@@ -23,6 +23,7 @@ import {
 } from "@/src/services/driverApi";
 import { useGetOrderByIdQuery, type Order } from "@/src/services/orderApi";
 import { useGetPricingQuery } from "@/src/services/pricingApi";
+import { formatOrderNumber } from "@/src/utils/orderNumber";
 
 type DriverStage = "PICKUP" | "WASHING" | "DRYING" | "DELIVERY";
 
@@ -34,7 +35,7 @@ const getStepFromOrder = (order?: Order) => {
   if (["OUT_FOR_DELIVERY", "DELIVERED", "COMPLETED"].includes(order.status)) {
     return 4;
   }
-  if (order.timeline?.dryingAt) return 3;
+  if (order.timeline && order.timeline.dryingAt) return 3;
   if (order.status === "WASHING_DRYING") return 2;
   if (order.status === "PICKED_UP") return 1;
 
@@ -62,34 +63,47 @@ export default function LiveTrackScreenDriverMain() {
   const [deliverySuccessModal, setDeliverySuccessModal] = useState(false);
 
   const activeOrder = useMemo(() => {
-    if (orderRes?.data) return orderRes.data;
+    if (orderRes && orderRes.data) return orderRes.data;
 
     if (orderId) {
-      const matchedOrder = myJobsRes?.data?.find(order => order._id === orderId);
+      const matchedOrder = myJobsRes && myJobsRes.data
+        ? myJobsRes.data.find(order => order._id === orderId)
+        : undefined;
       if (matchedOrder) return matchedOrder;
     }
 
-    return myJobsRes?.data?.find(
-      order => !inactiveStatuses.includes(order.status),
-    );
-  }, [myJobsRes?.data, orderId, orderRes?.data]);
+    return myJobsRes && myJobsRes.data
+      ? myJobsRes.data.find(order => !inactiveStatuses.includes(order.status))
+      : undefined;
+  }, [myJobsRes && myJobsRes.data, orderId, orderRes && orderRes.data]);
 
   useEffect(() => {
     setActiveStep(getStepFromOrder(activeOrder));
   }, [
-    activeOrder?._id,
-    activeOrder?.status,
-    activeOrder?.timeline?.dryingAt,
-    activeOrder?.timeline?.washingDryingAt,
+    activeOrder ? activeOrder._id : undefined,
+    activeOrder ? activeOrder.status : undefined,
+    activeOrder && activeOrder.timeline ? activeOrder.timeline.dryingAt : undefined,
+    activeOrder && activeOrder.timeline ? activeOrder.timeline.washingDryingAt : undefined,
   ]);
 
-  const driverEarningPercentage = pricingRes?.data?.driverEarningPercentage ?? 70;
+  const driverEarningPercentage =
+    pricingRes && pricingRes.data
+      ? pricingRes.data.driverEarningPercentage
+      : 70;
   const displayBags =
-    activeOrder?.bagCountAtPickup ?? activeOrder?.bags ?? 0;
+    activeOrder
+      ? activeOrder.bagCountAtPickup ?? activeOrder.bags ?? 0
+      : 0;
   const displayPricePerBag =
-    activeOrder?.pricePerBag ?? pricingRes?.data?.pricePerBag ?? 0;
+    activeOrder && activeOrder.pricePerBag !== undefined
+      ? activeOrder.pricePerBag
+      : pricingRes && pricingRes.data
+        ? pricingRes.data.pricePerBag
+        : 0;
   const displayTotal =
-    activeOrder?.total ?? displayBags * displayPricePerBag;
+    activeOrder && activeOrder.total !== undefined
+      ? activeOrder.total
+      : displayBags * displayPricePerBag;
   const driverEarning =
     (Number(displayTotal ?? 0) * driverEarningPercentage) / 100;
   const isLoading = isFetchingOrder || isFetchingJobs;
@@ -100,7 +114,7 @@ export default function LiveTrackScreenDriverMain() {
     nextStep: number,
     bagCount?: number,
   ) => {
-    if (!activeOrder?._id) {
+    if (!activeOrder || !activeOrder._id) {
       ShowMessage.error("No active order found");
       return;
     }
@@ -114,7 +128,11 @@ export default function LiveTrackScreenDriverMain() {
       await Promise.all([refetchJobs(), orderId ? refetchOrder() : undefined]);
       setActiveStep(nextStep);
     } catch (error: any) {
-      ShowMessage.error(error?.data?.message ?? "Failed to update order stage");
+      ShowMessage.error(
+        error && error.data && error.data.message
+          ? error.data.message
+          : "Failed to update order stage",
+      );
     }
   };
 
@@ -152,10 +170,10 @@ export default function LiveTrackScreenDriverMain() {
             </TouchableOpacity>
             <View className="flex-1">
               <Text className="text-white text-2xl font-semibold" numberOfLines={1}>
-                Order #{activeOrder._id.slice(-6)}
+                Order #{formatOrderNumber(activeOrder._id)}
               </Text>
               <Text className="text-blue-100 text-sm" numberOfLines={1}>
-                {activeOrder.serviceType?.replaceAll("_", " ") ?? "Laundry Service"}
+                {activeOrder.serviceType ? activeOrder.serviceType.replaceAll("_", " ") : "Laundry Service"}
               </Text>
             </View>
           </View>
@@ -171,7 +189,7 @@ export default function LiveTrackScreenDriverMain() {
 
       <View className="mx-4 -mt-10 bg-white rounded-2xl p-4 shadow-lg">
         <View className="flex-row justify-between items-center">
-          {steps?.map((step, index) => {
+          {steps.map((step, index) => {
             const isActive = index <= activeStep;
 
             return (
@@ -203,7 +221,7 @@ export default function LiveTrackScreenDriverMain() {
           <View
             className="h-1 bg-blue-500 rounded-full"
             style={{
-              width: `${((activeStep + 1) / steps?.length) * 100}%`,
+              width: `${((activeStep + 1) / steps.length) * 100}%`,
             }}
           />
         </View>
@@ -270,7 +288,7 @@ export default function LiveTrackScreenDriverMain() {
             <View className="bg-gray-50 rounded-2xl p-4 mt-6 border border-gray-200">
               <Text className="text-gray-500 text-sm">Service</Text>
               <Text className="text-base font-semibold mb-3">
-                {activeOrder.serviceType?.replaceAll("_", " ") ?? "Laundry Service"}
+                {activeOrder.serviceType ? activeOrder.serviceType.replaceAll("_", " ") : "Laundry Service"}
               </Text>
 
               <Text className="text-gray-500 text-sm">Pickup Address</Text>
@@ -278,7 +296,7 @@ export default function LiveTrackScreenDriverMain() {
                 {activeOrder.address ?? "No address available"}
               </Text>
               <Text className="text-sm text-gray-500 mb-3">
-                Order #{activeOrder._id.slice(-6)}
+                Order #{formatOrderNumber(activeOrder._id)}
               </Text>
 
               <Text className="text-gray-500 text-sm">Special Instructions</Text>

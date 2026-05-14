@@ -5,6 +5,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "@/constants/color";
 import { useRouter } from "expo-router";
+import { formatOrderNumber } from "@/src/utils/orderNumber";
 
 type ActiveOrder = {
   id: string | number;
@@ -52,7 +53,7 @@ export default function ActiveOrderCard({ data }: Props) {
 
             <View className="ml-2 w-[80%]">
               <Text numberOfLines={1} className=" font-semibold">
-                Order #{data.id}
+                Order #{formatOrderNumber(data.id)}
               </Text>
               <Text className="text-sm text-gray-500 mb-3">
                 {data.quantity} bags • ${data.price}.00
@@ -68,7 +69,7 @@ export default function ActiveOrderCard({ data }: Props) {
         </View>
 
         <View className="flex-row justify-between mb-2">
-          {data.steps?.map((step, index) => (
+          {data.steps.map((step, index) => (
             <Text
               key={step}
               className={`text-xs ${index <= data.currentStep ? "text-blue-500" : "text-gray-400"}`}

@@ -49,14 +49,24 @@ export default function ActiveOrderCard({ data }: Props) {
             <Ionicons name="cube-outline" size={20} color={Colors.primary} />
           </View>
 
-          <View className="ml-2 w-[80%]">
+          <TouchableOpacity
+            disabled={data?.status === "REQUESTED"}
+            onPress={() =>
+              router.push({
+                pathname: "/OrderTrackingForCustomer",
+                params: { orderId: data.id },
+              })
+            }
+            activeOpacity={0.7}
+            className="ml-2 w-[80%]"
+          >
             <Text numberOfLines={1} className=" font-semibold">
               Order #{formatOrderNumber(data.id)}
             </Text>
             <Text className="text-sm text-gray-500 mb-3">
               {data.quantity} bags • ${data.price}.00
             </Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         <Text
@@ -96,12 +106,18 @@ export default function ActiveOrderCard({ data }: Props) {
           disabled={data?.status === "REQUESTED"}
         >
           <Text
-            style={{ color: data?.status === "REQUESTED" ? "gray" : Colors.primary }}
+            style={{
+              color: data?.status === "REQUESTED" ? "gray" : Colors.primary,
+            }}
             className="text-[14px] font-bold"
           >
             Track Live
           </Text>
-          <Ionicons name="arrow-forward" size={16} color={data?.status === "REQUESTED" ? "gray" : Colors.primary} />
+          <Ionicons
+            name="arrow-forward"
+            size={16}
+            color={data?.status === "REQUESTED" ? "gray" : Colors.primary}
+          />
         </TouchableOpacity>
       </View>
     </View>

@@ -9,24 +9,6 @@ import { store } from "@/src/store";
 
 Splash.preventAutoHideAsync();
 
-// export default function RootLayout() {
-
-//   return (
-//     <>
-//       <StatusBar style="dark" />
-//       <AlertNotificationRoot theme="dark">
-//         <Stack
-//           screenOptions={{
-//             headerShown: false,
-//             animation: "slide_from_right",
-//           }}
-//         />
-//       </AlertNotificationRoot>
-//     </>
-//   );
-// }
-
-
 export default function RootLayout() {
   return (
     <Provider store={store}>

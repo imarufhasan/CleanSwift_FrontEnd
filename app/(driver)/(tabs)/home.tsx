@@ -11,7 +11,7 @@ import {
 import { AntDesign, Feather, Ionicons } from "@expo/vector-icons";
 import Colors from "@/constants/color";
 import Toast from "@/constants/toast";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import RequestPickupModal from "@/components/home/RequestPickupModal";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import ShowMessage from "@/constants/toast";
@@ -34,9 +34,124 @@ import { useOrderSocket } from "@/src/hooks/useOrderSocket";
 import { useGetPricingQuery } from "@/src/services/pricingApi";
 import { formatOrderNumber } from "@/src/utils/orderNumber";
 
+// Sub-component to handle per-order animated progress bar
+function ActiveOrderCard({
+  order,
+  router,
+  getOrderProgress,
+  getOrderStep,
+  getStatusStyle,
+}: {
+  order: Order;
+  router: any;
+  getOrderProgress: (status: Order["status"]) => number;
+  getOrderStep: (status: Order["status"]) => number;
+  getStatusStyle: (status: any) => string;
+}) {
+  const progressAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(progressAnim, {
+      toValue: getOrderProgress(order.status),
+      duration: 800,
+      useNativeDriver: false,
+    }).start();
+  }, [order.status]);
+
+  return (
+    <View className="bg-white rounded-2xl px-4 py-6 shadow-sm mb-4 border border-gray-100">
+      <View className="flex-row justify-between items-start mb-4">
+        <View className="flex-row items-safe">
+          <View
+            className="w-9 h-9 rounded-full justify-center items-center"
+            style={{ backgroundColor: "rgba(37, 99, 235, 0.2)" }}
+          >
+            <Ionicons name="cube-outline" size={20} color={Colors.primary} />
+          </View>
+
+          <View className="ml-2">
+            <Text className="font-semibold">
+              Order #{formatOrderNumber(order._id)}
+            </Text>
+            <Text className="text-sm text-gray-500 mb-3">
+              {order.bags} bags • ${order.total}.00
+            </Text>
+          </View>
+        </View>
+
+        <Text
+          className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusStyle(
+            order.status,
+          )}`}
+        >
+          {order.status.replaceAll("_", " ")}
+        </Text>
+      </View>
+
+      {/* Steps */}
+      <View className="flex-row justify-between mb-2">
+        {["Picked Up", "Washing", "Delivery"].map((step, index) => (
+          <Text
+            key={step}
+            className={`text-xs ${
+              index <= getOrderStep(order.status)
+                ? "text-blue-500"
+                : "text-gray-400"
+            }`}
+          >
+            {step}
+          </Text>
+        ))}
+      </View>
+      <View className="h-2 bg-gray-200 rounded-full mb-3 overflow-hidden">
+        <Animated.View
+          className="h-2 bg-blue-500 rounded-full"
+          style={{
+            width: progressAnim.interpolate({
+              inputRange: [0, 100],
+              outputRange: ["0%", "100%"],
+            }),
+          }}
+        />
+      </View>
+
+      <View className="flex-row justify-between items-center">
+        <View className="flex-1">
+          <Text className="text-xs text-gray-500">
+            {order.address || "Pickup address unavailable"}
+          </Text>
+        </View>
+        <TouchableOpacity
+          onPress={() =>
+            router.push({
+              pathname:
+                "/(common)/LiveTrackScreenDriver/LiveTrackScreenDriverMain" as any,
+              params: { id: order._id },
+            })
+          }
+          className="flex-row gap-3 items-center"
+        >
+          <Text
+            style={{ color: Colors.primary }}
+            className="text-[14px] font-bold"
+          >
+            Live Track
+          </Text>
+          <Ionicons name="arrow-forward" size={16} color={Colors.primary} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
 export default function HomeScreen() {
   const router = useRouter();
-  const { data: profileInfo, error, isLoading } = useProfileInfoQuery();
+  const {
+    data: profileInfo,
+    error,
+    isLoading,
+    refetch,
+  } = useProfileInfoQuery();
   const { data: driverProfileRes, refetch: refetchDriverProfile } =
     useGetMyDriverProfileQuery();
   const { data: myJobsRes, refetch: refetchMyJobs } = useGetMyDriverJobsQuery();
@@ -57,7 +172,6 @@ export default function HomeScreen() {
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const progressAnim = useRef(new Animated.Value(0)).current;
 
   const [acceptModal, setAcceptModal] = useState(false);
   const [declineModal, setDeclineModal] = useState(false);
@@ -70,19 +184,31 @@ export default function HomeScreen() {
     bags: 1,
   });
 
-  const driverProfile = driverProfileRes && driverProfileRes.data ? driverProfileRes.data : undefined;
-  const driverStatus = driverProfile && driverProfile.status ? driverProfile.status : "PENDING";
+  const driverProfile =
+    driverProfileRes && driverProfileRes.data
+      ? driverProfileRes.data
+      : undefined;
+  const driverStatus =
+    driverProfile && driverProfile.status ? driverProfile.status : "PENDING";
   const driverApproved = driverStatus === "APPROVED";
   const myJobs = myJobsRes && myJobsRes.data ? myJobsRes.data : [];
-  const availableJobs = availableJobsRes && availableJobsRes.data ? availableJobsRes.data : [];
+  const availableJobs =
+    availableJobsRes && availableJobsRes.data ? availableJobsRes.data : [];
   const driverEarningPercentage =
     pricingRes && pricingRes.data
       ? pricingRes.data.driverEarningPercentage
       : 70;
-  const activeOrder = myJobs.find(
-    (order) => !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
-  );
-  const availableOrder = availableJobs[0];
+
+  // Show up to 2 active (non-terminal) orders
+  const activeOrders = myJobs
+    .filter(
+      (order) => !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
+    )
+    .slice(0, 2);
+
+  // Show up to 2 available jobs
+  const availableOrder = availableJobs.slice(0, 2);
+
   const completedTodayEarnings = myJobs
     .filter(
       (order) =>
@@ -93,9 +219,11 @@ export default function HomeScreen() {
     .reduce(
       (sum, order) =>
         sum +
-        (Number(order.total ?? 0) * driverEarningPercentage) / 100,
+        (Number(order.total ?? 0) * Number(driverEarningPercentage)) / 100,
       0,
     );
+
+  console.log("myJobsRes: ", myJobsRes?.data?.length);
 
   const refreshJobs = useCallback(() => {
     refetchAvailableJobs();
@@ -107,6 +235,15 @@ export default function HomeScreen() {
     onDriverJobsUpdate: refreshJobs,
   });
 
+  useFocusEffect(
+    useCallback(() => {
+      refetchDriverProfile();
+      refetchMyJobs();
+      refetchAvailableJobs();
+      refetch();
+    }, [refetchAvailableJobs, refetchDriverProfile, refetchMyJobs, refetch]),
+  );
+
   useEffect(() => {
     if (driverProfile && typeof driverProfile.isAvailable === "boolean") {
       setSelected(driverProfile.isAvailable);
@@ -117,24 +254,12 @@ export default function HomeScreen() {
     const loadTokens = async () => {
       const access = await getAccessToken();
       const refresh = await getRefreshToken();
-
-      // console.log("home_Access:", access);
-      // console.log("home_Refresh:", refresh);
-
       setAccessToken(access);
       setRefreshToken(refresh);
     };
 
     loadTokens();
   }, []);
-
-  useEffect(() => {
-    Animated.timing(progressAnim, {
-      toValue: activeOrder ? getOrderProgress(activeOrder.status) : 0,
-      duration: 800, // smooth speed
-      useNativeDriver: false, // width animation must be false
-    }).start();
-  }, [activeOrder ? activeOrder.status : undefined]);
 
   useEffect(() => {
     if (!pickupData.asap && !pickupData.date) {
@@ -157,35 +282,14 @@ export default function HomeScreen() {
     setRefreshing(true);
 
     setTimeout(() => {
-      // setData((prev) => ({
-      //   ...prev,
-      //   activeOrder: {
-      //     ...prev.activeOrder,
-      //     progress: 75,
-      //     currentStep: 2,
-      //     status: "Delivery",
-      //     estimatedDelivery: "Today, 7:00 PM",
-      //   },
-      //   recentOrders: [
-      // {
-      //   id: 1248,
-      //   quantity: 2,
-      //   price: 90,
-      //   rating: 5.0,
-      //   status: "Delivered",
-      //   date: "Today",
-      // },
-      //     ...prev.recentOrders,
-      //   ],
-      // }));
-
       setRefreshing(false);
       refetchDriverProfile();
       refetchMyJobs();
       refetchAvailableJobs();
+      refetch();
       ShowMessage.show("updated");
     }, 1500);
-  }, [refetchAvailableJobs, refetchDriverProfile, refetchMyJobs]);
+  }, [refetchAvailableJobs, refetchDriverProfile, refetchMyJobs, refetch]);
 
   const getOrderProgress = (status: Order["status"]) => {
     switch (status) {
@@ -379,7 +483,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Today's Earnings */}
+        {/* Driver pending/rejected banner */}
         {!driverApproved && (
           <View className="px-5 -mt-8 z-20">
             <View className="rounded-2xl border border-yellow-200 bg-yellow-50 p-4">
@@ -417,107 +521,47 @@ export default function HomeScreen() {
         </View>
 
         {/* Content */}
-        <View className="px-5 mt-6 ">
+        <View className="px-5 mt-6">
           {/* Today's Status */}
-          <>
-            <TodayStats />
-          </>
+          <TodayStats />
 
           {/* Active Route */}
-          <Text className="text-lg font-bold mb-3">Active Route</Text>
-          {activeOrder ? (
-            <>
-              <View className="bg-white rounded-2xl px-4 py-6 shadow-sm mb-6 border border-gray-100">
-                <View className="flex-row justify-between items-start mb-4">
-                  <View className="flex-row items-safe">
-                    <View
-                      className="w-9 h-9 rounded-full justify-center items-center"
-                      style={{ backgroundColor: "rgba(37, 99, 235, 0.2)" }}
-                    >
-                      <Ionicons
-                        name="cube-outline"
-                        size={20}
-                        color={Colors.primary}
-                      />
-                    </View>
+          <View className="flex-row items-center justify-between mb-3">
+            <Text className="text-xl font-bold">Active Route</Text>
+            {activeOrders.length >= 2 && (
+              <TouchableOpacity
+                onPress={() => {
+                  router.push("/(driver)/(tabs)/jobs?tab=Active");
+                }}
+                activeOpacity={0.7}
+                className="flex-row items-center bg-blue-50 px-4 py-2 rounded-full border border-blue-100"
+              >
+                <Text
+                  style={{ color: Colors.primary }}
+                  className="text-sm font-semibold mr-1"
+                >
+                  View All
+                </Text>
+                <Ionicons
+                  name="arrow-forward"
+                  size={16}
+                  color={Colors.primary}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
 
-                    <View className="ml-2">
-                      <Text className="font-semibold">
-                        Order #{formatOrderNumber(activeOrder._id)}
-                      </Text>
-                      <Text className="text-sm text-gray-500 mb-3">
-                        {activeOrder.bags} bags • ${activeOrder.total}
-                        .00
-                      </Text>
-                    </View>
-                  </View>
-
-                  <Text
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusStyle(
-                      activeOrder.status,
-                    )}`}
-                  >
-                    {activeOrder.status.replaceAll("_", " ")}
-                  </Text>
-                </View>
-
-                {/* Steps */}
-                <View className="flex-row justify-between mb-2">
-                  {["Picked Up", "Washing", "Delivery"].map((step, index) => (
-                    <Text
-                      key={step}
-                      className={`text-xs ${
-                        index <= getOrderStep(activeOrder.status)
-                          ? "text-blue-500"
-                          : "text-gray-400"
-                      }`}
-                    >
-                      {step}
-                    </Text>
-                  ))}
-                </View>
-                <View className="h-2 bg-gray-200 rounded-full mb-3 overflow-hidden">
-                  <Animated.View
-                    className="h-2 bg-blue-500 rounded-full"
-                    style={{
-                      width: progressAnim.interpolate({
-                        inputRange: [0, 100],
-                        outputRange: ["0%", "100%"],
-                      }),
-                    }}
-                  />
-                </View>
-
-                <View className="flex-row justify-between items-center">
-                  <View className="flex-1">
-                    <Text className="text-xs  text-gray-500">
-                      {activeOrder.address || "Pickup address unavailable"}
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    onPress={() =>
-                       router.push({
-                        pathname: "/(common)/LiveTrackScreenDriver/LiveTrackScreenDriverMain" as any,
-                        params: { id: activeOrder._id },
-                      })
-                    }
-                    className="flex-row gap-3 items-center"
-                  >
-                    <Text
-                      style={{ color: Colors.primary }}
-                      className="text-[14px] font-bold"
-                    >
-                      Live Track
-                    </Text>
-                    <Ionicons
-                      name="arrow-forward"
-                      size={16}
-                      color={Colors.primary}
-                    />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </>
+          {activeOrders.length > 0 ? (
+            activeOrders.map((order) => (
+              <ActiveOrderCard
+                key={order._id}
+                order={order}
+                router={router}
+                getOrderProgress={getOrderProgress}
+                getOrderStep={getOrderStep}
+                getStatusStyle={getStatusStyle}
+              />
+            ))
           ) : (
             <View className="bg-white rounded-2xl px-4 py-6 shadow-sm mb-6 border border-gray-100">
               <Text className="text-gray-500">No active route right now</Text>
@@ -525,26 +569,37 @@ export default function HomeScreen() {
           )}
 
           {/* Available Jobs */}
-          <>
-            <View className=" mb-3 flex-row items-center justify-between">
-              <Text className="text-lg font-bold">Available Jobs</Text>
-              <TouchableOpacity
-                onPress={() => {
-                  router.push("/(driver)/(tabs)/jobs?tab=Available");
-                }}
+          <View className="mb-3 mt-4 flex-row items-center justify-between">
+            <Text className="text-lg font-bold">Available Jobs</Text>
+
+            <TouchableOpacity
+              onPress={() => {
+                router.push("/(driver)/(tabs)/jobs?tab=Available");
+              }}
+              activeOpacity={0.7}
+              className="flex-row items-center bg-blue-50 px-4 py-2 rounded-full border border-blue-100"
+            >
+              <Text
+                style={{ color: Colors.primary }}
+                className="text-sm font-semibold mr-1"
               >
-                <Text className="text-blue-500 font-semibold text-base">
-                  View All
-                </Text>
-              </TouchableOpacity>
-            </View>
-            {availableOrder ? (
-              <View className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100">
+                View All
+              </Text>
+              <Ionicons name="arrow-forward" size={16} color={Colors.primary} />
+            </TouchableOpacity>
+          </View>
+
+          {availableOrder.length > 0 ? (
+            availableOrder.map((job) => (
+              <View
+                key={job._id}
+                className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100"
+              >
                 <View className="flex-row justify-between items-start mb-3">
                   <View className="flex-row mr-2 w-[65%]">
                     <View className="ml-2">
                       <Text className="font-semibold mb-1">
-                        Order #{formatOrderNumber(availableOrder._id)}
+                        Order #{formatOrderNumber(job._id)}
                       </Text>
                       <View className="flex-row">
                         <Ionicons
@@ -552,27 +607,22 @@ export default function HomeScreen() {
                           size={14}
                           color="gray"
                         />
-
                         <Text className="text-sm text-gray-500 mb-1 ml-1 flex-shrink flex-wrap">
-                          {availableOrder.address ||
-                            "Pickup address unavailable"}
+                          {job.address || "Pickup address unavailable"}
                         </Text>
                       </View>
-
-                      {/* Pickup type row */}
                       <View className="flex-row">
                         <Ionicons name="time-outline" size={14} color="gray" />
-
                         <Text className="text-sm text-gray-500 mb-1 ml-1">
-                          {availableOrder.pickupType}
+                          {job.pickupType}
                         </Text>
                       </View>
                     </View>
                   </View>
 
-                  <View className="items-end justify-end w-[35%] ">
+                  <View className="items-end justify-end w-[35%]">
                     <Text className="font-bold text-green-500 text-[24px]">
-                      ${Number(availableOrder.total ?? 0).toFixed(2)}
+                      ${Number(job.total ?? 0).toFixed(2)}
                     </Text>
                     <Text className="font-sm text-gray-500">
                       You earn {driverEarningPercentage}%
@@ -582,23 +632,23 @@ export default function HomeScreen() {
 
                 <View className="flex-row justify-between bg-blue-50 rounded-[10px] py-4 px-6">
                   <View className="flex-1 items-start justify-center">
-                    <Text className="text-base text-gray-500">Begs</Text>
+                    <Text className="text-base text-gray-500">Bags</Text>
                     <Text className="text-lg font-bold text-black">
-                      {availableOrder.bags} Bags
+                      {job.bags} Bags
                     </Text>
                   </View>
                   <View className="flex-1 items-start justify-center ml-[20px]">
                     <Text className="text-base text-gray-500">Service</Text>
                     <Text className="text-lg font-bold text-black">
-                      {availableOrder.serviceType.replaceAll("_", " ")}
+                      {job.serviceType.replaceAll("_", " ")}
                     </Text>
                   </View>
                 </View>
 
-                <View className=" mt-5 flex-row items-center justify-center gap-4">
+                <View className="mt-5 flex-row items-center justify-center gap-4">
                   <TouchableOpacity
                     onPress={() => {
-                      setSelectedJobId(availableOrder._id);
+                      setSelectedJobId(job._id);
                       setDeclineModal(true);
                     }}
                     className="flex-1 border border-red-400 py-2 rounded-xl"
@@ -609,7 +659,7 @@ export default function HomeScreen() {
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => {
-                      setSelectedJobId(availableOrder._id);
+                      setSelectedJobId(job._id);
                       setAcceptModal(true);
                     }}
                     className="flex-1 bg-blue-500 py-2 rounded-xl"
@@ -620,12 +670,12 @@ export default function HomeScreen() {
                   </TouchableOpacity>
                 </View>
               </View>
-            ) : (
-              <View className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100">
-                <Text className="text-gray-500">No available jobs now</Text>
-              </View>
-            )}
-          </>
+            ))
+          ) : (
+            <View className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100">
+              <Text className="text-gray-500">No available jobs now</Text>
+            </View>
+          )}
         </View>
       </ScrollView>
 
@@ -657,7 +707,7 @@ export default function HomeScreen() {
         />
       )}
 
-      {/* Call Modal */}
+      {/* Confirm pickup modal */}
       {confirmed && (
         <Modal
           transparent

@@ -1,387 +1,171 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { AntDesign, Ionicons } from '@expo/vector-icons';
-import Colors from '@/constants/color';
-import { useRouter } from 'expo-router';
-import RatingStars from '@/components/home/RatingStars';
-import { useGetMyOrdersQuery, type Order } from '@/src/services/orderApi';
-import { useOrderSocket } from '@/src/hooks/useOrderSocket';
-import { formatOrderNumber } from '@/src/utils/orderNumber';
+import React, { useCallback, useState } from "react";
+import { View, Text, FlatList, TouchableOpacity } from "react-native";
+import { useGetMyOrdersQuery, type Order } from "@/src/services/orderApi";
+import { useOrderSocket } from "@/src/hooks/useOrderSocket";
+import ActiveOrderCard from "@/components/home/components/ActiveOrderCard";
+import { AntDesign } from "@expo/vector-icons";
+import Colors from "@/constants/color";
+import { useFocusEffect } from "expo-router";
+import ShowMessage from "@/constants/toast";
+import { RefreshControl } from "react-native";
+import { useDispatch } from "react-redux";
+import { orderApi } from "@/src/services/orderApi";
 
-const statusLabel = (status?: string) => (status ?? '').replaceAll('_', ' ');
+const getOrderProgress = (status?: string) => {
+  const steps = ["Requested", "Picked Up", "Washing", "Delivery"];
 
-const serviceLabel: Record<string, string> = {
-  WASH_DRY: 'Washing & Drying',
-  DRY_CLEAN: 'Dry Cleaning',
-};
-
-const buildSteps = (status?: string) => {
-  const currentByStatus: Record<string, number> = {
+  const indexByStatus: Record<string, number> = {
     REQUESTED: 0,
     DRIVER_ASSIGNED: 0,
     PICKED_UP: 1,
     WASHING_DRYING: 2,
     OUT_FOR_DELIVERY: 3,
-    DELIVERED: 4,
-    COMPLETED: 4,
+    DELIVERED: 3,
+    COMPLETED: 3,
   };
-  const current = currentByStatus[status ?? 'REQUESTED'] ?? 0;
 
-  return [
-    { key: 'requested', title: 'Requested', icon: 'clockcircleo' },
-    { key: 'picked', title: 'Picked Up', icon: 'checkcircleo' },
-    { key: 'washing', title: 'Washing', icon: 'sync' },
-    { key: 'delivery', title: 'Delivery', icon: 'car' },
-    { key: 'delivered', title: 'Delivered', icon: 'home' },
-  ].map((step, index) => ({
-    ...step,
-    status: index < current ? 'done' : index === current ? 'active' : 'pending',
-    time: index < current ? 'Completed' : '',
-    subtitle: index === current ? 'In Progress' : '',
-  }));
+  const currentStep = indexByStatus[status ?? "REQUESTED"] ?? 0;
+
+  return {
+    steps,
+    currentStep,
+    progress: Math.min(100, Math.max(15, (currentStep + 1) * 25)),
+  };
 };
 
-const toActiveOrder = (order?: Order) => {
+const mapOrderToCard = (order: Order) => {
+  const progress = getOrderProgress(order.status);
+
   return {
-    id: order ? order._id : '-',
-    status: order ? statusLabel(order.status) : 'No active order',
-    quantity: order ? order.bags ?? 0 : 0,
-    bagPrice: order ? order.pricePerBag ?? 0 : 0,
-    tip: 0,
-    estimatedDelivery: order
-      ? order.scheduledPickupAt
-        ? new Date(order.scheduledPickupAt).toLocaleString()
-        : 'As soon as possible'
-      : '--',
-    progressSteps: order ? buildSteps(order.status) : [],
+    id: order._id,
+    status: order.status.replaceAll("_", " "),
+    quantity: order.bags,
+    price: order.total,
+    estimatedDelivery: order.scheduledPickupAt
+      ? new Date(order.scheduledPickupAt).toLocaleString()
+      : "As soon as possible",
+    ...progress,
   };
 };
 
 export default function Orders() {
-  const router = useRouter();
-  const { data: ordersRes, isLoading, refetch } = useGetMyOrdersQuery();
+  const [refreshing, setRefreshing] = useState(false);
+  const dispatch = useDispatch();
+  const VISIBLE_LIMIT = 5;
+  const [showAllOrders, setShowAllOrders] = useState(false);
 
-  useOrderSocket({
-    role: 'CUSTOMER',
-    orderId:
-      ordersRes && ordersRes.data
-        ? (
-            ordersRes.data.find(order =>
-              !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(order.status),
-            ) || {}
-          )._id
-        : undefined,
-    onCustomerUpdate: refetch,
+  const {
+    data: ordersRes,
+    isLoading,
+    isFetching,
+    refetch: refetchOrders,
+  } = useGetMyOrdersQuery(undefined, {
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
   });
 
-  const orders = ordersRes && ordersRes.data ? ordersRes.data : [];
-  const activeOrderFromApi = orders.find(
-    order => !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(order.status),
+  const orders = ordersRes?.data ?? [];
+
+  const activeOrders = orders.filter(
+    (order) => !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
   );
-  const activeOrder = toActiveOrder(activeOrderFromApi);
-  const pastOrders = orders
-    .filter(order => ['DELIVERED', 'COMPLETED'].includes(order.status))
-    .map(order => ({
-      id: order._id,
-      quantity: order.bags,
-      price: order.total,
-      status: statusLabel(order.status),
-      rating: 5,
-      date: order.createdAt ? new Date(order.createdAt).toLocaleDateString() : '',
-    }));
 
-  const totalAmount = activeOrder.quantity * activeOrder.bagPrice + activeOrder.tip;
+  const activeOrder = activeOrders[0] ? mapOrderToCard(activeOrders[0]) : null;
 
-  const activeChatOrder = activeOrderFromApi;
-  const driver = activeChatOrder ? activeChatOrder.driver : null;
-  const orderDetails = activeChatOrder ?? null;
+  const activeOrdersMapped = activeOrders.map(mapOrderToCard);
+
+  const visibleOrders = showAllOrders
+    ? activeOrdersMapped
+    : activeOrdersMapped.slice(0, VISIBLE_LIMIT);
+
+  const hiddenCount = activeOrdersMapped.length - VISIBLE_LIMIT;
+
+  useOrderSocket({
+    role: "CUSTOMER",
+    orderId: activeOrder?.id,
+    onCustomerUpdate: refetchOrders,
+  });
+
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refetchOrders();
+      ShowMessage.show("Updated");
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refetchOrders]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refetchOrders();
+    }, [refetchOrders]),
+  );
+
+  const renderFooter = () => {
+    if (activeOrdersMapped.length <= VISIBLE_LIMIT) return null;
+
+    return (
+      <TouchableOpacity
+        onPress={() => setShowAllOrders((prev) => !prev)}
+        className="flex-row items-center justify-center gap-2 mt-3 mb-5 py-3 rounded-2xl border border-dashed border-gray-300 bg-gray-50"
+        activeOpacity={0.7}
+      >
+        <AntDesign
+          name={showAllOrders ? "up" : "down"}
+          size={14}
+          color={Colors.primary}
+        />
+
+        <Text style={{ color: Colors.primary }} className="text-sm font-medium">
+          {showAllOrders
+            ? "Show less"
+            : `View ${hiddenCount} more order${hiddenCount !== 1 ? "s" : ""}`}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
 
   return (
-    <ScrollView className="flex-1 bg-[#F6F9FF]">
-      {/* Header */}
-      <View style={{ backgroundColor: Colors.primary }} className="pt-14 pb-16 px-5 rounded-b-[32px]">
-        <Text className="text-white text-[26px] font-bold">Order Tracking</Text>
-        <Text className="text-white/80 mt-1">Track your laundry in real-time</Text>
-      </View>
+    <View className="flex-1 bg-[#F6F9FF]">
+      <FlatList
+        data={visibleOrders}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingTop: 40,
+          paddingBottom: 40,
+        }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        ListHeaderComponent={
+          <View className="flex-row items-center justify-between mb-5">
+            <Text className="text-2xl font-bold text-black">Active Orders</Text>
 
-      {/* Active Order Card */}
-      <View className="px-5 -mt-10">
-        <View className="bg-white rounded-2xl p-4 shadow">
-          <View className="flex-row justify-between items-center mb-2">
-            <View>
-              <Text className="font-semibold">Order #{formatOrderNumber(activeOrder.id)}</Text>
-              <Text className="text-gray-500 text-sm">
-                {activeOrder.quantity} bags • ${activeOrder.quantity * activeOrder.bagPrice}
-              </Text>
-            </View>
-
-            <View className="bg-orange-100 px-3 py-1 rounded-full">
-              <Text className="text-orange-500 text-xs font-semibold">{activeOrder.status}</Text>
-            </View>
-          </View>
-
-          <View className="bg-blue-50 rounded-xl p-3 mt-3">
-            <Text className="text-xs text-gray-500">Estimated Delivery</Text>
-            <Text className="font-semibold mt-1">{activeOrder.estimatedDelivery}</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Order Progress */}
-      <View className="px-5 mt-6">
-        <Text className="font-bold text-lg mb-4">Order Progress</Text>
-
-        <View className="bg-white rounded-2xl p-4 shadow">
-          {activeOrder.progressSteps.map((step, index) => {
-            if (step.status === 'done') {
-              return (
-                <View key={step.key}>
-                  <View className="flex-row">
-                    <View className="items-center mr-3">
-                      <View className="w-9 h-9 rounded-full bg-green-200 justify-center items-center">
-                        {step.title === 'Delivered' ? (
-                          <Ionicons name="home-outline" size={22} color={'green'} />
-                        ) : (
-                          <Ionicons name="checkmark-circle-outline" size={22} color={'green'} />
-                        )}
-                      </View>
-                      <View className="w-[2px] flex-1 bg-green-500 mt-1" />
-                    </View>
-
-                    <View>
-                      <Text className="font-medium">{step.title}</Text>
-                      <Text className="text-xs text-gray-500">{step.time}</Text>
-                    </View>
-                  </View>
-                  {step.title !== 'Delivered' ? (
-                    <View className="bg-green-200 h-[30px] w-[1px] ml-4 my-2 rounded-full" />
-                  ) : null}
-                </View>
-              );
-            }
-
-            if (step.status === 'active') {
-              return (
-                <View key={step.key}>
-                  <View className="flex-row">
-                    <View className="items-center mr-3">
-                      {/* loader icon */}
-                      <View className="w-9 h-9 rounded-full bg-blue-100 justify-center items-center">
-                        <Ionicons name="refresh-outline" size={22} color="#3B82F6" />
-                      </View>
-                    </View>
-
-                    <View>
-                      <Text className="font-medium text-black">{step.title}</Text>
-                      <Text className="text-xs text-black">In Progress</Text>
-                      <Text className="text-xs text-blue-500 font-semibold">{step.subtitle}</Text>
-                    </View>
-                  </View>
-                  {step.title !== 'Delivered' ? (
-                    <View className="bg-blue-300 h-[30px] w-[1px] ml-4 my-2 rounded-full" />
-                  ) : null}
-                </View>
-              );
-            }
-
-            return (
-              <View key={step.key}>
-                <View className="flex-row">
-                  <View className="flex-row opacity-40">
-                    <View className="items-center mr-3">
-                      <View className="w-9 h-9 rounded-full bg-gray-300 justify-center items-center">
-                        <AntDesign name={step.icon as any} size={16} color="#000" />
-                      </View>
-                    </View>
-                    <Text className="font-medium">{step.title}</Text>
-                  </View>
-                </View>
-                {step.title !== 'Delivered' ? (
-                  <View className="bg-gray-300 h-[30px] w-[1px] ml-4 my-2 rounded-full" />
-                ) : null}
-              </View>
-            );
-          })}
-        </View>
-      </View>
-
-      {/* Driver Card */}
-      <View className="px-5 mt-6 mb-6">
-        <View className="bg-white rounded-2xl p-4 shadow">
-          <View className="flex-row items-center mb-4">
-            <Image
-              source={driver && driver.image ? { uri: driver.image } : require('@/assets/images/profile.png')}
-              className="w-12 h-12 rounded-full mr-3"
-            />
-            <View className="flex-1">
-              <Text className="font-semibold">{driver && driver.name ? driver.name : 'Driver not assigned'}</Text>
-              <View className="flex-row items-center mt-1">
-                <RatingStars rating={driver ? 4.9 : 0} size={14} />
-                <Text className="text-sm ml-1 text-gray-600">
-                  {driver ? 'Assigned driver' : 'No driver yet'}
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          <View className="flex-row">
-            <TouchableOpacity
-              onPress={() =>
-                activeChatOrder && activeChatOrder.driver
-                  ? router.push({
-                      pathname: '/(common)/ChatScreen' as any,
-                      params: {
-                        orderId: activeChatOrder._id,
-                        name:
-                          activeChatOrder.driver && activeChatOrder.driver.name
-                            ? activeChatOrder.driver.name
-                            : activeChatOrder.customer && activeChatOrder.customer.name
-                              ? activeChatOrder.customer.name
-                              : 'Chat',
-                        avatar:
-                          activeChatOrder.driver && activeChatOrder.driver.image
-                            ? activeChatOrder.driver.image
-                            : activeChatOrder.customer && activeChatOrder.customer.image
-                              ? activeChatOrder.customer.image
-                              : '',
-                      },
-                    })
-                  : router.push('/(common)/MessagesScreen')
-              }
-              className="flex-1 border bg-blue-100 border-blue-500 rounded-xl py-3 flex-row justify-center items-center mr-2"
-            >
-              <Ionicons name="chatbubble-outline" size={18} color={Colors.primary} />
-              <Text className="ml-2 text-lg text-blue-500 font-semibold">Message</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() =>
-                router.push({
-                  pathname: '/(common)/CallScreen' as any,
-                  params: {
-                    name: driver && driver.name ? driver.name : 'Driver',
-                    image: driver && driver.image ? driver.image : '',
-                  },
-                })
-              }
-              className="flex-1 border bg-blue-100 border-blue-500 rounded-xl py-3 flex-row justify-center items-center ml-2"
-            >
-              <Ionicons name="call-outline" size={18} color={Colors.primary} />
-              <Text className="ml-2 text-lg text-blue-500 font-semibold">Call Driver</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
-      {/* Order Details */}
-      <View className="px-5 mb-6">
-        <Text className="font-bold text-[20px] mb-3">Order Details</Text>
-
-        <View className="bg-white rounded-2xl p-4 shadow">
-          {!orderDetails && <Text className="mb-3 text-sm text-gray-500">No active order</Text>}
-          <View className="mb-3">
-            <Text className="text-gray-500 text-xs">Service</Text>
-            <Text className="font-medium">
-              {activeOrderFromApi && activeOrderFromApi.serviceType
-                ? (serviceLabel[activeOrderFromApi.serviceType] ?? activeOrderFromApi.serviceType)
-                : 'Unavailable'}
-            </Text>
-          </View>
-
-          <View className="mb-3">
-            <Text className="text-gray-500 text-xs">Pickup Address</Text>
-            <Text className="font-medium">{activeOrderFromApi && activeOrderFromApi.address ? activeOrderFromApi.address : 'No address available'}</Text>
-          </View>
-
-          <View className="mb-3">
-            <Text className="text-gray-500 text-xs">Special Instructions</Text>
-            <Text className="font-medium">
-              {activeOrderFromApi && activeOrderFromApi.specialInstructions ? activeOrderFromApi.specialInstructions : 'No special instructions'}
-            </Text>
-          </View>
-
-          <View className="border-t border-gray-200 pt-3">
-            <View className="flex-row justify-between mb-2">
-              <Text className="text-gray-600">
-                {activeOrderFromApi ? activeOrderFromApi.bags ?? 0 : 0} bags × ${activeOrderFromApi ? activeOrderFromApi.pricePerBag ?? 0 : 0}
-              </Text>
-              <Text>
-                ${Number((activeOrderFromApi ? activeOrderFromApi.bags ?? 0 : 0) * (activeOrderFromApi ? activeOrderFromApi.pricePerBag ?? 0 : 0)).toFixed(2)}
-              </Text>
-            </View>
-            <View className="flex-row justify-between mb-2">
-              <Text className="text-gray-600">Tip</Text>
-              <Text>${activeOrder.tip}</Text>
-            </View>
-            <View className="flex-row justify-between mt-2">
-              <Text className="font-bold">Total</Text>
-              <Text className="font-bold text-blue-600">
-                ${Number(activeOrderFromApi ? activeOrderFromApi.total ?? 0 : 0).toFixed(2)}
+            <View className="bg-blue-100 px-3 py-1 rounded-full">
+              <Text className="text-blue-600 text-xs font-semibold">
+                {activeOrdersMapped.length} Active
               </Text>
             </View>
           </View>
-        </View>
-      </View>
-
-      {/* Past Orders */}
-      <View className="px-5 mb-6">
-        <Text className="text-lg font-bold mb-3">Past Orders</Text>
-
-        {isLoading && <Text className="text-gray-500 mb-3">Loading orders...</Text>}
-
-        {pastOrders.map(order => (
-          <TouchableOpacity
-            key={order.id}
-            className="bg-white rounded-2xl p-4 mb-2 border border-gray-100 flex-row"
-            onPress={() =>
-              router.push({
-                pathname: '/(common)/OrderDetails',
-                params: { id: String(order.id) },
-              })
-            }
-          >
-            <View className="w-9 h-9 rounded-full bg-gray-200 justify-center items-center">
-              <Ionicons name="cube-outline" size={20} />
+        }
+        renderItem={({ item }) => <ActiveOrderCard data={item} />}
+        ListFooterComponent={renderFooter}
+        ListEmptyComponent={
+          isLoading ? (
+            <View className="bg-white rounded-2xl p-5">
+              <Text className="text-gray-500">Loading orders...</Text>
             </View>
-
-            <View className="flex-1 ml-3">
-              <Text className="font-semibold">Order #{formatOrderNumber(order.id)}</Text>
-              <Text className="text-sm text-gray-500">
-                {order.quantity} bag • Estimate cost ${order.price}
-              </Text>
-
-              <View className="flex-row items-center mt-1">
-                <Ionicons name="checkmark-circle-outline" size={14} color="green" />
-                <Text className="ml-1 text-green-600 text-sm">{order.status}</Text>
-              </View>
+          ) : (
+            <View className="bg-white rounded-2xl p-5 items-center">
+              <Text className="text-gray-500">No active orders</Text>
             </View>
-
-            <View className="items-end justify-between">
-              <View className="flex-row items-center">
-                <Ionicons name="star" size={14} color="#FACC15" />
-                <Text className="ml-1 text-sm">{order.rating.toFixed(1)}</Text>
-              </View>
-
-              <TouchableOpacity
-                onPress={() => {
-                  console.log('recet_item: ', order);
-                  router.push({
-                    pathname: '/(common)/OrderDetails',
-                    params: { id: String(order.id) },
-                  });
-                }}
-                className="my-2"
-              >
-                <Text style={{ color: Colors.primary }} className="font-semibold">
-                  View Details
-                </Text>
-              </TouchableOpacity>
-
-              <Text className="text-xs text-gray-400">{order.date}</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </ScrollView>
+          )
+        }
+      />
+    </View>
   );
 }

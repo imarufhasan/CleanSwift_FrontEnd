@@ -1,23 +1,34 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Modal } from 'react-native';
-import { AntDesign, Ionicons } from '@expo/vector-icons';
-import Colors from '@/constants/color';
-import Toast from '@/constants/toast';
-import { useFocusEffect, useRouter } from 'expo-router';
-import RequestPickupModal from '@/components/home/RequestPickupModal';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import ShowMessage from '@/constants/toast';
-import RequestPickupCard from '@/components/home/components/RequestPickupCard';
-import HeaderSection from '@/components/home/components/HeaderSection';
-import ActiveOrderCard from '@/components/home/components/ActiveOrderCard';
-import RecentOrdersList from '@/components/home/components/RecentOrdersList';
-import { useProfileInfoQuery } from '@/src/services/userApi';
-import { useCreateOrderMutation, useGetMyOrdersQuery, type Order } from '@/src/services/orderApi';
-import { useGetPricingQuery } from '@/src/services/pricingApi';
-import { useOrderSocket } from '@/src/hooks/useOrderSocket';
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  RefreshControl,
+  Modal,
+} from "react-native";
+import { AntDesign, Ionicons } from "@expo/vector-icons";
+import Colors from "@/constants/color";
+import Toast from "@/constants/toast";
+import { useFocusEffect, useRouter } from "expo-router";
+import RequestPickupModal from "@/components/home/RequestPickupModal";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import ShowMessage from "@/constants/toast";
+import RequestPickupCard from "@/components/home/components/RequestPickupCard";
+import HeaderSection from "@/components/home/components/HeaderSection";
+import ActiveOrderCard from "@/components/home/components/ActiveOrderCard";
+import RecentOrdersList from "@/components/home/components/RecentOrdersList";
+import { useProfileInfoQuery } from "@/src/services/userApi";
+import {
+  useCreateOrderMutation,
+  useGetMyOrdersQuery,
+  type Order,
+} from "@/src/services/orderApi";
+import { useGetPricingQuery } from "@/src/services/pricingApi";
+import { useOrderSocket } from "@/src/hooks/useOrderSocket";
 
 const getOrderProgress = (status?: string) => {
-  const steps = ['Requested', 'Picked Up', 'Washing', 'Delivery'];
+  const steps = ["Requested", "Picked Up", "Washing", "Delivery"];
   const indexByStatus: Record<string, number> = {
     REQUESTED: 0,
     DRIVER_ASSIGNED: 0,
@@ -27,7 +38,7 @@ const getOrderProgress = (status?: string) => {
     DELIVERED: 3,
     COMPLETED: 3,
   };
-  const currentStep = indexByStatus[status ?? 'REQUESTED'] ?? 0;
+  const currentStep = indexByStatus[status ?? "REQUESTED"] ?? 0;
 
   return {
     steps,
@@ -41,12 +52,12 @@ const mapOrderToCard = (order: Order) => {
 
   return {
     id: order._id,
-    status: order.status.replaceAll('_', ' '),
+    status: order.status.replaceAll("_", " "),
     quantity: order.bags,
     price: order.total,
     estimatedDelivery: order.scheduledPickupAt
       ? new Date(order.scheduledPickupAt).toLocaleString()
-      : 'As soon as possible',
+      : "As soon as possible",
     ...progress,
   };
 };
@@ -56,31 +67,41 @@ const mapOrderToRecent = (order: Order) => ({
   quantity: order.bags,
   price: order.total,
   rating: 5,
-  status: order.status.replaceAll('_', ' '),
-  date: order.createdAt ? new Date(order.createdAt).toLocaleDateString() : '',
+  status: order.status.replaceAll("_", " "),
+  date: order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "",
 });
 
 const parseAddress = (address?: string) => {
-  const parts = (address ?? '')
-    .split(',')
-    ?.map(part => part.trim())
+  const parts = (address ?? "")
+    .split(",")
+    ?.map((part) => part.trim())
     .filter(Boolean);
 
   return {
-    title: 'Current Location',
-    street: parts[0] ?? address ?? 'No address available',
-    city: parts[1] ?? '',
-    state: parts.slice(2).join(', ') ?? '',
+    title: "Current Location",
+    street: parts[0] ?? address ?? "No address available",
+    city: parts[1] ?? "",
+    state: parts.slice(2).join(", ") ?? "",
   };
 };
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { data: profileInfo, error, isLoading, isFetching, refetch } = useProfileInfoQuery();
-  const { data: ordersRes, isFetching: isOrdersFetching, refetch: refetchOrders } = useGetMyOrdersQuery();
+  const {
+    data: profileInfo,
+    error,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useProfileInfoQuery();
+  const {
+    data: ordersRes,
+    isFetching: isOrdersFetching,
+    refetch: refetchOrders,
+  } = useGetMyOrdersQuery();
   const { data: pricingRes } = useGetPricingQuery();
-  const [createOrder, { isLoading: isCreatingOrder }] = useCreateOrderMutation();
-  console.log('profileInfo api home: ', profileInfo?.data?.role);
+  const [createOrder, { isLoading: isCreatingOrder }] =
+    useCreateOrderMutation();
 
   const [refreshing, setRefreshing] = useState(false);
   const [bottomModal, setBottomModal] = useState(false);
@@ -93,16 +114,43 @@ export default function HomeScreen() {
     time: null as Date | null,
     bags: 1,
   });
+
+  // ── Active orders ──────────────────────────────────────────
+  const VISIBLE_LIMIT = 3;
+  const [showAllOrders, setShowAllOrders] = useState(false);
+
+  // ── Recent orders ──────────────────────────────────────────
+  const RECENT_VISIBLE_LIMIT = 3;
+  const [showAllRecent, setShowAllRecent] = useState(false);
+
   const orders = ordersRes?.data ?? [];
-  const activeOrders = orders.filter(order => !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(order.status));
-  const completedOrders = orders.filter(order => ['DELIVERED', 'COMPLETED'].includes(order.status));
+  const activeOrders = orders.filter(
+    (order) => !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
+  );
+  const completedOrders = orders.filter((order) =>
+    ["DELIVERED", "COMPLETED"].includes(order.status),
+  );
+
   const activeOrder = activeOrders[0] ? mapOrderToCard(activeOrders[0]) : null;
-  const recentOrders = (completedOrders?.length ? completedOrders : orders).slice(0, 5)?.map(mapOrderToRecent);
+  const activeOrdersMapped = activeOrders.map(mapOrderToCard);
+  const visibleOrders = showAllOrders
+    ? activeOrdersMapped
+    : activeOrdersMapped.slice(0, VISIBLE_LIMIT);
+  const hiddenCount = activeOrdersMapped.length - VISIBLE_LIMIT;
+
+  const allRecentOrders = (completedOrders?.length ? completedOrders : orders)
+    .slice(0, 10)
+    .map(mapOrderToRecent);
+  const visibleRecentOrders = showAllRecent
+    ? allRecentOrders
+    : allRecentOrders.slice(0, RECENT_VISIBLE_LIMIT);
+  const hiddenRecentCount = allRecentOrders.length - RECENT_VISIBLE_LIMIT;
+
   const pricePerBag = pricingRes?.data?.pricePerBag ?? 0;
   const location = parseAddress(profileInfo?.data?.address);
 
   useOrderSocket({
-    role: 'CUSTOMER',
+    role: "CUSTOMER",
     orderId: activeOrder?.id,
     onCustomerUpdate: refetchOrders,
   });
@@ -113,14 +161,13 @@ export default function HomeScreen() {
     }
   }, [pickupData.asap]);
 
-  // Refresh logic
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => {
       setRefreshing(false);
       refetch();
       refetchOrders();
-      ShowMessage.show('updated');
+      ShowMessage.show("updated");
     }, 1500);
   }, [refetch, refetchOrders]);
 
@@ -134,66 +181,59 @@ export default function HomeScreen() {
   const onDateChange = (_: any, date?: Date) => {
     setShowDatePicker(false);
     if (date) {
-      setPickupData(prev => ({
-        ...prev,
-        date,
-        asap: false,
-      }));
+      setPickupData((prev) => ({ ...prev, date, asap: false }));
     }
   };
 
   const onTimeChange = (_: any, time?: Date) => {
     setShowTimePicker(false);
     if (time) {
-      setPickupData(prev => ({
-        ...prev,
-        time,
-        asap: false,
-      }));
+      setPickupData((prev) => ({ ...prev, time, asap: false }));
     }
   };
 
   const handleOrderPress = (order: any) => {
-    console.log('Clicked order: ', order);
     router.push({
-      pathname: '/(common)/OrderDetails',
+      pathname: "/(common)/OrderDetails",
       params: { id: String(order.id) },
     });
   };
 
   const handleCreateOrder = async (payload: {
     bags: number;
-    pickupType: 'ASAP' | 'SCHEDULED';
+    pickupType: "ASAP" | "SCHEDULED";
     scheduledPickupAt?: string;
     specialInstructions?: string;
   }) => {
     try {
       const res = await createOrder({
-        serviceType: 'WASH_DRY',
+        serviceType: "WASH_DRY",
         pickupType: payload.pickupType,
         scheduledPickupAt: payload.scheduledPickupAt,
         bags: payload.bags,
         specialInstructions: payload.specialInstructions,
       }).unwrap();
 
-      ShowMessage.success(res?.message ?? 'Pickup request confirmed');
+      ShowMessage.success(res?.message ?? "Pickup request confirmed");
       setBottomModal(false);
       setConfirmed(false);
       refetchOrders();
     } catch (error: any) {
-      ShowMessage.error(error?.data?.message ?? 'Failed to create order');
+      ShowMessage.error(error?.data?.message ?? "Failed to create order");
     }
   };
 
   return (
     <View className="flex-1 bg-gray-100">
       <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
         className="flex-1 bg-white"
       >
         {/* Header Section */}
         <HeaderSection
-          userName={profileInfo?.data?.name || 'User'}
+          userName={profileInfo?.data?.name || "User"}
           notificationCount={0}
           location={location}
           profileInfo={profileInfo}
@@ -202,20 +242,103 @@ export default function HomeScreen() {
         {/* Request Pickup Card */}
         <RequestPickupCard onPressAdd={() => setBottomModal(true)} />
 
-        {/* Active & Recent Orders */}
+        {/* Active Orders */}
         <View className="px-5 mt-6">
-          {activeOrder ? (
-            <ActiveOrderCard data={activeOrder} />
+          <View className="flex-row items-center justify-between mb-3">
+            <Text className="text-lg font-bold">Active Orders</Text>
+            {activeOrdersMapped.length > 0 && (
+              <View className="bg-purple-100 rounded-full px-3 py-1">
+                <Text
+                  style={{ color: Colors.primary }}
+                  className="text-xs font-semibold"
+                >
+                  {activeOrdersMapped.length} order
+                  {activeOrdersMapped.length !== 1 ? "s" : ""}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {activeOrdersMapped.length > 0 ? (
+            <>
+              {visibleOrders.map((order) => (
+                <ActiveOrderCard key={order.id} data={order} />
+              ))}
+
+              {activeOrdersMapped.length > VISIBLE_LIMIT && (
+                <TouchableOpacity
+                  onPress={() => setShowAllOrders((prev) => !prev)}
+                  className="flex-row items-center justify-center gap-2 mt-3 mb-2 py-3 rounded-2xl border border-dashed border-gray-300 bg-gray-50"
+                  activeOpacity={0.7}
+                >
+                  <AntDesign
+                    name={showAllOrders ? "up" : "down"}
+                    size={14}
+                    color={Colors.primary}
+                  />
+                  <Text
+                    style={{ color: Colors.primary }}
+                    className="text-sm font-medium"
+                  >
+                    {showAllOrders
+                      ? "Show less"
+                      : `View ${hiddenCount} more order${hiddenCount !== 1 ? "s" : ""}`}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </>
           ) : (
             <View className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100">
-              <Text className="text-lg font-bold mb-1">Active Order</Text>
               <Text className="text-gray-500">
-                {isOrdersFetching ? 'Loading orders...' : 'No active order'}
+                {isOrdersFetching ? "Loading orders..." : "No active orders"}
               </Text>
             </View>
           )}
+        </View>
 
-          <RecentOrdersList orders={recentOrders} onOrderPress={handleOrderPress} />
+        {/* Recent Orders */}
+        <View className="px-5 mt-8">
+          <View className="flex-row items-center justify-between mb-3">
+            <Text className="text-lg font-bold">Recent Orders</Text>
+            {allRecentOrders.length > 0 && (
+              <View className="bg-purple-100 rounded-full px-3 py-1">
+                <Text
+                  style={{ color: Colors.primary }}
+                  className="text-xs font-semibold"
+                >
+                  {allRecentOrders.length} order
+                  {allRecentOrders.length !== 1 ? "s" : ""}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          <RecentOrdersList
+            orders={visibleRecentOrders}
+            onOrderPress={handleOrderPress}
+          />
+
+          {allRecentOrders.length > RECENT_VISIBLE_LIMIT && (
+            <TouchableOpacity
+              onPress={() => setShowAllRecent((prev) => !prev)}
+              className="flex-row items-center justify-center gap-2 mt-2 mb-6 py-3 rounded-2xl border border-dashed border-gray-300 bg-gray-50"
+              activeOpacity={0.7}
+            >
+              <AntDesign
+                name={showAllRecent ? "up" : "down"}
+                size={14}
+                color={Colors.primary}
+              />
+              <Text
+                style={{ color: Colors.primary }}
+                className="text-sm font-medium"
+              >
+                {showAllRecent
+                  ? "Show less"
+                  : `View ${hiddenRecentCount} more order${hiddenRecentCount !== 1 ? "s" : ""}`}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
 
@@ -243,10 +366,14 @@ export default function HomeScreen() {
       )}
 
       {showTimePicker && (
-        <DateTimePicker value={pickupData.time || new Date()} mode="time" onChange={onTimeChange} />
+        <DateTimePicker
+          value={pickupData.time || new Date()}
+          mode="time"
+          onChange={onTimeChange}
+        />
       )}
 
-      {/* Call Modal */}
+      {/* Confirm Modal */}
       {confirmed && (
         <Modal
           transparent
@@ -265,18 +392,22 @@ export default function HomeScreen() {
                   onPress={() => setConfirmed(false)}
                   className="flex-1 border border-red-500 rounded-2xl py-3"
                 >
-                  <Text className="text-red-500 text-[20px] text-center font-semibold">No</Text>
+                  <Text className="text-red-500 text-[20px] text-center font-semibold">
+                    No
+                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   onPress={() => {
                     setConfirmed(false);
                     setBottomModal(false);
-                    ShowMessage.show('Pickup request confirmed');
+                    ShowMessage.show("Pickup request confirmed");
                   }}
                   className="flex-1 bg-green-500 rounded-2xl py-3"
                 >
-                  <Text className="text-white text-[20px] text-center font-semibold">Yes</Text>
+                  <Text className="text-white text-[20px] text-center font-semibold">
+                    Yes
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>

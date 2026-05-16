@@ -21,9 +21,8 @@ type Props = {
 
 export default function RecentOrdersList({ orders, onOrderPress }: Props) {
   return (
-    <>
-      <Text className="text-lg font-bold mb-3">Recent Orders</Text>
-      {orders.map(order => (
+    <View >
+      {orders?.map(order => (
         <TouchableOpacity
           key={order.id}
           className="bg-white flex-row items-safe justify-center rounded-2xl p-4 mb-4 border border-gray-100"
@@ -61,6 +60,6 @@ export default function RecentOrdersList({ orders, onOrderPress }: Props) {
           </View>
         </TouchableOpacity>
       ))}
-    </>
+    </View>
   );
 }

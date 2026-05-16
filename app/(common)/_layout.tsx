@@ -28,7 +28,7 @@ export default function CommonLayout() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="LiveTrackingScreen/index"
+        name="LiveTrackingScreen"
         options={{ headerShown: false }}
       />
       <Stack.Screen
@@ -79,6 +79,10 @@ export default function CommonLayout() {
       />
        <Stack.Screen
         name="DeliveredSuccessScreen/index"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="OrderTrackingForCustomer/index"
         options={{ headerShown: false }}
       />
     </Stack>

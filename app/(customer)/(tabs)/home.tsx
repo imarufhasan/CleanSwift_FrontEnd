@@ -116,11 +116,11 @@ export default function HomeScreen() {
   });
 
   // ── Active orders ──────────────────────────────────────────
-  const VISIBLE_LIMIT = 3;
+  const VISIBLE_LIMIT = 2;
   const [showAllOrders, setShowAllOrders] = useState(false);
 
   // ── Recent orders ──────────────────────────────────────────
-  const RECENT_VISIBLE_LIMIT = 3;
+  const RECENT_VISIBLE_LIMIT = 2;
   const [showAllRecent, setShowAllRecent] = useState(false);
 
   const orders = ordersRes?.data ?? [];
@@ -245,17 +245,35 @@ export default function HomeScreen() {
         {/* Active Orders */}
         <View className="px-5 mt-6">
           <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-lg font-bold">Active Orders</Text>
-            {activeOrdersMapped.length > 0 && (
-              <View className="bg-purple-100 rounded-full px-3 py-1">
+            <Text className="text-xl font-bold">Active Orders</Text>
+            {activeOrdersMapped.length > 2 && (
+              // <View className="bg-purple-100 rounded-full px-3 py-1">
+              //   <Text
+              //     style={{ color: Colors.primary }}
+              //     className="text-xs font-semibold"
+              //   >
+              //     {activeOrdersMapped.length} order
+              //     {activeOrdersMapped.length !== 1 ? "s" : ""}
+              //   </Text>
+              // </View>
+              <TouchableOpacity
+                onPress={() => router.push("/orders")}
+                activeOpacity={0.7}
+                className="flex-row items-center bg-blue-50 px-4 py-2 rounded-full border border-blue-100"
+              >
                 <Text
                   style={{ color: Colors.primary }}
-                  className="text-xs font-semibold"
+                  className="text-sm font-semibold mr-1"
                 >
-                  {activeOrdersMapped.length} order
-                  {activeOrdersMapped.length !== 1 ? "s" : ""}
+                  View All
                 </Text>
-              </View>
+
+                <Ionicons
+                  name="arrow-forward"
+                  size={16}
+                  color={Colors.primary}
+                />
+              </TouchableOpacity>
             )}
           </View>
 
@@ -265,7 +283,7 @@ export default function HomeScreen() {
                 <ActiveOrderCard key={order.id} data={order} />
               ))}
 
-              {activeOrdersMapped.length > VISIBLE_LIMIT && (
+              {/* {activeOrdersMapped.length > VISIBLE_LIMIT && (
                 <TouchableOpacity
                   onPress={() => setShowAllOrders((prev) => !prev)}
                   className="flex-row items-center justify-center gap-2 mt-3 mb-2 py-3 rounded-2xl border border-dashed border-gray-300 bg-gray-50"
@@ -285,7 +303,7 @@ export default function HomeScreen() {
                       : `View ${hiddenCount} more order${hiddenCount !== 1 ? "s" : ""}`}
                   </Text>
                 </TouchableOpacity>
-              )}
+              )} */}
             </>
           ) : (
             <View className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100">

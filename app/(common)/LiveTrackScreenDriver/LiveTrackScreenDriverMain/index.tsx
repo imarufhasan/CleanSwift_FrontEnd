@@ -66,14 +66,15 @@ export default function LiveTrackScreenDriverMain() {
     if (orderRes && orderRes.data) return orderRes.data;
 
     if (orderId) {
-      const matchedOrder = myJobsRes && myJobsRes.data
-        ? myJobsRes.data.find(order => order._id === orderId)
-        : undefined;
+      const matchedOrder =
+        myJobsRes && myJobsRes.data
+          ? myJobsRes.data.find((order) => order._id === orderId)
+          : undefined;
       if (matchedOrder) return matchedOrder;
     }
 
     return myJobsRes && myJobsRes.data
-      ? myJobsRes.data.find(order => !inactiveStatuses.includes(order.status))
+      ? myJobsRes.data.find((order) => !inactiveStatuses.includes(order.status))
       : undefined;
   }, [myJobsRes && myJobsRes.data, orderId, orderRes && orderRes.data]);
 
@@ -82,18 +83,21 @@ export default function LiveTrackScreenDriverMain() {
   }, [
     activeOrder ? activeOrder._id : undefined,
     activeOrder ? activeOrder.status : undefined,
-    activeOrder && activeOrder.timeline ? activeOrder.timeline.dryingAt : undefined,
-    activeOrder && activeOrder.timeline ? activeOrder.timeline.washingDryingAt : undefined,
+    activeOrder && activeOrder.timeline
+      ? activeOrder.timeline.dryingAt
+      : undefined,
+    activeOrder && activeOrder.timeline
+      ? activeOrder.timeline.washingDryingAt
+      : undefined,
   ]);
 
   const driverEarningPercentage =
     pricingRes && pricingRes.data
       ? pricingRes.data.driverEarningPercentage
       : 70;
-  const displayBags =
-    activeOrder
-      ? activeOrder.bagCountAtPickup ?? activeOrder.bags ?? 0
-      : 0;
+  const displayBags = activeOrder
+    ? (activeOrder.bagCountAtPickup ?? activeOrder.bags ?? 0)
+    : 0;
   const displayPricePerBag =
     activeOrder && activeOrder.pricePerBag !== undefined
       ? activeOrder.pricePerBag
@@ -103,9 +107,9 @@ export default function LiveTrackScreenDriverMain() {
   const displayTotal =
     activeOrder && activeOrder.total !== undefined
       ? activeOrder.total
-      : displayBags * displayPricePerBag;
+      : displayBags * Number(displayPricePerBag);
   const driverEarning =
-    (Number(displayTotal ?? 0) * driverEarningPercentage) / 100;
+    (Number(displayTotal ?? 0) * Number(driverEarningPercentage)) / 100;
   const isLoading = isFetchingOrder || isFetchingJobs;
   const currentOrderStep = getStepFromOrder(activeOrder);
 
@@ -147,7 +151,10 @@ export default function LiveTrackScreenDriverMain() {
   if (!activeOrder) {
     return (
       <SafeAreaView className="flex-1 bg-white px-5 pt-14">
-        <TouchableOpacity onPress={() => router.back()} className="bg-gray-100 rounded-full p-3 self-start">
+        <TouchableOpacity
+          onPress={() => router.back()}
+          className="bg-gray-100 rounded-full p-3 self-start"
+        >
           <Ionicons name="arrow-back-outline" size={18} color="black" />
         </TouchableOpacity>
         <View className="flex-1 items-center justify-center">
@@ -162,18 +169,29 @@ export default function LiveTrackScreenDriverMain() {
 
   return (
     <SafeAreaView edges={["bottom"]} className="flex-1 bg-white">
-      <View style={{ backgroundColor: Colors.primary }} className="px-5 pt-14 pb-[60px] rounded-b-[30px]">
+      <View
+        style={{ backgroundColor: Colors.primary }}
+        className="px-5 pt-14 pb-[60px] rounded-b-[30px]"
+      >
         <View className="flex-row justify-between items-center">
           <View className="flex-row justify-center items-center gap-4 flex-1 pr-3">
-            <TouchableOpacity onPress={() => router.back()} className="bg-gray-100 rounded-full p-3">
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="bg-gray-100 rounded-full p-3"
+            >
               <Ionicons name="arrow-back-outline" size={18} color="black" />
             </TouchableOpacity>
             <View className="flex-1">
-              <Text className="text-white text-2xl font-semibold" numberOfLines={1}>
+              <Text
+                className="text-white text-2xl font-semibold"
+                numberOfLines={1}
+              >
                 Order #{formatOrderNumber(activeOrder._id)}
               </Text>
               <Text className="text-blue-100 text-sm" numberOfLines={1}>
-                {activeOrder.serviceType ? activeOrder.serviceType.replaceAll("_", " ") : "Laundry Service"}
+                {activeOrder.serviceType
+                  ? activeOrder.serviceType.replaceAll("_", " ")
+                  : "Laundry Service"}
               </Text>
             </View>
           </View>
@@ -195,7 +213,9 @@ export default function LiveTrackScreenDriverMain() {
             return (
               <TouchableOpacity
                 key={step}
-                onPress={() => index <= currentOrderStep && setActiveStep(index)}
+                onPress={() =>
+                  index <= currentOrderStep && setActiveStep(index)
+                }
                 disabled={index > currentOrderStep}
                 className="items-center flex-1"
               >
@@ -204,12 +224,16 @@ export default function LiveTrackScreenDriverMain() {
                     isActive ? "bg-blue-500" : "bg-gray-200"
                   }`}
                 >
-                  <Text className={`text-base font-bold ${isActive ? "text-white" : "text-gray-500"}`}>
+                  <Text
+                    className={`text-base font-bold ${isActive ? "text-white" : "text-gray-500"}`}
+                  >
                     {index + 1}
                   </Text>
                 </View>
 
-                <Text className={`text-[10px] mt-1 font-semibold ${isActive ? "text-blue-500" : "text-gray-400"}`}>
+                <Text
+                  className={`text-[10px] mt-1 font-semibold ${isActive ? "text-blue-500" : "text-gray-400"}`}
+                >
                   {step}
                 </Text>
               </TouchableOpacity>
@@ -227,12 +251,15 @@ export default function LiveTrackScreenDriverMain() {
         </View>
       </View>
 
-      <ScrollView className="mt-4 bg-white" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        className="mt-4 bg-white"
+        showsVerticalScrollIndicator={false}
+      >
         {activeStep === 0 && (
           <PickupStep
             order={activeOrder}
             isUpdating={isUpdatingStage}
-            onCompletePickup={bagCount =>
+            onCompletePickup={(bagCount) =>
               handleStageUpdate("PICKUP", 1, bagCount)
             }
           />
@@ -288,7 +315,9 @@ export default function LiveTrackScreenDriverMain() {
             <View className="bg-gray-50 rounded-2xl p-4 mt-6 border border-gray-200">
               <Text className="text-gray-500 text-sm">Service</Text>
               <Text className="text-base font-semibold mb-3">
-                {activeOrder.serviceType ? activeOrder.serviceType.replaceAll("_", " ") : "Laundry Service"}
+                {activeOrder.serviceType
+                  ? activeOrder.serviceType.replaceAll("_", " ")
+                  : "Laundry Service"}
               </Text>
 
               <Text className="text-gray-500 text-sm">Pickup Address</Text>
@@ -299,7 +328,9 @@ export default function LiveTrackScreenDriverMain() {
                 Order #{formatOrderNumber(activeOrder._id)}
               </Text>
 
-              <Text className="text-gray-500 text-sm">Special Instructions</Text>
+              <Text className="text-gray-500 text-sm">
+                Special Instructions
+              </Text>
               <Text className="text-base font-semibold mb-3">
                 {activeOrder.specialInstructions ?? "No special instructions"}
               </Text>
@@ -307,7 +338,8 @@ export default function LiveTrackScreenDriverMain() {
               <View className="border-t border-gray-200 pt-3 mt-2">
                 <View className="flex-row justify-between mb-2">
                   <Text className="text-gray-600">
-                    {displayBags} bags x ${Number(displayPricePerBag).toFixed(2)}
+                    {displayBags} bags x $
+                    {Number(displayPricePerBag).toFixed(2)}
                   </Text>
                   <Text className="text-gray-600">
                     ${Number(displayTotal ?? 0).toFixed(2)}
@@ -326,7 +358,9 @@ export default function LiveTrackScreenDriverMain() {
             </View>
 
             <TouchableOpacity className="flex-row justify-center gap-4 px-4 border border-blue-500 rounded-full py-3 mt-6 items-center">
-              <Text className="text-blue-500 font-medium">Download Invoice</Text>
+              <Text className="text-blue-500 font-medium">
+                Download Invoice
+              </Text>
               <Ionicons name="cloud-download-sharp" size={18} color="blue" />
             </TouchableOpacity>
 

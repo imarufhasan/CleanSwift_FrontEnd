@@ -638,7 +638,7 @@ export default function HomeScreen() {
               />
             ))
           ) : (
-            <View className="bg-white rounded-2xl px-4 py-6 shadow-sm mb-6 border border-gray-100">
+            <View className="bg-white rounded-2xl p-6 shadow-sm mb-6 border border-gray-100">
               <Text className="text-gray-500">No active route right now</Text>
             </View>
           )}
@@ -647,21 +647,27 @@ export default function HomeScreen() {
           <View className="mb-3 mt-4 flex-row items-center justify-between">
             <Text className="text-lg font-bold">Available Jobs</Text>
 
-            <TouchableOpacity
-              onPress={() => {
-                router.push("/(driver)/(tabs)/jobs?tab=Available");
-              }}
-              activeOpacity={0.7}
-              className="flex-row items-center bg-blue-50 px-4 py-2 rounded-full border border-blue-100"
-            >
-              <Text
-                style={{ color: Colors.primary }}
-                className="text-sm font-semibold mr-1"
+            {availableOrder?.length > 2 && (
+              <TouchableOpacity
+                onPress={() => {
+                  router.push("/(driver)/(tabs)/jobs?tab=Available");
+                }}
+                activeOpacity={0.7}
+                className="flex-row items-center bg-blue-50 px-4 py-2 rounded-full border border-blue-100"
               >
-                View All
-              </Text>
-              <Ionicons name="arrow-forward" size={16} color={Colors.primary} />
-            </TouchableOpacity>
+                <Text
+                  style={{ color: Colors.primary }}
+                  className="text-sm font-semibold mr-1"
+                >
+                  View All
+                </Text>
+                <Ionicons
+                  name="arrow-forward"
+                  size={16}
+                  color={Colors.primary}
+                />
+              </TouchableOpacity>
+            )}
           </View>
 
           {availableOrder.length > 0 ? (
@@ -747,7 +753,7 @@ export default function HomeScreen() {
               </View>
             ))
           ) : (
-            <View className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100">
+            <View className="bg-white rounded-2xl p-6 shadow-sm mb-6 border border-gray-100">
               <Text className="text-gray-500">No available jobs now</Text>
             </View>
           )}

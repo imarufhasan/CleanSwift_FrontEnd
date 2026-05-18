@@ -282,28 +282,6 @@ export default function HomeScreen() {
               {visibleOrders.map((order) => (
                 <ActiveOrderCard key={order.id} data={order} />
               ))}
-
-              {/* {activeOrdersMapped.length > VISIBLE_LIMIT && (
-                <TouchableOpacity
-                  onPress={() => setShowAllOrders((prev) => !prev)}
-                  className="flex-row items-center justify-center gap-2 mt-3 mb-2 py-3 rounded-2xl border border-dashed border-gray-300 bg-gray-50"
-                  activeOpacity={0.7}
-                >
-                  <AntDesign
-                    name={showAllOrders ? "up" : "down"}
-                    size={14}
-                    color={Colors.primary}
-                  />
-                  <Text
-                    style={{ color: Colors.primary }}
-                    className="text-sm font-medium"
-                  >
-                    {showAllOrders
-                      ? "Show less"
-                      : `View ${hiddenCount} more order${hiddenCount !== 1 ? "s" : ""}`}
-                  </Text>
-                </TouchableOpacity>
-              )} */}
             </>
           ) : (
             <View className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100">
@@ -315,21 +293,28 @@ export default function HomeScreen() {
         </View>
 
         {/* Recent Orders */}
-        <View className="px-5 mt-8">
+        <View className="px-5 mt-2">
           <View className="flex-row items-center justify-between mb-3">
             <Text className="text-lg font-bold">Recent Orders</Text>
-            {allRecentOrders.length > 0 && (
-              <View className="bg-purple-100 rounded-full px-3 py-1">
-                <Text
-                  style={{ color: Colors.primary }}
-                  className="text-xs font-semibold"
-                >
-                  {allRecentOrders.length} order
-                  {allRecentOrders.length !== 1 ? "s" : ""}
-                </Text>
-              </View>
-            )}
+            <View className="bg-purple-100 rounded-full px-3 py-1">
+              <Text
+                style={{ color: Colors.primary }}
+                className="text-xs font-semibold"
+              >
+                {allRecentOrders.length} order
+                {allRecentOrders.length !== 1 ? "s" : ""}
+              </Text>
+            </View>
           </View>
+          {allRecentOrders.length === 0 && (
+            <View className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100">
+              <Text className="text-gray-500">
+                {isOrdersFetching
+                  ? "Loading recent orders..."
+                  : "No recent orders"}
+              </Text>
+            </View>
+          )}
 
           <RecentOrdersList
             orders={visibleRecentOrders}

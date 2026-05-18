@@ -144,7 +144,10 @@ export default function Profile() {
           </View>
         </View>
 
-        <TouchableOpacity
+
+        {/*In future coming this feature */}
+
+        {/* <TouchableOpacity
           onPress={() => {
             router.push('/DriverVerification');
           }}
@@ -167,7 +170,7 @@ export default function Profile() {
               <Ionicons name="chevron-forward-sharp" size={18} color={'#01A1FF'} />
             </TouchableOpacity>
           </View>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         {/* Menu */}
         <View className="px-5 mt-6">

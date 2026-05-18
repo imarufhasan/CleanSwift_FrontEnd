@@ -35,10 +35,10 @@ const getStepFromOrder = (order?: Order) => {
   if (["OUT_FOR_DELIVERY", "DELIVERED", "COMPLETED"].includes(order.status)) {
     return 4;
   }
-  if (order.status === "FOLDING") return 3;
-  if (order.status === "DRYING") return 2;
+  if (order.status === "FOLDING") return 4;
+  if (order.status === "DRYING") return 3;
   if (order.timeline && order.timeline.foldingAt) return 3;
-  if (order.timeline && order.timeline.dryingAt) return 2;
+  if (order.timeline && order.timeline.dryingAt) return 3;
   if (order.timeline && order.timeline.washingDryingAt) return 2;
   if (order.status === "WASHING_DRYING") return 1;
   if (order.status === "PICKED_UP") return 1;

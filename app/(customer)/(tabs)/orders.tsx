@@ -11,30 +11,39 @@ import { RefreshControl } from "react-native";
 import { useDispatch } from "react-redux";
 import { orderApi } from "@/src/services/orderApi";
 
-const getOrderProgress = (status?: string) => {
-  const steps = ["Requested", "Picked Up", "Washing", "Delivery"];
-
-  const indexByStatus: Record<string, number> = {
-    REQUESTED: 0,
-    DRIVER_ASSIGNED: 0,
-    PICKED_UP: 1,
-    WASHING_DRYING: 2,
-    OUT_FOR_DELIVERY: 3,
-    DELIVERED: 3,
-    COMPLETED: 3,
-  };
-
-  const currentStep = indexByStatus[status ?? "REQUESTED"] ?? 0;
+const getOrderProgress = (order: Order) => {
+  const steps = [
+    "Requested",
+    "Picked Up",
+    "Washing",
+    "Drying",
+    "Folding",
+    "Delivery",
+  ];
+  const currentStep =
+    order.status === "OUT_FOR_DELIVERY" ||
+    order.status === "DELIVERED" ||
+    order.status === "COMPLETED"
+      ? 5
+      : order.timeline?.foldingAt
+        ? 4
+        : order.timeline?.dryingAt
+          ? 3
+          : order.status === "WASHING_DRYING"
+            ? 2
+            : order.status === "PICKED_UP"
+              ? 1
+              : 0;
 
   return {
     steps,
     currentStep,
-    progress: Math.min(100, Math.max(15, (currentStep + 1) * 25)),
+    progress: Math.min(100, Math.max(15, Math.round(((currentStep + 1) / steps.length) * 100))),
   };
 };
 
 const mapOrderToCard = (order: Order) => {
-  const progress = getOrderProgress(order.status);
+  const progress = getOrderProgress(order);
 
   return {
     id: order._id,

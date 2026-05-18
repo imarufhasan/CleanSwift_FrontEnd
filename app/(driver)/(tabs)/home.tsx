@@ -204,10 +204,9 @@ export default function HomeScreen() {
       ? pricingRes.data.driverEarningPercentage
       : 70;
 
-  const activeOrders = myJobs
-    .filter(
-      (order) => !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
-    );
+  const activeOrders = myJobs.filter(
+    (order) => !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
+  );
 
   const availableOrder = availableJobs;
 
@@ -234,7 +233,10 @@ export default function HomeScreen() {
           ? new Date(order.updatedAt || order.createdAt || "").getTime()
           : null,
       )
-      .filter((value): value is number => typeof value === "number" && !Number.isNaN(value));
+      .filter(
+        (value): value is number =>
+          typeof value === "number" && !Number.isNaN(value),
+      );
 
     if (timestamps.length <= 1) return 0;
 
@@ -255,13 +257,11 @@ export default function HomeScreen() {
       : driverStatus;
   const driverRatingSummary = driverRatingsRes?.data?.summary;
 
-  const completedTodayEarnings = completedTodayJobs
-    .reduce(
-      (sum, order) =>
-        sum +
-        (Number(order.total ?? 0) * Number(driverEarningPercentage)) / 100,
-      0,
-    );
+  const completedTodayEarnings = completedTodayJobs.reduce(
+    (sum, order) =>
+      sum + (Number(order.total ?? 0) * Number(driverEarningPercentage)) / 100,
+    0,
+  );
 
   console.log("myJobsRes: ", myJobsRes?.data?.length);
 
@@ -281,8 +281,17 @@ export default function HomeScreen() {
       refetchMyJobs();
       refetchAvailableJobs();
       refetch();
-      refetchDriverRatings();
-    }, [refetchAvailableJobs, refetchDriverProfile, refetchDriverRatings, refetchMyJobs, refetch]),
+      //refetchDriverRatings();
+      if (driverProfile?.user) {
+        refetchDriverRatings();
+      }
+    }, [
+      refetchAvailableJobs,
+      refetchDriverProfile,
+      refetchDriverRatings,
+      refetchMyJobs,
+      refetch,
+    ]),
   );
 
   useEffect(() => {
@@ -328,10 +337,19 @@ export default function HomeScreen() {
       refetchMyJobs();
       refetchAvailableJobs();
       refetch();
-      refetchDriverRatings();
+      //refetchDriverRatings();
+      if (driverProfile?.user) {
+        refetchDriverRatings();
+      }
       ShowMessage.show("updated");
     }, 1500);
-  }, [refetchAvailableJobs, refetchDriverProfile, refetchDriverRatings, refetchMyJobs, refetch]);
+  }, [
+    refetchAvailableJobs,
+    refetchDriverProfile,
+    refetchDriverRatings,
+    refetchMyJobs,
+    refetch,
+  ]);
 
   const getOrderProgress = (status: Order["status"]) => {
     switch (status) {

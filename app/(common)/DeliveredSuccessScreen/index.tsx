@@ -44,10 +44,10 @@ export default function DeliveredSuccessScreen() {
       : 'Add a card';
 
   const openPaymentMethodModal = () => {
-    if (!STRIPE_PUBLISHABLE_KEY) {
-      ShowMessage.error('Stripe publishable key is missing');
-      return;
-    }
+    // if (!STRIPE_PUBLISHABLE_KEY) {
+    //   ShowMessage.error('Stripe publishable key is missing');
+    //   return;
+    // }
 
     setPaymentMethodModal(true);
   };

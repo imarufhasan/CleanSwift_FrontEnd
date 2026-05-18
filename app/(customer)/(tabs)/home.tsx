@@ -64,12 +64,13 @@ const getOrderProgress = (order: Order) => {
 
 const mapOrderToCard = (order: Order) => {
   const progress = getOrderProgress(order);
+  const quantity = Math.max(0, order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0);
 
   return {
     id: order._id,
     status: order.status.replaceAll("_", " "),
-    quantity: order.bags,
-    price: order.total,
+    quantity,
+    price: quantity * Number(order.pricePerBag ?? 0),
     estimatedDelivery: order.scheduledPickupAt
       ? new Date(order.scheduledPickupAt).toLocaleString()
       : "As soon as possible",
@@ -79,8 +80,8 @@ const mapOrderToCard = (order: Order) => {
 
 const mapOrderToRecent = (order: Order) => ({
   id: order._id,
-  quantity: order.bags,
-  price: order.total,
+  quantity: Math.max(0, order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0),
+  price: Math.max(0, order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0) * Number(order.pricePerBag ?? 0),
   rating: 5,
   status: order.status.replaceAll("_", " "),
   date: order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "",

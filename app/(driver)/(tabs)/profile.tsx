@@ -12,6 +12,8 @@ import * as SecureStore from 'expo-secure-store';
 import { useDispatch } from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useProfileInfoQuery } from '@/src/services/userApi';
+import { useGetMyDriverProfileQuery, useGetMyDriverJobsQuery } from '@/src/services/driverApi';
+import { useGetDriverRatingsQuery } from '@/src/services/ratingApi';
 const menuItems = [
   { label: 'Profile Setting', icon: 'person-outline' },
   { label: 'Connect Stripe', icon: 'card-outline' },
@@ -26,19 +28,36 @@ const menuItems = [
 export default function Profile() {
   const router = useRouter();
   const { data: profileInfo, error, isLoading } = useProfileInfoQuery();
+  const { data: driverProfileRes, refetch: refetchDriverProfile } = useGetMyDriverProfileQuery();
+  const { data: myJobsRes, refetch: refetchMyJobs } = useGetMyDriverJobsQuery();
   const dispatch = useDispatch();
 
   const [refreshing, setRefreshing] = useState(false);
   const [logoutModal, setLogoutModal] = useState(false);
   const clearUser = useUserInfo(state => state.clearAuth);
 
+  const driverProfile = driverProfileRes?.data;
+  const { data: driverRatingsRes, refetch: refetchDriverRatings } = useGetDriverRatingsQuery(driverProfile?.user ?? '', {
+    skip: !driverProfile?.user,
+  });
+  const myJobs = myJobsRes?.data ?? [];
+  const completedJobs = myJobs.filter(job => ['DELIVERED', 'COMPLETED'].includes(job.status));
+  const successRate = myJobs.length ? Math.round((completedJobs.length / myJobs.length) * 100) : 0;
+  const tierNumber = driverProfile?.reputationTier ?? 0;
+  const tierText = tierNumber > 0 ? `Tier ${tierNumber}` : 'N/A';
+  const performanceText = driverProfile?.status ?? 'PENDING';
+  const ratingText = driverRatingsRes?.data?.summary?.count ? Number(driverRatingsRes.data.summary.avg ?? 0).toFixed(1) : 'N/A';
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => {
+      refetchDriverProfile();
+      refetchMyJobs();
+      refetchDriverRatings();
       setRefreshing(false);
       ShowMessage.show('updated');
     }, 1500);
-  }, []);
+  }, [refetchDriverProfile, refetchDriverRatings, refetchMyJobs]);
 
   const logout = async () => {
     try {
@@ -97,11 +116,11 @@ export default function Profile() {
             <View className="flex-row">
               <View className="flex-1 items-center">
                 <Text className="text-gray-500 text-sm">Driver Tier</Text>
-                <Text className="text-[20px] font-bold">Gold</Text>
+                <Text className="text-[20px] font-bold">{tierText}</Text>
               </View>
               <View className="flex-1 items-center">
                 <Text className="text-gray-500 text-sm">Performance</Text>
-                <Text className="font-bold text-blue-500 text-[20px]">Top 10%</Text>
+                <Text className="font-bold text-blue-500 text-[20px]">{performanceText}</Text>
               </View>
             </View>
 
@@ -109,16 +128,16 @@ export default function Profile() {
 
             <View className="flex-row">
               <View className="flex-1 items-center border-r border-gray-200">
-                <Text className="text-[28px] font-bold">4.9</Text>
+                <Text className="text-[28px] font-bold">{ratingText}</Text>
                 <Text className="text-gray-500 text-sm">Rating</Text>
               </View>
 
               <View className="flex-1 items-center border-r border-gray-200">
-                <Text className="text-[28px] font-bold">234</Text>
+                <Text className="text-[28px] font-bold">{completedJobs.length}</Text>
                 <Text className="text-gray-500 text-sm">Deliveries</Text>
               </View>
               <View className="flex-1 items-center">
-                <Text className="font-bold text-[28px]">98%</Text>
+                <Text className="font-bold text-[28px]">{successRate}%</Text>
                 <Text className="text-gray-500 text-sm">Success</Text>
               </View>
             </View>

@@ -22,11 +22,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDispatch } from 'react-redux';
 import AppLoader from '@/components/shared/AppLoader';
 import { useProfileInfoQuery, useUpdateProfilePhotoMutation } from '@/src/services/userApi';
+import { useGetMyOrdersQuery } from '@/src/services/orderApi';
 import * as ImagePicker from 'expo-image-picker';
 
 export default function Profile() {
   const router = useRouter();
   const { data: profileInfo, error, isLoading, isFetching, refetch } = useProfileInfoQuery();
+  const { data: ordersRes, refetch: refetchOrders } = useGetMyOrdersQuery();
 
   const userRole = profileInfo?.data?.role || '';
   console.log('profileInfo role: ', profileInfo?.data?.role);
@@ -40,23 +42,27 @@ export default function Profile() {
   const clearUser = useUserInfo(state => state.clearAuth);
   const [imageLoading, setImageLoading] = useState(false);
   const [imageVersion, setImageVersion] = useState(Date.now());
+  const orders = ordersRes?.data ?? [];
+  const totalSpent = orders.reduce((sum, order) => sum + Number(order.total ?? 0), 0);
   const onRefresh = useCallback(async () => {
     try {
       setRefreshing(true);
       setImageVersion(Date.now());
       await refetch();
+      await refetchOrders();
       ShowMessage.show('Profile updated');
     } catch (error) {
       ShowMessage.error('Failed to refresh');
     } finally {
       setRefreshing(false);
     }
-  }, [refetch]);
+  }, [refetch, refetchOrders]);
 
   useFocusEffect(
     useCallback(() => {
       refetch();
-    }, [refetch]),
+      refetchOrders();
+    }, [refetch, refetchOrders]),
   );
 
   const menuItems = [
@@ -201,11 +207,11 @@ export default function Profile() {
         <View className="px-5 -mt-12">
           <View className="bg-white rounded-2xl flex-row py-4 shadow-sm">
             <View className="flex-1 items-center border-r border-gray-200">
-              <Text className="text-[28px] font-bold">28</Text>
+              <Text className="text-[28px] font-bold">{orders.length}</Text>
               <Text className="text-gray-500 text-sm">Total Orders</Text>
             </View>
             <View className="flex-1 items-center">
-              <Text className="font-bold text-[28px]">$560</Text>
+              <Text className="font-bold text-[28px]">${totalSpent.toFixed(2)}</Text>
               <Text className="text-gray-500 text-sm">Total Spent</Text>
             </View>
           </View>

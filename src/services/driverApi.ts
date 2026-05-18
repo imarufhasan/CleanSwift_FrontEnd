@@ -13,6 +13,14 @@ export type DriverProfile = {
   isAvailable?: boolean;
   backgroundCheckStatus?: 'PENDING' | 'APPROVED' | 'FAILED';
   status?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
+  reputationTier?: number;
+  capacityLimit?: number;
+  vehicle?: {
+    make?: string;
+    model?: string;
+    year?: number;
+    plate?: string;
+  };
 };
 
 export const driverApi = api.injectEndpoints({

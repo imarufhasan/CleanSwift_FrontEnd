@@ -33,6 +33,7 @@ import type { Order } from "@/src/services/orderApi";
 import { useOrderSocket } from "@/src/hooks/useOrderSocket";
 import { useGetPricingQuery } from "@/src/services/pricingApi";
 import { formatOrderNumber } from "@/src/utils/orderNumber";
+import { useGetDriverRatingsQuery } from "@/src/services/ratingApi";
 
 // Sub-component to handle per-order animated progress bar
 function ActiveOrderCard({
@@ -188,6 +189,10 @@ export default function HomeScreen() {
     driverProfileRes && driverProfileRes.data
       ? driverProfileRes.data
       : undefined;
+  const { data: driverRatingsRes, refetch: refetchDriverRatings } =
+    useGetDriverRatingsQuery(driverProfile?.user ?? "", {
+      skip: !driverProfile?.user,
+    });
   const driverStatus =
     driverProfile && driverProfile.status ? driverProfile.status : "PENDING";
   const driverApproved = driverStatus === "APPROVED";
@@ -199,23 +204,58 @@ export default function HomeScreen() {
       ? pricingRes.data.driverEarningPercentage
       : 70;
 
-  // Show up to 2 active (non-terminal) orders
   const activeOrders = myJobs
     .filter(
       (order) => !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
-    )
-    .slice(0, 2);
+    );
 
-  // Show up to 2 available jobs
-  const availableOrder = availableJobs.slice(0, 2);
+  const availableOrder = availableJobs;
 
-  const completedTodayEarnings = myJobs
-    .filter(
-      (order) =>
-        ["DELIVERED", "COMPLETED"].includes(order.status) &&
-        order.createdAt &&
-        new Date(order.createdAt).toDateString() === new Date().toDateString(),
-    )
+  const completedJobs = myJobs.filter((order) =>
+    ["DELIVERED", "COMPLETED"].includes(order.status),
+  );
+
+  const completedTodayJobs = completedJobs.filter(
+    (order) =>
+      order.createdAt &&
+      new Date(order.createdAt).toDateString() === new Date().toDateString(),
+  );
+
+  const todayJobs = myJobs.filter(
+    (order) =>
+      order.createdAt &&
+      new Date(order.createdAt).toDateString() === new Date().toDateString(),
+  );
+
+  const activeHours = (() => {
+    const timestamps = todayJobs
+      .map((order) =>
+        order.updatedAt || order.createdAt
+          ? new Date(order.updatedAt || order.createdAt || "").getTime()
+          : null,
+      )
+      .filter((value): value is number => typeof value === "number" && !Number.isNaN(value));
+
+    if (timestamps.length <= 1) return 0;
+
+    const minTime = Math.min(...timestamps);
+    const maxTime = Math.max(...timestamps);
+    return Math.max(0, (maxTime - minTime) / (1000 * 60 * 60));
+  })();
+
+  const successRate = myJobs.length
+    ? Math.round((completedJobs.length / myJobs.length) * 100)
+    : 0;
+
+  const tierNumber = driverProfile?.reputationTier ?? 0;
+  const tierText = tierNumber > 0 ? `Tier ${tierNumber}` : "N/A";
+  const tierSubtitle =
+    driverProfile?.status === "APPROVED"
+      ? `Capacity ${driverProfile?.capacityLimit ?? 0}`
+      : driverStatus;
+  const driverRatingSummary = driverRatingsRes?.data?.summary;
+
+  const completedTodayEarnings = completedTodayJobs
     .reduce(
       (sum, order) =>
         sum +
@@ -241,7 +281,8 @@ export default function HomeScreen() {
       refetchMyJobs();
       refetchAvailableJobs();
       refetch();
-    }, [refetchAvailableJobs, refetchDriverProfile, refetchMyJobs, refetch]),
+      refetchDriverRatings();
+    }, [refetchAvailableJobs, refetchDriverProfile, refetchDriverRatings, refetchMyJobs, refetch]),
   );
 
   useEffect(() => {
@@ -287,9 +328,10 @@ export default function HomeScreen() {
       refetchMyJobs();
       refetchAvailableJobs();
       refetch();
+      refetchDriverRatings();
       ShowMessage.show("updated");
     }, 1500);
-  }, [refetchAvailableJobs, refetchDriverProfile, refetchMyJobs, refetch]);
+  }, [refetchAvailableJobs, refetchDriverProfile, refetchDriverRatings, refetchMyJobs, refetch]);
 
   const getOrderProgress = (status: Order["status"]) => {
     switch (status) {
@@ -523,12 +565,27 @@ export default function HomeScreen() {
         {/* Content */}
         <View className="px-5 mt-6">
           {/* Today's Status */}
-          <TodayStats />
+          <TodayStats
+            deliveries={completedTodayJobs.length}
+            hours={activeHours}
+            ratingText={
+              driverRatingSummary && driverRatingSummary.count > 0
+                ? Number(driverRatingSummary.avg ?? 0).toFixed(1)
+                : "N/A"
+            }
+            ratingSubtitle={
+              driverRatingSummary && driverRatingSummary.count > 0
+                ? `${driverRatingSummary.count} reviews`
+                : "No reviews yet"
+            }
+            tierText={tierText}
+            tierSubtitle={tierSubtitle}
+          />
 
           {/* Active Route */}
           <View className="flex-row items-center justify-between mb-3">
             <Text className="text-xl font-bold">Active Route</Text>
-            {activeOrders.length >= 2 && (
+            {activeOrders.length > 0 && (
               <TouchableOpacity
                 onPress={() => {
                   router.push("/(driver)/(tabs)/jobs?tab=Active");

@@ -1,6 +1,15 @@
 import React from "react";
 import { View, Text } from "react-native";
-import { Feather, AntDesign, FontAwesome6 } from "@expo/vector-icons";
+import { Feather, FontAwesome6 } from "@expo/vector-icons";
+
+type TodayStatsProps = {
+  deliveries: number;
+  hours: number;
+  ratingText: string;
+  ratingSubtitle: string;
+  tierText: string;
+  tierSubtitle: string;
+};
 
 const StatCard = ({
   icon,
@@ -33,7 +42,14 @@ const StatCard = ({
   );
 };
 
-export default function TodayStats() {
+export default function TodayStats({
+  deliveries,
+  hours,
+  ratingText,
+  ratingSubtitle,
+  tierText,
+  tierSubtitle,
+}: TodayStatsProps) {
   return (
     <View className="mb-4">
       <Text className="text-lg font-semibold text-black mb-3">
@@ -43,16 +59,16 @@ export default function TodayStats() {
       <View className="flex-row mb-3 gap-3">
         <StatCard
           title="Deliveries"
-          value="12"
-          subtitle="+3 from yesterday"
+          value={String(deliveries)}
+          subtitle="Completed today"
           iconBg="#EAF2FF"
           icon={<Feather name="box" size={18} color="#2563EB" />}
         />
 
         <StatCard
           title="Hours"
-          value="6.5"
-          subtitle="Active time"
+          value={hours.toFixed(1)}
+          subtitle="Active today"
           iconBg="#F3E8FF"
           icon={<Feather name="clock" size={18} color="#9333EA" />}
         />
@@ -61,16 +77,16 @@ export default function TodayStats() {
       <View className="flex-row gap-3">
         <StatCard
           title="Rating"
-          value="4.9"
-          subtitle="234 reviews"
+          value={ratingText}
+          subtitle={ratingSubtitle}
           iconBg="#ECFDF3"
           icon={<FontAwesome6 name="arrow-trend-up" size={18} color="#16A34A" />}
         />
 
         <StatCard
           title="Tier"
-          value="Gold"
-          subtitle="Top 10%"
+          value={tierText}
+          subtitle={tierSubtitle}
           iconBg="#FFF7ED"
           icon={<Feather name="star" size={18} color="#F97316" />}
         />

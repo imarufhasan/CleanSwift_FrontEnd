@@ -28,7 +28,7 @@ export default function CommonLayout() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="LiveTrackingScreen"
+        name="LiveTrackingScreen/index"
         options={{ headerShown: false }}
       />
       <Stack.Screen

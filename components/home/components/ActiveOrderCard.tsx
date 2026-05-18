@@ -49,14 +49,14 @@ export default function ActiveOrderCard({ data }: Props) {
             <Ionicons name="cube-outline" size={20} color={Colors.primary} />
           </View>
 
-          <TouchableOpacity
-            disabled={data?.status === "REQUESTED"}
-            onPress={() =>
-              router.push({
-                pathname: "/OrderTrackingForCustomer",
-                params: { orderId: data.id },
-              })
-            }
+        <TouchableOpacity
+          disabled={data?.status === "REQUESTED"}
+          onPress={() =>
+            router.push({
+              pathname: "/LiveTrackingScreen",
+              params: { orderId: String(data.id) },
+            })
+          }
             activeOpacity={0.7}
             className="ml-2 w-[80%]"
           >
@@ -101,7 +101,12 @@ export default function ActiveOrderCard({ data }: Props) {
           </Text>
         </View>
         <TouchableOpacity
-          onPress={() => router.push("/LiveTrackingScreen")}
+          onPress={() =>
+            router.push({
+              pathname: "/LiveTrackingScreen",
+              params: { orderId: String(data.id) },
+            })
+          }
           className="flex-row gap-3 items-center"
           disabled={data?.status === "REQUESTED"}
         >

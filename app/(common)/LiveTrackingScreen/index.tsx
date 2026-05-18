@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGetMyOrdersQuery } from '@/src/services/orderApi';
 import { useOrderSocket } from '@/src/hooks/useOrderSocket';
+import { useLocalSearchParams } from 'expo-router';
 
 const buildSteps = (status?: string) => {
   const currentByStatus: Record<string, number> = {
@@ -41,10 +42,13 @@ const buildSteps = (status?: string) => {
 
 export default function LiveTrackingScreen() {
   const router = useRouter();
+  const { orderId } = useLocalSearchParams<{ orderId?: string }>();
   const { data: ordersRes, refetch } = useGetMyOrdersQuery();
-  const activeOrder = ordersRes?.data?.find(
-    order => !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(order.status),
-  );
+  const orders = ordersRes?.data ?? [];
+  const clickedOrder = orderId ? orders.find(order => order._id === orderId) : undefined;
+  const activeOrder = orderId
+    ? clickedOrder
+    : orders.find(order => !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(order.status));
   const driver = activeOrder?.driver ?? null;
   const status = {
     label: activeOrder?.status?.replaceAll('_', ' ') ?? 'No active order',

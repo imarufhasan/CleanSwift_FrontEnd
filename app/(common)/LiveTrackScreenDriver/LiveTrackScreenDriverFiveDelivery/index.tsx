@@ -8,6 +8,9 @@ import type { Order } from '@/src/services/orderApi';
 import { useGetPricingQuery } from '@/src/services/pricingApi';
 import { formatOrderNumber } from '@/src/utils/orderNumber';
 
+const getEffectiveBagCount = (order?: Order) =>
+  Math.max(0, order?.bagCountAtDelivery ?? order?.bagCountAtPickup ?? order?.bags ?? 0);
+
 type Props = {
   order?: Order;
   onStartOutForDelivery: () => Promise<void> | void;
@@ -37,7 +40,7 @@ export default function DeliveryStep({ order, onStartOutForDelivery }: Props) {
     instructions:
       activeJob && activeJob.specialInstructions ? activeJob.specialInstructions : 'No special instructions',
     pricing: {
-      bags: activeJob ? (activeJob.bagCountAtPickup ?? activeJob.bags ?? 0) : 0,
+      bags: getEffectiveBagCount(activeJob),
       bagPrice: activeJob && activeJob.pricePerBag !== undefined ? activeJob.pricePerBag : 0,
       tip: 0,
     },

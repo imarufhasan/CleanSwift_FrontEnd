@@ -126,6 +126,14 @@ export default function LiveTrackingScreen() {
           !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
       );
   const driver = activeOrder?.driver ?? null;
+  const driverName =
+    activeOrder && typeof activeOrder.driver === 'object' && activeOrder.driver
+      ? activeOrder.driver.name ?? 'Driver'
+      : 'Driver';
+  const driverImage =
+    activeOrder && typeof activeOrder.driver === 'object' && activeOrder.driver
+      ? activeOrder.driver.image ?? ''
+      : '';
   const status = {
     label: activeOrder?.status?.replaceAll("_", " ") ?? "No active order",
     etaMinutes: activeOrder?.scheduledPickupAt ? 12 : 0,
@@ -300,23 +308,19 @@ export default function LiveTrackingScreen() {
         {/* Driver Card */}
         <View className="bg-white rounded-2xl p-4 shadow mx-5 mb-5 mt-4">
           <View className="flex-row items-center mb-3">
-            <Image
-              source={
-                driver?.image
-                  ? { uri: driver.image }
-                  : require("@/assets/images/profile.png")
-              }
-              style={{ width: 40, height: 40, borderRadius: 25 }}
-              resizeMode="cover"
-            />
+              <Image
+                source={driverImage ? { uri: driverImage } : require("@/assets/images/profile.png")}
+                style={{ width: 40, height: 40, borderRadius: 25 }}
+                resizeMode="cover"
+              />
             <View className="flex-1 ml-2">
               <Text className="font-semibold text-base">
-                {driver?.name ?? "Driver"}
+                {driverName}
               </Text>
               <View className="flex-row items-center mt-1">
-                <RatingStars rating={driver ? 4.9 : 0} />
+                <RatingStars rating={driverImage || driverName !== 'Driver' ? 4.9 : 0} />
                 <Text className="text-sm ml-1 text-gray-600">
-                  {driver ? "Assigned driver" : "No driver yet"}
+                  {driverImage || driverName !== 'Driver' ? "Assigned driver" : "No driver yet"}
                 </Text>
               </View>
             </View>
@@ -328,7 +332,7 @@ export default function LiveTrackingScreen() {
                   params: {
                     orderId: String(activeOrder?._id ?? ""),
                     name: driver?.name ?? "Driver",
-                    image: driver?.image ?? "",
+                    image: driverImage,
                     rating: "4.9",
                     trips: "0",
                     vehicle: "Vehicle info unavailable",
@@ -352,8 +356,8 @@ export default function LiveTrackingScreen() {
                   pathname: "/(common)/ChatScreen" as any,
                   params: {
                     orderId: String(activeOrder?._id ?? ""),
-                    name: driver?.name ?? "Driver",
-                    avatar: driver?.image ?? "",
+                    name: driverName,
+                    avatar: driverImage,
                   },
                 })
               }
@@ -373,8 +377,8 @@ export default function LiveTrackingScreen() {
                 router.push({
                   pathname: "/(common)/CallScreen" as any,
                   params: {
-                    name: driver?.name ?? "Driver",
-                    image: driver?.image ?? "",
+                    name: driverName,
+                    image: driverImage,
                   },
                 })
               }

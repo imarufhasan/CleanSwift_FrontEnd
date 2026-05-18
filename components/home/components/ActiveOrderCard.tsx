@@ -18,6 +18,8 @@ type ActiveOrder = {
   currentStep: number;
 };
 
+const formatPrice = (value: number) => `$${Number(value ?? 0).toFixed(2)}`;
+
 type Props = {
   data: ActiveOrder;
 };
@@ -64,7 +66,7 @@ export default function ActiveOrderCard({ data }: Props) {
               Order #{formatOrderNumber(data.id)}
             </Text>
             <Text className="text-sm text-gray-500 mb-3">
-              {data.quantity} bags • ${data.price}.00
+              {data.quantity} bags • {formatPrice(data.price)}
             </Text>
           </TouchableOpacity>
         </View>

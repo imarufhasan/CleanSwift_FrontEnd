@@ -48,12 +48,14 @@ const getOrderProgress = (order: Order) => {
 
 const mapOrderToCard = (order: Order) => {
   const progress = getOrderProgress(order);
+  const quantity = Math.max(0, order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0);
+  const price = quantity * Number(order.pricePerBag ?? 0);
 
   return {
     id: order._id,
     status: order.status.replaceAll("_", " "),
-    quantity: order.bags,
-    price: order.total,
+    quantity,
+    price,
     estimatedDelivery: order.scheduledPickupAt
       ? new Date(order.scheduledPickupAt).toLocaleString()
       : "As soon as possible",

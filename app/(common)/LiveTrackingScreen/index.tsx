@@ -273,7 +273,6 @@ export default function LiveTrackingScreen() {
           </View>
         </View>
 
-        {/* Order Details */}
         <View className="mx-5 mb-5">
           <Text className="font-bold text-[20px] mb-3">Order Details</Text>
 

@@ -88,7 +88,6 @@ export default function DriverDetails() {
         </View>
       </View>
 
-      {/* Order Details */}
       <View className="px-5 mt-6">
         <Text className="text-lg font-bold mb-3">Safety & Trust</Text>
 

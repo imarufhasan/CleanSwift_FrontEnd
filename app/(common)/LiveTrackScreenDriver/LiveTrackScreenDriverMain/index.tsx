@@ -37,6 +37,7 @@ const getStepFromOrder = (order?: Order) => {
   }
   if (order.timeline && order.timeline.foldingAt) return 3;
   if (order.timeline && order.timeline.dryingAt) return 2;
+  if (order.timeline && order.timeline.washingDryingAt) return 2;
   if (order.status === "WASHING_DRYING") return 1;
   if (order.status === "PICKED_UP") return 1;
 
@@ -88,10 +89,10 @@ export default function LiveTrackScreenDriverMain() {
       ? activeOrder.timeline.dryingAt
       : undefined,
     activeOrder && activeOrder.timeline
-      ? activeOrder.timeline.foldingAt
+      ? activeOrder.timeline.washingDryingAt
       : undefined,
     activeOrder && activeOrder.timeline
-      ? activeOrder.timeline.washingDryingAt
+      ? activeOrder.timeline.foldingAt
       : undefined,
   ]);
 

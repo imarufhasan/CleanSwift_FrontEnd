@@ -612,7 +612,7 @@ export default function HomeScreen() {
           {/* Active Route */}
           <View className="flex-row items-center justify-between mb-3">
             <Text className="text-xl font-bold">Active Route</Text>
-            {activeOrders.length > 0 && (
+            {activeOrders.length > 2 && (
               <TouchableOpacity
                 onPress={() => {
                   router.push("/(driver)/(tabs)/jobs?tab=Active");

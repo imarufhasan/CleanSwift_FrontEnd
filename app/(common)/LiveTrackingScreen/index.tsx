@@ -1,15 +1,15 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
-import { Ionicons, Feather, AntDesign } from '@expo/vector-icons';
-import Colors from '@/constants/color';
-import RatingStars from '@/components/home/RatingStars';
-import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useGetMyOrdersQuery } from '@/src/services/orderApi';
-import { useOrderSocket } from '@/src/hooks/useOrderSocket';
-import { useLocalSearchParams } from 'expo-router';
+import React from "react";
+import { View, Text, TouchableOpacity, ScrollView, Image } from "react-native";
+import { Ionicons, Feather, AntDesign } from "@expo/vector-icons";
+import Colors from "@/constants/color";
+import RatingStars from "@/components/home/RatingStars";
+import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useGetMyOrdersQuery } from "@/src/services/orderApi";
+import { useOrderSocket } from "@/src/hooks/useOrderSocket";
+import { useLocalSearchParams } from "expo-router";
 
-const buildSteps = (status?: string) => {
+const buildSteps2 = (status?: string) => {
   const currentByStatus: Record<string, number> = {
     REQUESTED: 0,
     DRIVER_ASSIGNED: 0,
@@ -19,25 +19,107 @@ const buildSteps = (status?: string) => {
     DELIVERED: 4,
     COMPLETED: 4,
   };
-  const current = currentByStatus[status ?? 'REQUESTED'] ?? 0;
+  const current = currentByStatus[status ?? "REQUESTED"] ?? 0;
 
   return [
-    { key: 'requested', title: 'Requested', time: '', status: 'done' },
-    { key: 'picked', title: 'Picked Up', time: '', status: 'done' },
-    { key: 'washing', title: 'Washing', time: '', subtitle: 'Currently in progress', status: 'active' },
-    { key: 'delivery', title: 'Out for Delivery', time: '', status: 'pending', icon: 'truck' },
-    { key: 'delivered', title: 'Delivered', time: '', status: 'pending', icon: 'home' },
+    { key: "requested", title: "Requested", time: "", status: "done" },
+    { key: "picked", title: "Picked Up", time: "", status: "done" },
+    {
+      key: "washing",
+      title: "Washing",
+      time: "",
+      subtitle: "Currently in progress",
+      status: "active",
+    },
+    {
+      key: "delivery",
+      title: "Out for Delivery",
+      time: "",
+      status: "pending",
+      icon: "truck",
+    },
+    {
+      key: "delivered",
+      title: "Delivered",
+      time: "",
+      status: "pending",
+      icon: "home",
+    },
   ]?.map((step, index) => ({
     ...step,
     status:
       index < current
-        ? 'done'
+        ? "done"
         : index === current
-          ? step.status === 'pending'
-            ? 'active'
+          ? step.status === "pending"
+            ? "active"
             : step.status
-          : 'pending',
+          : "pending",
   }));
+};
+
+const buildSteps = (status?: string) => {
+  const order = [
+    {
+      key: "requested",
+      title: "Requested",
+      match: [
+        "REQUESTED",
+        "DRIVER_ASSIGNED",
+        "PICKED_UP",
+        "WASHING_DRYING",
+        "OUT_FOR_DELIVERY",
+        "DELIVERED",
+      ],
+      icon: "time-outline",
+    },
+    {
+      key: "driver_assigned",
+      title: "Driver Assigned",
+      match: [
+        "DRIVER_ASSIGNED",
+        "PICKED_UP",
+        "WASHING_DRYING",
+        "OUT_FOR_DELIVERY",
+        "DELIVERED",
+      ],
+      icon: "person-outline",
+    },
+    {
+      key: "picked",
+      title: "Picked Up",
+      match: ["PICKED_UP", "WASHING_DRYING", "OUT_FOR_DELIVERY", "DELIVERED"],
+      icon: "cube-outline",
+    },
+    {
+      key: "washing",
+      title: "Washing",
+      match: ["WASHING_DRYING", "OUT_FOR_DELIVERY", "DELIVERED"],
+      icon: "water-outline",
+    },
+    {
+      key: "delivery",
+      title: "Out for Delivery",
+      match: ["OUT_FOR_DELIVERY", "DELIVERED"],
+      icon: "bicycle-outline",
+    },
+    {
+      key: "delivered",
+      title: "Delivered",
+      match: ["DELIVERED"],
+      icon: "checkmark-done-circle-outline",
+    },
+  ];
+
+  return order.map((step) => {
+    const isDone = step.match.includes(status ?? "REQUESTED");
+    const isActive = !isDone && step.match[0] === status;
+
+    return {
+      ...step,
+      status: isDone ? "done" : isActive ? "active" : "pending",
+    };
+  });
 };
 
 export default function LiveTrackingScreen() {
@@ -45,22 +127,31 @@ export default function LiveTrackingScreen() {
   const { orderId } = useLocalSearchParams<{ orderId?: string }>();
   const { data: ordersRes, refetch } = useGetMyOrdersQuery();
   const orders = ordersRes?.data ?? [];
-  const clickedOrder = orderId ? orders.find(order => order._id === orderId) : undefined;
+  console.log("tracking order details: ", orders);
+
+  const clickedOrder = orderId
+    ? orders.find((order) => order._id === orderId)
+    : undefined;
   const activeOrder = orderId
     ? clickedOrder
-    : orders.find(order => !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(order.status));
+    : orders.find(
+        (order) =>
+          !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
+      );
   const driver = activeOrder?.driver ?? null;
   const status = {
-    label: activeOrder?.status?.replaceAll('_', ' ') ?? 'No active order',
+    label: activeOrder?.status?.replaceAll("_", " ") ?? "No active order",
     etaMinutes: activeOrder?.scheduledPickupAt ? 12 : 0,
   };
   const orderDetails = {
-    service: activeOrder?.serviceType ? activeOrder.serviceType.replaceAll('_', ' ') : 'Unavailable',
+    service: activeOrder?.serviceType
+      ? activeOrder.serviceType.replaceAll("_", " ")
+      : "Unavailable",
     address: {
-      street: activeOrder?.address ?? 'No address available',
-      city: '',
+      street: activeOrder?.address ?? "No address available",
+      city: "",
     },
-    instructions: activeOrder?.specialInstructions ?? 'No special instructions',
+    instructions: activeOrder?.specialInstructions ?? "No special instructions",
     pricing: {
       bags: activeOrder?.bags ?? 0,
       bagPrice: activeOrder?.pricePerBag ?? 0,
@@ -68,24 +159,29 @@ export default function LiveTrackingScreen() {
     },
   };
 
-  const total = orderDetails.pricing.bags * orderDetails.pricing.bagPrice + orderDetails.pricing.tip;
+  const total =
+    orderDetails.pricing.bags * orderDetails.pricing.bagPrice +
+    orderDetails.pricing.tip;
 
   useOrderSocket({
-    role: 'CUSTOMER',
+    role: "CUSTOMER",
     orderId: activeOrder?._id,
     onCustomerUpdate: refetch,
   });
 
   return (
     <ScrollView className="flex-1">
-      <SafeAreaView edges={['bottom']} className="bg-[#F6F9FF] flex-1">
+      <SafeAreaView edges={["bottom"]} className="bg-[#F6F9FF] flex-1">
         {/* Map Placeholder */}
         <View className="h-[300px] bg-blue-100 relative">
           {/* Fake Map Grid Background */}
           <View className="absolute inset-0 opacity-40">
             <View className="flex-1 flex-row flex-wrap">
               {[...Array(100)]?.map((_, i) => (
-                <View key={i} className="w-[10%] h-[10%] border border-blue-200" />
+                <View
+                  key={i}
+                  className="w-[10%] h-[10%] border border-blue-200"
+                />
               ))}
             </View>
           </View>
@@ -126,7 +222,7 @@ export default function LiveTrackingScreen() {
           <View className="absolute left-4 bottom-4 bg-white px-4 py-2 rounded-xl shadow">
             <Text className="text-sm text-gray-500">Estimated Ready Time</Text>
             <Text className="font-bold text-[22px]">
-              {status.etaMinutes ? `${status.etaMinutes} mins` : '--'}
+              {status.etaMinutes ? `${status.etaMinutes} mins` : "--"}
             </Text>
           </View>
         </View>
@@ -141,16 +237,24 @@ export default function LiveTrackingScreen() {
           </View>
           <View className="bg-white rounded-2xl p-4 shadow">
             {buildSteps(activeOrder?.status)?.map((step, index) => {
-              if (step.status === 'done') {
+              if (step.status === "done") {
                 return (
                   <View key={step.key}>
                     <View className="flex-row">
                       <View className="items-center mr-3">
                         <View className="w-9 h-9 rounded-full bg-green-200 justify-center items-center">
-                          {step.title === 'Delivered' ? (
-                            <Ionicons name="home-outline" size={22} color={'green'} />
+                          {step.title === "Delivered" ? (
+                            <Ionicons
+                              name="home-outline"
+                              size={22}
+                              color={"green"}
+                            />
                           ) : (
-                            <Ionicons name="checkmark-circle-outline" size={22} color={'green'} />
+                            <Ionicons
+                              name="checkmark-circle-outline"
+                              size={22}
+                              color={"green"}
+                            />
                           )}
                         </View>
                         <View className="w-[2px] flex-1 bg-green-500 mt-1" />
@@ -158,30 +262,40 @@ export default function LiveTrackingScreen() {
 
                       <View>
                         <Text className="font-medium">{step.title}</Text>
-                        <Text className="text-xs text-gray-500">{step.time}</Text>
+                        <Text className="text-xs text-gray-500">
+                          {/* {step.time} */}
+                        </Text>
                       </View>
                     </View>
-                    {step.title !== 'Delivered' ? (
+                    {step.title !== "Delivered" ? (
                       <View className="bg-green-200 h-[30px] w-[1px] ml-4 my-2 rounded-full" />
                     ) : null}
                   </View>
                 );
               }
 
-              if (step.status === 'active') {
+              if (step.status === "active") {
                 return (
                   <View key={step.key} className="flex-row mb-6">
                     <View className="items-center mr-3">
                       {/* loader icon */}
                       <View className="w-9 h-9 rounded-full bg-blue-100 justify-center items-center">
-                        <Ionicons name="refresh-outline" size={22} color="#3B82F6" />
+                        <Ionicons
+                          name="refresh-outline"
+                          size={22}
+                          color="#3B82F6"
+                        />
                       </View>
                     </View>
 
                     <View>
-                      <Text className="font-medium text-black">{step.title}</Text>
+                      <Text className="font-medium text-black">
+                        {step.title}
+                      </Text>
                       <Text className="text-xs text-black">In Progress</Text>
-                      <Text className="text-xs text-blue-500 font-semibold">{step.subtitle}</Text>
+                      <Text className="text-xs text-blue-500 font-semibold">
+                        {/* {step.subtitle} */}
+                      </Text>
                     </View>
                   </View>
                 );
@@ -191,7 +305,11 @@ export default function LiveTrackingScreen() {
                 <View key={step.key} className="flex-row mb-5 opacity-40">
                   <View className="items-center mr-3">
                     <View className="w-9 h-9 rounded-full bg-gray-300 justify-center items-center">
-                      <AntDesign name={step.icon as any} size={16} color="#000" />
+                      <Ionicons
+                        name={step.icon as any}
+                        size={20}
+                        color="#000"
+                      />
                     </View>
                   </View>
                   <Text className="font-medium">{step.title}</Text>
@@ -205,16 +323,22 @@ export default function LiveTrackingScreen() {
         <View className="bg-white rounded-2xl p-4 shadow mx-5 mb-5 mt-4">
           <View className="flex-row items-center mb-3">
             <Image
-              source={driver?.image ? { uri: driver.image } : require('@/assets/images/profile.png')}
+              source={
+                driver?.image
+                  ? { uri: driver.image }
+                  : require("@/assets/images/profile.png")
+              }
               style={{ width: 40, height: 40, borderRadius: 25 }}
               resizeMode="cover"
             />
             <View className="flex-1 ml-2">
-              <Text className="font-semibold text-base">{driver?.name ?? 'Driver'}</Text>
+              <Text className="font-semibold text-base">
+                {driver?.name ?? "Driver"}
+              </Text>
               <View className="flex-row items-center mt-1">
                 <RatingStars rating={driver ? 4.9 : 0} />
                 <Text className="text-sm ml-1 text-gray-600">
-                  {driver ? 'Assigned driver' : 'No driver yet'}
+                  {driver ? "Assigned driver" : "No driver yet"}
                 </Text>
               </View>
             </View>
@@ -222,19 +346,22 @@ export default function LiveTrackingScreen() {
             <TouchableOpacity
               onPress={() =>
                 router.push({
-                  pathname: '/(common)/DriverDetails' as any,
+                  pathname: "/(common)/DriverDetails" as any,
                   params: {
-                    orderId: String(activeOrder?._id ?? ''),
-                    name: driver?.name ?? 'Driver',
-                    image: driver?.image ?? '',
-                    rating: '4.9',
-                    trips: '0',
-                    vehicle: 'Vehicle info unavailable',
+                    orderId: String(activeOrder?._id ?? ""),
+                    name: driver?.name ?? "Driver",
+                    image: driver?.image ?? "",
+                    rating: "4.9",
+                    trips: "0",
+                    vehicle: "Vehicle info unavailable",
                   },
                 })
               }
             >
-              <Text style={{ color: Colors.primary }} className="text-sm font-semibold text-right">
+              <Text
+                style={{ color: Colors.primary }}
+                className="text-sm font-semibold text-right"
+              >
                 View Details
               </Text>
             </TouchableOpacity>
@@ -244,18 +371,21 @@ export default function LiveTrackingScreen() {
             <TouchableOpacity
               onPress={() =>
                 router.push({
-                  pathname: '/(common)/ChatScreen' as any,
+                  pathname: "/(common)/ChatScreen" as any,
                   params: {
-                    orderId: String(activeOrder?._id ?? ''),
-                    name: driver?.name ?? 'Driver',
-                    avatar: driver?.image ?? '',
+                    orderId: String(activeOrder?._id ?? ""),
+                    name: driver?.name ?? "Driver",
+                    avatar: driver?.image ?? "",
                   },
                 })
               }
               className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center mr-2"
             >
               <AntDesign name="message" size={18} color={Colors.primary} />
-              <Text style={{ color: Colors.primary }} className="ml-2 font-semibold">
+              <Text
+                style={{ color: Colors.primary }}
+                className="ml-2 font-semibold"
+              >
                 Message
               </Text>
             </TouchableOpacity>
@@ -263,14 +393,20 @@ export default function LiveTrackingScreen() {
             <TouchableOpacity
               onPress={() =>
                 router.push({
-                  pathname: '/(common)/CallScreen' as any,
-                  params: { name: driver?.name ?? 'Driver', image: driver?.image ?? '' },
+                  pathname: "/(common)/CallScreen" as any,
+                  params: {
+                    name: driver?.name ?? "Driver",
+                    image: driver?.image ?? "",
+                  },
                 })
               }
               className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center ml-2"
             >
               <Ionicons name="call-outline" size={18} color={Colors.primary} />
-              <Text style={{ color: Colors.primary }} className="ml-2 font-semibold">
+              <Text
+                style={{ color: Colors.primary }}
+                className="ml-2 font-semibold"
+              >
                 Call Driver
               </Text>
             </TouchableOpacity>
@@ -292,16 +428,21 @@ export default function LiveTrackingScreen() {
             </View>
 
             <View className="mb-3">
-              <Text className="text-gray-500 text-xs">Special Instructions</Text>
+              <Text className="text-gray-500 text-xs">
+                Special Instructions
+              </Text>
               <Text className="font-medium">{orderDetails.instructions}</Text>
             </View>
 
             <View className="pt-3">
               <View className="border-t border-b border-gray-200 py-3 flex-row justify-between mb-2">
                 <Text className="text-gray-600">
-                  {orderDetails.pricing.bags} bags × ${orderDetails.pricing.bagPrice}
+                  {orderDetails.pricing.bags} bags × $
+                  {orderDetails.pricing.bagPrice}
                 </Text>
-                <Text>${orderDetails.pricing.bags * orderDetails.pricing.bagPrice}</Text>
+                <Text>
+                  ${orderDetails.pricing.bags * orderDetails.pricing.bagPrice}
+                </Text>
               </View>
 
               <View className="flex-row justify-between mb-2">
@@ -322,11 +463,11 @@ export default function LiveTrackingScreen() {
           <TouchableOpacity
             onPress={() =>
               router.push({
-                pathname: '/(common)/DeliveredSuccessScreen' as any,
+                pathname: "/(common)/DeliveredSuccessScreen" as any,
                 params: {
-                  orderId: String(activeOrder?._id ?? ''),
-                  name: driver?.name ?? 'Driver',
-                  image: driver?.image ?? '',
+                  orderId: String(activeOrder?._id ?? ""),
+                  name: driver?.name ?? "Driver",
+                  image: driver?.image ?? "",
                   service: orderDetails.service,
                   address: orderDetails.address.street,
                   bags: String(orderDetails.pricing.bags),
@@ -338,7 +479,9 @@ export default function LiveTrackingScreen() {
             className="bg-green-600 gap-2 rounded-xl py-3 flex-row justify-center items-center"
           >
             <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
-            <Text className="text-white text-lg font-semibold">Mark as Delivered</Text>
+            <Text className="text-white text-lg font-semibold">
+              Mark as Delivered
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>

@@ -20,6 +20,9 @@ export default function OrderDetails() {
     skip: !id,
   });
 
+  console.log("order detials: ", data);
+  
+
   const order = data?.data;
   const driver = order?.driver;
 

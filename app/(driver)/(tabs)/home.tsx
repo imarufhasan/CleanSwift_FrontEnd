@@ -689,7 +689,7 @@ export default function HomeScreen() {
           )}
 
           {availableOrder.length > 0 ? (
-            availableOrder.map((job) => (
+            availableOrder?.slice(0,2)?.map((job) => (
               <View
                 key={job._id}
                 className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100"

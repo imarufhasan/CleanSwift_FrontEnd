@@ -5,7 +5,7 @@ import Colors from '@/constants/color';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGetMyDriverJobsQuery } from '@/src/services/driverApi';
 import type { Order } from '@/src/services/orderApi';
-import { useGetPricingQuery } from '@/src/services/pricingApi';
+import { livePricingQueryOptions, useGetPricingQuery } from '@/src/services/pricingApi';
 import { formatOrderNumber } from '@/src/utils/orderNumber';
 
 const getEffectiveBagCount = (order?: Order) =>
@@ -18,7 +18,7 @@ type Props = {
 
 export default function DeliveryStep({ order, onStartOutForDelivery }: Props) {
   const { data: myJobsRes } = useGetMyDriverJobsQuery();
-  const { data: pricingRes } = useGetPricingQuery();
+  const { data: pricingRes } = useGetPricingQuery(undefined, livePricingQueryOptions);
   const driverEarningPercentage = pricingRes?.data?.driverEarningPercentage ?? 70;
   const activeJob =
     order ??

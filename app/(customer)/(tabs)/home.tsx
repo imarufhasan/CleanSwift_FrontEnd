@@ -24,7 +24,7 @@ import {
   useGetMyOrdersQuery,
   type Order,
 } from "@/src/services/orderApi";
-import { useGetPricingQuery } from "@/src/services/pricingApi";
+import { livePricingQueryOptions, useGetPricingQuery } from "@/src/services/pricingApi";
 import { useOrderSocket } from "@/src/hooks/useOrderSocket";
 
 const getOrderProgress = (order: Order) => {
@@ -114,7 +114,7 @@ export default function HomeScreen() {
     isFetching: isOrdersFetching,
     refetch: refetchOrders,
   } = useGetMyOrdersQuery();
-  const { data: pricingRes } = useGetPricingQuery();
+  const { data: pricingRes } = useGetPricingQuery(undefined, livePricingQueryOptions);
   const [createOrder, { isLoading: isCreatingOrder }] =
     useCreateOrderMutation();
 

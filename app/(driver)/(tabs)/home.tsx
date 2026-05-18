@@ -31,9 +31,15 @@ import {
 } from "@/src/services/driverApi";
 import type { Order } from "@/src/services/orderApi";
 import { useOrderSocket } from "@/src/hooks/useOrderSocket";
-import { useGetPricingQuery } from "@/src/services/pricingApi";
+import { livePricingQueryOptions, useGetPricingQuery } from "@/src/services/pricingApi";
 import { formatOrderNumber } from "@/src/utils/orderNumber";
 import { useGetDriverRatingsQuery } from "@/src/services/ratingApi";
+
+const getEffectiveBagCount = (order: Order) =>
+  Math.max(0, order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0);
+
+const getEffectiveOrderTotal = (order: Order) =>
+  getEffectiveBagCount(order) * Number(order.pricePerBag ?? 0);
 
 // Sub-component to handle per-order animated progress bar
 function ActiveOrderCard({
@@ -82,7 +88,7 @@ function ActiveOrderCard({
               </View>
             </View>
             <Text className="text-sm text-gray-500 mb-3">
-              {order.bags} bags • ${order.total}.00
+              {getEffectiveBagCount(order)} bags • ${getEffectiveOrderTotal(order).toFixed(2)}
             </Text>
           </View>
         </View>
@@ -165,7 +171,7 @@ export default function HomeScreen() {
   const { data: myJobsRes, refetch: refetchMyJobs } = useGetMyDriverJobsQuery();
   const { data: availableJobsRes, refetch: refetchAvailableJobs } =
     useGetAvailableJobsQuery();
-  const { data: pricingRes } = useGetPricingQuery();
+  const { data: pricingRes } = useGetPricingQuery(undefined, livePricingQueryOptions);
   const [updateAvailability, { isLoading: isUpdatingAvailability }] =
     useUpdateDriverAvailabilityMutation();
   const [acceptJob, { isLoading: isAcceptingJob }] = useAcceptJobMutation();
@@ -270,7 +276,7 @@ export default function HomeScreen() {
 
   const completedTodayEarnings = completedTodayJobs.reduce(
     (sum, order) =>
-      sum + (Number(order.total ?? 0) * Number(driverEarningPercentage)) / 100,
+      sum + (getEffectiveOrderTotal(order) * Number(driverEarningPercentage)) / 100,
     0,
   );
 

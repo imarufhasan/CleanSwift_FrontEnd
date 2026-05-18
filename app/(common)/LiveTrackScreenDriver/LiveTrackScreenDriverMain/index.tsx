@@ -21,7 +21,7 @@ import {
   useUpdateDriverJobStageMutation,
 } from "@/src/services/driverApi";
 import { useGetOrderByIdQuery, type Order } from "@/src/services/orderApi";
-import { useGetPricingQuery } from "@/src/services/pricingApi";
+import { livePricingQueryOptions, useGetPricingQuery } from "@/src/services/pricingApi";
 import { formatOrderNumber } from "@/src/utils/orderNumber";
 
 type DriverStage = "PICKUP" | "WASHING" | "DRYING" | "DELIVERY";
@@ -62,7 +62,7 @@ export default function LiveTrackScreenDriverMain() {
     isFetching: isFetchingJobs,
     refetch: refetchJobs,
   } = useGetMyDriverJobsQuery();
-  const { data: pricingRes } = useGetPricingQuery();
+  const { data: pricingRes } = useGetPricingQuery(undefined, livePricingQueryOptions);
   const [updateDriverJobStage, { isLoading: isUpdatingStage }] =
     useUpdateDriverJobStageMutation();
   const [activeStep, setActiveStep] = useState(0);

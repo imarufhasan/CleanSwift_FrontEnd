@@ -6,13 +6,19 @@ import { useRouter } from 'expo-router';
 import RatingStars from '@/components/home/RatingStars';
 import Colors from '@/constants/color';
 import { useGetMyDriverJobsQuery } from '@/src/services/driverApi';
-import { useGetPricingQuery } from '@/src/services/pricingApi';
+import { livePricingQueryOptions, useGetPricingQuery } from '@/src/services/pricingApi';
 import { formatOrderNumber } from '@/src/utils/orderNumber';
+
+const getEffectiveBagCount = (order: { bagCountAtDelivery?: number; bagCountAtPickup?: number; bags?: number }) =>
+  Math.max(0, order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0);
+
+const getEffectiveOrderTotal = (order: { pricePerBag?: number; bagCountAtDelivery?: number; bagCountAtPickup?: number; bags?: number; total?: number }) =>
+  getEffectiveBagCount(order) * Number(order.pricePerBag ?? order.total ?? 0);
 
 export default function Index() {
   const router = useRouter();
   const { data: jobsRes } = useGetMyDriverJobsQuery();
-  const { data: pricingRes } = useGetPricingQuery();
+  const { data: pricingRes } = useGetPricingQuery(undefined, livePricingQueryOptions);
   const driverEarningPercentage = pricingRes?.data?.driverEarningPercentage ?? 70;
   const completedJobs = (jobsRes && jobsRes.data ? jobsRes.data : []).filter(job =>
     ['DELIVERED', 'COMPLETED'].includes(job.status),
@@ -20,16 +26,16 @@ export default function Index() {
   const recentOrders = completedJobs.slice(0, 5).map(order => ({
     id: order._id,
     quantity: order.bags,
-    price: order.total,
+    price: getEffectiveOrderTotal(order),
     rating: 5,
     status: order.status.replaceAll('_', ' '),
     date: order.createdAt ? new Date(order.createdAt).toLocaleDateString() : '',
   }));
   const todayEarning = completedJobs
     .filter(job => job.createdAt && new Date(job.createdAt).toDateString() === new Date().toDateString())
-    .reduce((sum, job) => sum + (Number(job.total ?? 0) * driverEarningPercentage) / 100, 0);
+    .reduce((sum, job) => sum + (getEffectiveOrderTotal(job) * driverEarningPercentage) / 100, 0);
   const weeklyEarning = completedJobs.reduce(
-    (sum, job) => sum + (Number(job.total ?? 0) * driverEarningPercentage) / 100,
+    (sum, job) => sum + (getEffectiveOrderTotal(job) * driverEarningPercentage) / 100,
     0,
   );
 

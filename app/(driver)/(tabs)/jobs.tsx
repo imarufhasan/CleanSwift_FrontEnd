@@ -21,7 +21,7 @@ import {
   useGetMyDriverProfileQuery,
 } from "@/src/services/driverApi";
 import type { Order } from "@/src/services/orderApi";
-import { useGetPricingQuery } from "@/src/services/pricingApi";
+import { livePricingQueryOptions, useGetPricingQuery } from "@/src/services/pricingApi";
 import { formatOrderNumber } from "@/src/utils/orderNumber";
 import RecentOrdersList from "@/components/home/components/RecentOrdersList";
 
@@ -45,11 +45,16 @@ const formatPickupTime = (order: Order) =>
     ? new Date(order.scheduledPickupAt).toLocaleString()
     : "ASAP";
 
+const getEffectiveBagCount = (order: Order) =>
+  Math.max(0, order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0);
+
+const getEffectiveOrderTotal = (order: Order) => getEffectiveBagCount(order) * Number(order.pricePerBag ?? 0);
+
 const mapOrderToJob = (order: Order): JobCardData => ({
   id: order._id,
   address: order.address ?? "Pickup address",
   time: formatPickupTime(order),
-  price: `$${Number(order.total ?? 0).toFixed(2)}`,
+  price: `$${getEffectiveOrderTotal(order).toFixed(2)}`,
   bags: `${order.bags} Bags`,
   distance: order.pickupType === "ASAP" ? "ASAP" : "Scheduled",
   pickupTypeLabel: order.pickupType === "ASAP" ? "ASAP" : "Scheduled",
@@ -301,7 +306,7 @@ export default function JobsScreen() {
     refetch: refetchMyJobs,
   } = useGetMyDriverJobsQuery();
   const { data: driverProfileRes } = useGetMyDriverProfileQuery();
-  const { data: pricingRes } = useGetPricingQuery();
+  const { data: pricingRes } = useGetPricingQuery(undefined, livePricingQueryOptions);
   const [acceptJob, { isLoading: isAccepting }] = useAcceptJobMutation();
   const [declineJob, { isLoading: isDeclining }] = useDeclineJobMutation();
   const driverEarningPercentage =

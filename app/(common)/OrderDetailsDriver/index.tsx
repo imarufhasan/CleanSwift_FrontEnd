@@ -12,6 +12,12 @@ const serviceLabel: Record<string, string> = {
 
 const userImage = (image?: string) => (image ? { uri: image } : require('@/assets/images/profile.png'));
 
+const getEffectiveBagCount = (order?: { bagCountAtDelivery?: number; bagCountAtPickup?: number; bags?: number }) =>
+  Math.max(0, order?.bagCountAtDelivery ?? order?.bagCountAtPickup ?? order?.bags ?? 0);
+
+const getEffectiveOrderTotal = (order?: { pricePerBag?: number; bagCountAtDelivery?: number; bagCountAtPickup?: number; bags?: number }) =>
+  getEffectiveBagCount(order) * Number(order?.pricePerBag ?? 0);
+
 export default function OrderDetailsDriver() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -131,15 +137,15 @@ export default function OrderDetailsDriver() {
           <View className="border-t border-gray-200 pt-3 space-y-2">
             <View className="flex-row justify-between">
               <Text className="text-gray-500">
-                {order.bags} bags x ${order.pricePerBag}
+                {getEffectiveBagCount(order)} bags x ${order.pricePerBag}
               </Text>
-              <Text className="text-gray-700">${(order.bags * order.pricePerBag).toFixed(2)}</Text>
+              <Text className="text-gray-700">${getEffectiveOrderTotal(order).toFixed(2)}</Text>
             </View>
 
             <View className="flex-row justify-between border-t border-gray-200 pt-3 mt-2">
               <Text className="font-bold">Total</Text>
               <Text className="font-bold" style={{ color: Colors.primary }}>
-                ${Number(order.total ?? 0).toFixed(2)}
+                ${getEffectiveOrderTotal(order).toFixed(2)}
               </Text>
             </View>
           </View>

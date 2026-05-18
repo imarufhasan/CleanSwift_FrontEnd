@@ -12,6 +12,12 @@ type ApiResponse<T> = {
   data: T;
 };
 
+export const livePricingQueryOptions = {
+  pollingInterval: 30000,
+  refetchOnFocus: true,
+  refetchOnReconnect: true,
+} as const;
+
 export const pricingApi = api.injectEndpoints({
   endpoints: builder => ({
     getPricing: builder.query<ApiResponse<Pricing | null>, void>({

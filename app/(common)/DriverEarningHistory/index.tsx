@@ -6,30 +6,40 @@ import { useRouter } from 'expo-router';
 import RatingStars from '@/components/home/RatingStars';
 import Colors from '@/constants/color';
 import { useGetMyDriverJobsQuery } from '@/src/services/driverApi';
-import { useGetPricingQuery } from '@/src/services/pricingApi';
 import { formatOrderNumber } from '@/src/utils/orderNumber';
+
+const getEffectiveBagCount = (order: { bagCountAtDelivery?: number; bagCountAtPickup?: number; bags?: number }) =>
+  Math.max(0, order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0);
+
+const getEffectiveOrderTotal = (order: { pricePerBag?: number; bagCountAtDelivery?: number; bagCountAtPickup?: number; bags?: number; total?: number }) =>
+  getEffectiveBagCount(order) * Number(order.pricePerBag ?? order.total ?? 0);
+
+const getOrderDriverEarningPercentage = (order: { driverEarningPercentage?: number }) =>
+  Number(order.driverEarningPercentage ?? 70);
+
+const getDriverEarning = (order: { pricePerBag?: number; bagCountAtDelivery?: number; bagCountAtPickup?: number; bags?: number; total?: number; driverEarningPercentage?: number }) =>
+  (getEffectiveOrderTotal(order) * getOrderDriverEarningPercentage(order)) / 100;
 
 export default function Index() {
   const router = useRouter();
   const { data: jobsRes } = useGetMyDriverJobsQuery();
-  const { data: pricingRes } = useGetPricingQuery();
-  const driverEarningPercentage = pricingRes?.data?.driverEarningPercentage ?? 70;
   const completedJobs = (jobsRes && jobsRes.data ? jobsRes.data : []).filter(job =>
     ['DELIVERED', 'COMPLETED'].includes(job.status),
   );
   const recentOrders = completedJobs.slice(0, 5).map(order => ({
     id: order._id,
     quantity: order.bags,
-    price: order.total,
+    price: getEffectiveOrderTotal(order),
+    earning: getDriverEarning(order),
     rating: 5,
     status: order.status.replaceAll('_', ' '),
     date: order.createdAt ? new Date(order.createdAt).toLocaleDateString() : '',
   }));
   const todayEarning = completedJobs
     .filter(job => job.createdAt && new Date(job.createdAt).toDateString() === new Date().toDateString())
-    .reduce((sum, job) => sum + (Number(job.total ?? 0) * driverEarningPercentage) / 100, 0);
+    .reduce((sum, job) => sum + getDriverEarning(job), 0);
   const weeklyEarning = completedJobs.reduce(
-    (sum, job) => sum + (Number(job.total ?? 0) * driverEarningPercentage) / 100,
+    (sum, job) => sum + getDriverEarning(job),
     0,
   );
 
@@ -85,7 +95,7 @@ export default function Index() {
 
               <View className="items-end justify-center">
                 <Text className="text-green-600 text-lg font-bold">
-                  ${((Number(order.price) * driverEarningPercentage) / 100).toFixed(2)}
+                  ${order.earning.toFixed(2)}
                 </Text>
                 <View className="flex-row items-center">
                   <RatingStars rating={order.rating} />

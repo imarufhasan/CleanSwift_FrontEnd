@@ -50,6 +50,8 @@ export function useOrderSocket({
 
       if (role === 'CUSTOMER') {
         socket.on('order:driver:accepted', () => onCustomerUpdate?.());
+        socket.on('order:assigned', () => onCustomerUpdate?.());
+        socket.on('order:stage:updated', () => onCustomerUpdate?.());
         socket.on('order:tracking:location', () => onCustomerUpdate?.());
       }
 

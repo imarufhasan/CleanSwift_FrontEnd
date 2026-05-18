@@ -8,7 +8,7 @@ import type { Order } from "@/src/services/orderApi";
 type Props = {
   order?: Order;
   isUpdating?: boolean;
-  onStartDelivery: () => Promise<void> | void;
+  onStartDelivery: () => Promise<boolean | void> | boolean | void;
 };
 
 const formatDateTime = (value?: string) => {
@@ -111,7 +111,7 @@ export default function FoldingStep({
           ) : (
             <>
               <Text className="text-white font-semibold ml-2">
-                Start Delivery
+                Start Folding
               </Text>
               <FontAwesome6 name="arrow-right-long" size={18} color="white" />
             </>

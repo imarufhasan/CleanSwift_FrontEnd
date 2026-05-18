@@ -9,7 +9,7 @@ import type { Order } from "@/src/services/orderApi";
 type Props = {
   order?: Order;
   isUpdating?: boolean;
-  onStartDrying: () => Promise<void> | void;
+  onStartDrying: () => Promise<boolean | void> | boolean | void;
 };
 
 const formatDateTime = (value?: string) => {
@@ -74,6 +74,12 @@ export default function DryingStep({
           <Text className="text-sm text-gray-500 font-medium">Washing Started</Text>
           <Text className="text-sm text-black font-semibold">
             {formatDateTime(order && order.timeline ? order.timeline.washingDryingAt : undefined)}
+          </Text>
+        </View>
+        <View className="flex-row items-center justify-between mt-2">
+          <Text className="text-sm text-gray-500 font-medium">Now Drying</Text>
+          <Text className="text-sm text-black font-semibold">
+            {formatDateTime(order && order.timeline ? order.timeline.dryingAt : undefined)}
           </Text>
         </View>
       </View>

@@ -24,37 +24,53 @@ import {
   useGetMyOrdersQuery,
   type Order,
 } from "@/src/services/orderApi";
-import { useGetPricingQuery } from "@/src/services/pricingApi";
+import { livePricingQueryOptions, useGetPricingQuery } from "@/src/services/pricingApi";
 import { useOrderSocket } from "@/src/hooks/useOrderSocket";
 
-const getOrderProgress = (status?: string) => {
-  const steps = ["Requested", "Picked Up", "Washing", "Delivery"];
-  const indexByStatus: Record<string, number> = {
-    REQUESTED: 0,
-    DRIVER_ASSIGNED: 0,
-    PICKED_UP: 1,
-    WASHING_DRYING: 2,
-    OUT_FOR_DELIVERY: 3,
-    DELIVERED: 3,
-    COMPLETED: 3,
-  };
-  const currentStep = indexByStatus[status ?? "REQUESTED"] ?? 0;
+const getOrderProgress = (order: Order) => {
+  const steps = [
+    "Requested",
+    "Picked Up",
+    "Washing",
+    "Drying",
+    "Folding",
+    "Delivery",
+  ];
+  const currentStep =
+    order.status === "OUT_FOR_DELIVERY" ||
+    order.status === "DELIVERED" ||
+    order.status === "COMPLETED"
+      ? 5
+      : order.status === "FOLDING"
+        ? 4
+        : order.status === "DRYING"
+          ? 3
+      : order.timeline?.foldingAt
+        ? 4
+        : order.timeline?.dryingAt
+          ? 3
+          : order.status === "WASHING_DRYING"
+            ? 2
+            : order.status === "PICKED_UP"
+              ? 1
+              : 0;
 
   return {
     steps,
     currentStep,
-    progress: Math.min(100, Math.max(15, (currentStep + 1) * 25)),
+    progress: Math.min(100, Math.max(15, Math.round(((currentStep + 1) / steps.length) * 100))),
   };
 };
 
 const mapOrderToCard = (order: Order) => {
-  const progress = getOrderProgress(order.status);
+  const progress = getOrderProgress(order);
+  const quantity = Math.max(0, order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0);
 
   return {
     id: order._id,
     status: order.status.replaceAll("_", " "),
-    quantity: order.bags,
-    price: order.total,
+    quantity,
+    price: quantity * Number(order.pricePerBag ?? 0),
     estimatedDelivery: order.scheduledPickupAt
       ? new Date(order.scheduledPickupAt).toLocaleString()
       : "As soon as possible",
@@ -64,8 +80,8 @@ const mapOrderToCard = (order: Order) => {
 
 const mapOrderToRecent = (order: Order) => ({
   id: order._id,
-  quantity: order.bags,
-  price: order.total,
+  quantity: Math.max(0, order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0),
+  price: Math.max(0, order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0) * Number(order.pricePerBag ?? 0),
   rating: 5,
   status: order.status.replaceAll("_", " "),
   date: order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "",
@@ -99,7 +115,7 @@ export default function HomeScreen() {
     isFetching: isOrdersFetching,
     refetch: refetchOrders,
   } = useGetMyOrdersQuery();
-  const { data: pricingRes } = useGetPricingQuery();
+  const { data: pricingRes } = useGetPricingQuery(undefined, livePricingQueryOptions);
   const [createOrder, { isLoading: isCreatingOrder }] =
     useCreateOrderMutation();
 

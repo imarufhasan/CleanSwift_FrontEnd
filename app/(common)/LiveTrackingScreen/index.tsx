@@ -5,61 +5,35 @@ import Colors from "@/constants/color";
 import RatingStars from "@/components/home/RatingStars";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useGetMyOrdersQuery } from "@/src/services/orderApi";
+import { useGetMyOrdersQuery, type Order } from "@/src/services/orderApi";
 import { useOrderSocket } from "@/src/hooks/useOrderSocket";
 import { useLocalSearchParams } from "expo-router";
+import { formatOrderNumber } from "@/src/utils/orderNumber";
 
-const buildSteps2 = (status?: string) => {
-  const currentByStatus: Record<string, number> = {
-    REQUESTED: 0,
-    DRIVER_ASSIGNED: 0,
-    PICKED_UP: 1,
-    WASHING_DRYING: 2,
-    OUT_FOR_DELIVERY: 3,
-    DELIVERED: 4,
-    COMPLETED: 4,
-  };
-  const current = currentByStatus[status ?? "REQUESTED"] ?? 0;
+const buildSteps = (order?: Order) => {
+  const current = !order
+    ? 0
+    : order.status === "DELIVERED" || order.status === "COMPLETED"
+      ? 7
+    : order.status === "OUT_FOR_DELIVERY"
+        ? 6
+        : order.status === "FOLDING"
+          ? 5
+          : order.status === "DRYING"
+            ? 4
+        : order.timeline?.foldingAt
+          ? 5
+          : order.timeline?.dryingAt
+            ? 4
+            : order.status === "WASHING_DRYING"
+              ? 3
+              : order.status === "PICKED_UP"
+                ? 2
+                : order.status === "DRIVER_ASSIGNED"
+                  ? 1
+                  : 0;
 
-  return [
-    { key: "requested", title: "Requested", time: "", status: "done" },
-    { key: "picked", title: "Picked Up", time: "", status: "done" },
-    {
-      key: "washing",
-      title: "Washing",
-      time: "",
-      subtitle: "Currently in progress",
-      status: "active",
-    },
-    {
-      key: "delivery",
-      title: "Out for Delivery",
-      time: "",
-      status: "pending",
-      icon: "truck",
-    },
-    {
-      key: "delivered",
-      title: "Delivered",
-      time: "",
-      status: "pending",
-      icon: "home",
-    },
-  ]?.map((step, index) => ({
-    ...step,
-    status:
-      index < current
-        ? "done"
-        : index === current
-          ? step.status === "pending"
-            ? "active"
-            : step.status
-          : "pending",
-  }));
-};
-
-const buildSteps = (status?: string) => {
-  const order = [
+  const orderSteps = [
     {
       key: "requested",
       title: "Requested",
@@ -98,6 +72,18 @@ const buildSteps = (status?: string) => {
       icon: "water-outline",
     },
     {
+      key: "drying",
+      title: "Drying",
+      match: ["OUT_FOR_DELIVERY", "DELIVERED"],
+      icon: "cloud-outline",
+    },
+    {
+      key: "folding",
+      title: "Folding",
+      match: ["OUT_FOR_DELIVERY", "DELIVERED"],
+      icon: "inbox-outline",
+    },
+    {
       key: "delivery",
       title: "Out for Delivery",
       match: ["OUT_FOR_DELIVERY", "DELIVERED"],
@@ -111,9 +97,9 @@ const buildSteps = (status?: string) => {
     },
   ];
 
-  return order.map((step) => {
-    const isDone = step.match.includes(status ?? "REQUESTED");
-    const isActive = !isDone && step.match[0] === status;
+  return orderSteps.map((step, index) => {
+    const isDone = index < current;
+    const isActive = index === current;
 
     return {
       ...step,
@@ -122,13 +108,14 @@ const buildSteps = (status?: string) => {
   });
 };
 
+const getEffectiveBagCount = (order?: Order) =>
+  Math.max(0, order?.bagCountAtDelivery ?? order?.bagCountAtPickup ?? order?.bags ?? 0);
+
 export default function LiveTrackingScreen() {
   const router = useRouter();
   const { orderId } = useLocalSearchParams<{ orderId?: string }>();
   const { data: ordersRes, refetch } = useGetMyOrdersQuery();
   const orders = ordersRes?.data ?? [];
-  console.log("tracking order details: ", orders);
-
   const clickedOrder = orderId
     ? orders.find((order) => order._id === orderId)
     : undefined;
@@ -139,6 +126,14 @@ export default function LiveTrackingScreen() {
           !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
       );
   const driver = activeOrder?.driver ?? null;
+  const driverName =
+    activeOrder && typeof activeOrder.driver === 'object' && activeOrder.driver
+      ? activeOrder.driver.name ?? 'Driver'
+      : 'Driver';
+  const driverImage =
+    activeOrder && typeof activeOrder.driver === 'object' && activeOrder.driver
+      ? activeOrder.driver.image ?? ''
+      : '';
   const status = {
     label: activeOrder?.status?.replaceAll("_", " ") ?? "No active order",
     etaMinutes: activeOrder?.scheduledPickupAt ? 12 : 0,
@@ -153,7 +148,7 @@ export default function LiveTrackingScreen() {
     },
     instructions: activeOrder?.specialInstructions ?? "No special instructions",
     pricing: {
-      bags: activeOrder?.bags ?? 0,
+      bags: getEffectiveBagCount(activeOrder),
       bagPrice: activeOrder?.pricePerBag ?? 0,
       tip: 0,
     },
@@ -236,26 +231,18 @@ export default function LiveTrackingScreen() {
             </Text>
           </View>
           <View className="bg-white rounded-2xl p-4 shadow">
-            {buildSteps(activeOrder?.status)?.map((step, index) => {
+              {buildSteps(activeOrder)?.map((step, index) => {
               if (step.status === "done") {
                 return (
                   <View key={step.key}>
                     <View className="flex-row">
                       <View className="items-center mr-3">
                         <View className="w-9 h-9 rounded-full bg-green-200 justify-center items-center">
-                          {step.title === "Delivered" ? (
-                            <Ionicons
-                              name="home-outline"
-                              size={22}
-                              color={"green"}
-                            />
-                          ) : (
-                            <Ionicons
-                              name="checkmark-circle-outline"
-                              size={22}
-                              color={"green"}
-                            />
-                          )}
+                          <Ionicons
+                            name={step.icon as any}
+                            size={22}
+                            color={"green"}
+                          />
                         </View>
                         <View className="w-[2px] flex-1 bg-green-500 mt-1" />
                       </View>
@@ -278,10 +265,9 @@ export default function LiveTrackingScreen() {
                 return (
                   <View key={step.key} className="flex-row mb-6">
                     <View className="items-center mr-3">
-                      {/* loader icon */}
                       <View className="w-9 h-9 rounded-full bg-blue-100 justify-center items-center">
                         <Ionicons
-                          name="refresh-outline"
+                          name={step.icon as any}
                           size={22}
                           color="#3B82F6"
                         />
@@ -322,23 +308,19 @@ export default function LiveTrackingScreen() {
         {/* Driver Card */}
         <View className="bg-white rounded-2xl p-4 shadow mx-5 mb-5 mt-4">
           <View className="flex-row items-center mb-3">
-            <Image
-              source={
-                driver?.image
-                  ? { uri: driver.image }
-                  : require("@/assets/images/profile.png")
-              }
-              style={{ width: 40, height: 40, borderRadius: 25 }}
-              resizeMode="cover"
-            />
+              <Image
+                source={driverImage ? { uri: driverImage } : require("@/assets/images/profile.png")}
+                style={{ width: 40, height: 40, borderRadius: 25 }}
+                resizeMode="cover"
+              />
             <View className="flex-1 ml-2">
               <Text className="font-semibold text-base">
-                {driver?.name ?? "Driver"}
+                {driverName}
               </Text>
               <View className="flex-row items-center mt-1">
-                <RatingStars rating={driver ? 4.9 : 0} />
+                <RatingStars rating={driverImage || driverName !== 'Driver' ? 4.9 : 0} />
                 <Text className="text-sm ml-1 text-gray-600">
-                  {driver ? "Assigned driver" : "No driver yet"}
+                  {driverImage || driverName !== 'Driver' ? "Assigned driver" : "No driver yet"}
                 </Text>
               </View>
             </View>
@@ -350,7 +332,7 @@ export default function LiveTrackingScreen() {
                   params: {
                     orderId: String(activeOrder?._id ?? ""),
                     name: driver?.name ?? "Driver",
-                    image: driver?.image ?? "",
+                    image: driverImage,
                     rating: "4.9",
                     trips: "0",
                     vehicle: "Vehicle info unavailable",
@@ -374,8 +356,8 @@ export default function LiveTrackingScreen() {
                   pathname: "/(common)/ChatScreen" as any,
                   params: {
                     orderId: String(activeOrder?._id ?? ""),
-                    name: driver?.name ?? "Driver",
-                    avatar: driver?.image ?? "",
+                    name: driverName,
+                    avatar: driverImage,
                   },
                 })
               }
@@ -395,8 +377,8 @@ export default function LiveTrackingScreen() {
                 router.push({
                   pathname: "/(common)/CallScreen" as any,
                   params: {
-                    name: driver?.name ?? "Driver",
-                    image: driver?.image ?? "",
+                    name: driverName,
+                    image: driverImage,
                   },
                 })
               }
@@ -416,11 +398,16 @@ export default function LiveTrackingScreen() {
         <View className="mx-5 mb-5">
           <Text className="font-bold text-[20px] mb-3">Order Details</Text>
 
-          <View className="bg-white rounded-2xl p-4 shadow mb-8">
-            <View className="mb-3">
-              <Text className="text-gray-500 text-xs">Service</Text>
-              <Text className="font-medium">{orderDetails.service}</Text>
-            </View>
+            <View className="bg-white rounded-2xl p-4 shadow mb-8">
+              <View className="mb-3">
+                <Text className="text-gray-500 text-xs">Order ID</Text>
+                <Text className="font-medium">#{formatOrderNumber(activeOrder?._id ?? "")}</Text>
+              </View>
+
+              <View className="mb-3">
+                <Text className="text-gray-500 text-xs">Service</Text>
+                <Text className="font-medium">{orderDetails.service}</Text>
+              </View>
 
             <View className="mb-3">
               <Text className="text-gray-500 text-xs">Pickup Address</Text>
@@ -458,32 +445,33 @@ export default function LiveTrackingScreen() {
           </View>
         </View>
 
-        {/* Mark as Delivered Button */}
-        <View className="px-5 mb-5">
-          <TouchableOpacity
-            onPress={() =>
-              router.push({
-                pathname: "/(common)/DeliveredSuccessScreen" as any,
-                params: {
-                  orderId: String(activeOrder?._id ?? ""),
-                  name: driver?.name ?? "Driver",
-                  image: driver?.image ?? "",
-                  service: orderDetails.service,
-                  address: orderDetails.address.street,
-                  bags: String(orderDetails.pricing.bags),
-                  bagPrice: String(orderDetails.pricing.bagPrice),
-                  tip: String(orderDetails.pricing.tip),
-                },
-              })
-            }
-            className="bg-green-600 gap-2 rounded-xl py-3 flex-row justify-center items-center"
-          >
-            <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
-            <Text className="text-white text-lg font-semibold">
-              Mark as Delivered
-            </Text>
-          </TouchableOpacity>
-        </View>
+        {activeOrder?.status === "OUT_FOR_DELIVERY" && (
+          <View className="px-5 mb-5">
+            <TouchableOpacity
+              onPress={() =>
+                router.push({
+                  pathname: "/(common)/DeliveredSuccessScreen" as any,
+                  params: {
+                    orderId: String(activeOrder?._id ?? ""),
+                    name: driver?.name ?? "Driver",
+                    image: driver?.image ?? "",
+                    service: orderDetails.service,
+                    address: orderDetails.address.street,
+                    bags: String(orderDetails.pricing.bags),
+                    bagPrice: String(orderDetails.pricing.bagPrice),
+                    tip: String(orderDetails.pricing.tip),
+                  },
+                })
+              }
+              className="bg-green-600 gap-2 rounded-xl py-3 flex-row justify-center items-center"
+            >
+              <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
+              <Text className="text-white text-lg font-semibold">
+                Complete Delivery
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </SafeAreaView>
     </ScrollView>
   );

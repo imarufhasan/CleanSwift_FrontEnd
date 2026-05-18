@@ -15,6 +15,10 @@ export default function Track() {
     order => !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
   );
   const driver = activeOrder?.driver ?? null;
+  const driverName =
+    driver && typeof driver === 'object' ? driver.name ?? 'Driver' : 'Driver';
+  const driverImage =
+    driver && typeof driver === 'object' ? driver.image ?? '' : '';
   const status = {
     label: activeOrder?.status?.replaceAll("_", " ") ?? "No active order",
     etaMinutes: activeOrder?.scheduledPickupAt ? 12 : 0,
@@ -35,7 +39,7 @@ export default function Track() {
     },
     instructions: activeOrder?.specialInstructions ?? "No special instructions",
     pricing: {
-      bags: activeOrder?.bags ?? 0,
+      bags: Math.max(0, activeOrder?.bagCountAtDelivery ?? activeOrder?.bagCountAtPickup ?? activeOrder?.bags ?? 0),
       bagPrice: activeOrder?.pricePerBag ?? 0,
       tip: 0,
     },
@@ -121,16 +125,16 @@ export default function Track() {
       <View className="bg-white rounded-2xl p-4 shadow mx-5 mb-5">
         <View className="flex-row items-center mb-3">
           <Image
-            source={{ uri: driver?.avatar }}
+            source={driverImage ? { uri: driverImage } : require('@/assets/images/profile.png')}
             style={{ width: 40, height: 40, borderRadius: 25 }}
             resizeMode="cover"
           />
           <View className="flex-1 ml-2">
-            <Text className="font-semibold text-base">{driver?.name}</Text>
+            <Text className="font-semibold text-base">{driverName}</Text>
             <View className="flex-row items-center mt-1">
-              <RatingStars rating={driver?.rating} />
+              <RatingStars rating={driverImage || driverName !== 'Driver' ? 4.9 : 0} />
               <Text className="text-sm ml-1 text-gray-600">
-                {driver?.rating} ({driver?.trips} trips)
+                {driverImage || driverName !== 'Driver' ? 'Assigned driver' : 'No driver yet'}
               </Text>
             </View>
           </View>
@@ -161,8 +165,8 @@ export default function Track() {
                 pathname: "/(common)/ChatScreen" as any,
                 params: {
                   orderId: String(order.id),
-                  name: driver?.name,
-                  avatar: driver?.avatar,
+                  name: driverName,
+                  avatar: driverImage,
                 },
               })
             }
@@ -179,10 +183,10 @@ export default function Track() {
           <TouchableOpacity
             onPress={() =>
               router.push({
-                pathname: "/(common)/CallScreen" as any,
-                params: { name: driver?.name, image: driver?.avatar },
-              })
-            }
+              pathname: "/(common)/CallScreen" as any,
+              params: { name: driverName, image: driverImage },
+            })
+          }
             className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center ml-2"
           >
             <Ionicons name="call-outline" size={18} color={Colors.primary} />

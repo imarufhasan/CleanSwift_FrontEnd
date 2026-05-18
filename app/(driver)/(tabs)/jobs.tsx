@@ -21,7 +21,6 @@ import {
   useGetMyDriverProfileQuery,
 } from "@/src/services/driverApi";
 import type { Order } from "@/src/services/orderApi";
-import { useGetPricingQuery } from "@/src/services/pricingApi";
 import { formatOrderNumber } from "@/src/utils/orderNumber";
 import RecentOrdersList from "@/components/home/components/RecentOrdersList";
 
@@ -33,23 +32,38 @@ type JobCardData = {
   price: string;
   bags: string;
   distance: string;
+  pickupTypeLabel: string;
   quantity: number;
   status: string;
+  driverEarningPercentage: number;
 };
 
 const formatStatus = (status?: string) => (status ?? "").replaceAll("_", " ");
 
+const formatPickupTime = (order: Order) =>
+  order.pickupType === "SCHEDULED" && order.scheduledPickupAt
+    ? new Date(order.scheduledPickupAt).toLocaleString()
+    : "ASAP";
+
+const getEffectiveBagCount = (order: Order) =>
+  Math.max(0, order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0);
+
+const getEffectiveOrderTotal = (order: Order) => getEffectiveBagCount(order) * Number(order.pricePerBag ?? 0);
+
+const getOrderDriverEarningPercentage = (order: Pick<Order, "driverEarningPercentage">) =>
+  Number(order.driverEarningPercentage ?? 70);
+
 const mapOrderToJob = (order: Order): JobCardData => ({
   id: order._id,
   address: order.address ?? "Pickup address",
-  time: order.createdAt
-    ? new Date(order.createdAt).toLocaleString()
-    : "Recently posted",
-  price: `$${Number(order.total ?? 0).toFixed(2)}`,
+  time: formatPickupTime(order),
+  price: `$${getEffectiveOrderTotal(order).toFixed(2)}`,
   bags: `${order.bags} Bags`,
   distance: order.pickupType === "ASAP" ? "ASAP" : "Scheduled",
+  pickupTypeLabel: order.pickupType === "ASAP" ? "ASAP" : "Scheduled",
   quantity: order.bags,
   status: order.status,
+  driverEarningPercentage: getOrderDriverEarningPercentage(order),
 });
 
 const TopTab = ({
@@ -134,7 +148,7 @@ const JobCard = ({
 
       <View className="flex-1">
         <Text className="text-xs text-gray-400">Pickup</Text>
-        <Text className="font-semibold text-black">{item.distance}</Text>
+        <Text className="font-semibold text-black">{item.pickupTypeLabel}</Text>
       </View>
     </View>
 
@@ -296,11 +310,8 @@ export default function JobsScreen() {
     refetch: refetchMyJobs,
   } = useGetMyDriverJobsQuery();
   const { data: driverProfileRes } = useGetMyDriverProfileQuery();
-  const { data: pricingRes } = useGetPricingQuery();
   const [acceptJob, { isLoading: isAccepting }] = useAcceptJobMutation();
   const [declineJob, { isLoading: isDeclining }] = useDeclineJobMutation();
-  const driverEarningPercentage =
-    pricingRes?.data?.driverEarningPercentage ?? 70;
 
   const refreshJobs = useCallback(() => {
     refetchAvailableJobs();
@@ -440,7 +451,7 @@ export default function JobsScreen() {
             <JobCard
               key={item.id}
               item={item}
-              driverEarningPercentage={Number(driverEarningPercentage)}
+              driverEarningPercentage={item.driverEarningPercentage}
               showActions
               acceptDisabled={isAtCapacity}
               onAccept={() => {
@@ -468,25 +479,17 @@ export default function JobsScreen() {
             <Text className="mb-3 text-gray-500">Loading jobs...</Text>
           )}
           {activeJobs.map((item) => (
-            // <JobCard
-            //   key={item.id}
-            //   item={item}
-            //   driverEarningPercentage={Number(driverEarningPercentage)}
-            //   onDetails={() =>
-            //     router.push({
-            //       pathname: "/(common)/OrderDetailsDriver",
-            //       params: { id: item.id },
-            //     })
-            //   }
-            // />
-
-            <ActiveOrderCard
+            <JobCard
               key={item.id}
-              order={item}
-              router={router}
-              getOrderProgress={getOrderProgress}
-              getOrderStep={getOrderStep}
-              getStatusStyle={getStatusStyle}
+              item={item}
+              driverEarningPercentage={item.driverEarningPercentage}
+              onDetails={() =>
+                router.push({
+                  pathname:
+                    "/(common)/LiveTrackScreenDriver/LiveTrackScreenDriverMain" as any,
+                  params: { id: item.id },
+                })
+              }
             />
           ))}
         </>

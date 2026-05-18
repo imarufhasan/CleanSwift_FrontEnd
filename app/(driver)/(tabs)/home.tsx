@@ -31,9 +31,20 @@ import {
 } from "@/src/services/driverApi";
 import type { Order } from "@/src/services/orderApi";
 import { useOrderSocket } from "@/src/hooks/useOrderSocket";
-import { useGetPricingQuery } from "@/src/services/pricingApi";
 import { formatOrderNumber } from "@/src/utils/orderNumber";
 import { useGetDriverRatingsQuery } from "@/src/services/ratingApi";
+
+const getEffectiveBagCount = (order: Order) =>
+  Math.max(0, order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0);
+
+const getEffectiveOrderTotal = (order: Order) =>
+  getEffectiveBagCount(order) * Number(order.pricePerBag ?? 0);
+
+const getOrderDriverEarningPercentage = (order: Pick<Order, "driverEarningPercentage">) =>
+  Number(order.driverEarningPercentage ?? 70);
+
+const getDriverEarning = (order: Order) =>
+  (getEffectiveOrderTotal(order) * getOrderDriverEarningPercentage(order)) / 100;
 
 // Sub-component to handle per-order animated progress bar
 function ActiveOrderCard({
@@ -45,19 +56,19 @@ function ActiveOrderCard({
 }: {
   order: Order;
   router: any;
-  getOrderProgress: (status: Order["status"]) => number;
-  getOrderStep: (status: Order["status"]) => number;
+  getOrderProgress: (order: Order) => number;
+  getOrderStep: (order: Order) => number;
   getStatusStyle: (status: any) => string;
 }) {
   const progressAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.timing(progressAnim, {
-      toValue: getOrderProgress(order.status),
+      toValue: getOrderProgress(order),
       duration: 800,
       useNativeDriver: false,
     }).start();
-  }, [order.status]);
+  }, [order.status, order.timeline?.dryingAt, order.timeline?.foldingAt]);
 
   return (
     <View className="bg-white rounded-2xl px-4 py-6 shadow-sm mb-4 border border-gray-100">
@@ -70,12 +81,19 @@ function ActiveOrderCard({
             <Ionicons name="cube-outline" size={20} color={Colors.primary} />
           </View>
 
-          <View className="ml-2">
-            <Text className="font-semibold">
-              Order #{formatOrderNumber(order._id)}
-            </Text>
+        <View className="ml-2">
+            <View className="flex-row items-center gap-2">
+              <Text className="font-semibold">
+                Order #{formatOrderNumber(order._id)}
+              </Text>
+              <View className="rounded-full bg-blue-50 px-2 py-0.5">
+                <Text className="text-[10px] font-semibold text-blue-600">
+                  {order.pickupType === "ASAP" ? "ASAP" : "Scheduled"}
+                </Text>
+              </View>
+            </View>
             <Text className="text-sm text-gray-500 mb-3">
-              {order.bags} bags • ${order.total}.00
+              {getEffectiveBagCount(order)} bags • ${getEffectiveOrderTotal(order).toFixed(2)}
             </Text>
           </View>
         </View>
@@ -91,11 +109,11 @@ function ActiveOrderCard({
 
       {/* Steps */}
       <View className="flex-row justify-between mb-2">
-        {["Picked Up", "Washing", "Delivery"].map((step, index) => (
+        {["Requested", "Picked Up", "Washing", "Drying", "Folding", "Delivery"].map((step, index) => (
           <Text
             key={step}
             className={`text-xs ${
-              index <= getOrderStep(order.status)
+              index <= getOrderStep(order)
                 ? "text-blue-500"
                 : "text-gray-400"
             }`}
@@ -158,7 +176,6 @@ export default function HomeScreen() {
   const { data: myJobsRes, refetch: refetchMyJobs } = useGetMyDriverJobsQuery();
   const { data: availableJobsRes, refetch: refetchAvailableJobs } =
     useGetAvailableJobsQuery();
-  const { data: pricingRes } = useGetPricingQuery();
   const [updateAvailability, { isLoading: isUpdatingAvailability }] =
     useUpdateDriverAvailabilityMutation();
   const [acceptJob, { isLoading: isAcceptingJob }] = useAcceptJobMutation();
@@ -199,11 +216,6 @@ export default function HomeScreen() {
   const myJobs = myJobsRes && myJobsRes.data ? myJobsRes.data : [];
   const availableJobs =
     availableJobsRes && availableJobsRes.data ? availableJobsRes.data : [];
-  const driverEarningPercentage =
-    pricingRes && pricingRes.data
-      ? pricingRes.data.driverEarningPercentage
-      : 70;
-
   const activeOrders = myJobs.filter(
     (order) => !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
   );
@@ -262,8 +274,7 @@ export default function HomeScreen() {
   const driverRatingSummary = driverRatingsRes?.data?.summary;
 
   const completedTodayEarnings = completedTodayJobs.reduce(
-    (sum, order) =>
-      sum + (Number(order.total ?? 0) * Number(driverEarningPercentage)) / 100,
+    (sum, order) => sum + getDriverEarning(order),
     0,
   );
 
@@ -324,6 +335,10 @@ export default function HomeScreen() {
   const getStatusStyle = (status: any) => {
     switch (status) {
       case "Washing":
+      case "WASHING_DRYING":
+        return "bg-orange-100 text-orange-500";
+      case "DRYING":
+      case "FOLDING":
         return "bg-orange-100 text-orange-500";
       case "Delivered":
         return "bg-green-100 text-green-600";
@@ -355,31 +370,27 @@ export default function HomeScreen() {
     refetch,
   ]);
 
-  const getOrderProgress = (status: Order["status"]) => {
-    switch (status) {
-      case "REQUESTED":
-        return 10;
-      case "DRIVER_ASSIGNED":
-        return 25;
-      case "PICKED_UP":
-        return 50;
-      case "WASHING_DRYING":
-        return 70;
-      case "OUT_FOR_DELIVERY":
-        return 90;
-      case "DELIVERED":
-      case "COMPLETED":
-        return 100;
-      default:
-        return 0;
-    }
+  const getOrderStep = (order: Order) => {
+    if (order.status === "REQUESTED" || order.status === "DRIVER_ASSIGNED") return 0;
+    if (order.status === "PICKED_UP") return 1;
+    if (order.status === "WASHING_DRYING") return 2;
+    if (order.status === "DRYING") return 3;
+    if (order.status === "FOLDING") return 4;
+    if (order.status === "OUT_FOR_DELIVERY") return 5;
+    if (order.timeline?.dryingAt) return 3;
+    if (order.timeline?.foldingAt) return 4;
+    return 5;
   };
 
-  const getOrderStep = (status: Order["status"]) => {
-    if (status === "REQUESTED" || status === "DRIVER_ASSIGNED") return 0;
-    if (status === "PICKED_UP" || status === "WASHING_DRYING") return 1;
-    return 2;
+  const getOrderProgress = (order: Order) => {
+    const currentStep = getOrderStep(order);
+    return Math.round(((currentStep + 1) / 6) * 100);
   };
+
+  const getPickupTime = (order: Order) =>
+    order.pickupType === "SCHEDULED" && order.scheduledPickupAt
+      ? new Date(order.scheduledPickupAt).toLocaleString()
+      : "ASAP";
 
   const handleAcceptJob = async () => {
     if (isAtCapacity) {
@@ -713,7 +724,7 @@ export default function HomeScreen() {
                       <View className="flex-row">
                         <Ionicons name="time-outline" size={14} color="gray" />
                         <Text className="text-sm text-gray-500 mb-1 ml-1">
-                          {job.pickupType}
+                          {getPickupTime(job)}
                         </Text>
                       </View>
                     </View>
@@ -724,7 +735,7 @@ export default function HomeScreen() {
                       ${Number(job.total ?? 0).toFixed(2)}
                     </Text>
                     <Text className="font-sm text-gray-500">
-                      You earn {driverEarningPercentage}%
+                      You earn {getOrderDriverEarningPercentage(job)}%
                     </Text>
                   </View>
                 </View>

@@ -35,7 +35,7 @@ export default function Track() {
     },
     instructions: activeOrder?.specialInstructions ?? "No special instructions",
     pricing: {
-      bags: activeOrder?.bags ?? 0,
+      bags: Math.max(0, activeOrder?.bagCountAtDelivery ?? activeOrder?.bagCountAtPickup ?? activeOrder?.bags ?? 0),
       bagPrice: activeOrder?.pricePerBag ?? 0,
       tip: 0,
     },

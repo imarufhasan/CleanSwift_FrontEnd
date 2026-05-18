@@ -108,6 +108,9 @@ const buildSteps = (order?: Order) => {
   });
 };
 
+const getEffectiveBagCount = (order?: Order) =>
+  Math.max(0, order?.bagCountAtDelivery ?? order?.bagCountAtPickup ?? order?.bags ?? 0);
+
 export default function LiveTrackingScreen() {
   const router = useRouter();
   const { orderId } = useLocalSearchParams<{ orderId?: string }>();
@@ -137,7 +140,7 @@ export default function LiveTrackingScreen() {
     },
     instructions: activeOrder?.specialInstructions ?? "No special instructions",
     pricing: {
-      bags: activeOrder?.bags ?? 0,
+      bags: getEffectiveBagCount(activeOrder),
       bagPrice: activeOrder?.pricePerBag ?? 0,
       tip: 0,
     },

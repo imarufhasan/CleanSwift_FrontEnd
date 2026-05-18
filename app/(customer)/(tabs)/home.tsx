@@ -41,6 +41,10 @@ const getOrderProgress = (order: Order) => {
     order.status === "DELIVERED" ||
     order.status === "COMPLETED"
       ? 5
+      : order.status === "FOLDING"
+        ? 4
+        : order.status === "DRYING"
+          ? 3
       : order.timeline?.foldingAt
         ? 4
         : order.timeline?.dryingAt

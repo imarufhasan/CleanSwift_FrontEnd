@@ -331,6 +331,10 @@ export default function HomeScreen() {
   const getStatusStyle = (status: any) => {
     switch (status) {
       case "Washing":
+      case "WASHING_DRYING":
+        return "bg-orange-100 text-orange-500";
+      case "DRYING":
+      case "FOLDING":
         return "bg-orange-100 text-orange-500";
       case "Delivered":
         return "bg-green-100 text-green-600";

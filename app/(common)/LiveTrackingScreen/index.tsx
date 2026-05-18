@@ -15,8 +15,12 @@ const buildSteps = (order?: Order) => {
     ? 0
     : order.status === "DELIVERED" || order.status === "COMPLETED"
       ? 7
-      : order.status === "OUT_FOR_DELIVERY"
+    : order.status === "OUT_FOR_DELIVERY"
         ? 6
+        : order.status === "FOLDING"
+          ? 5
+          : order.status === "DRYING"
+            ? 4
         : order.timeline?.foldingAt
           ? 5
           : order.timeline?.dryingAt

@@ -5,6 +5,8 @@ export type OrderStatus =
   | 'DRIVER_ASSIGNED'
   | 'PICKED_UP'
   | 'WASHING_DRYING'
+  | 'DRYING'
+  | 'FOLDING'
   | 'OUT_FOR_DELIVERY'
   | 'DELIVERED'
   | 'COMPLETED'

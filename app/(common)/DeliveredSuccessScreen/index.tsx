@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, TextInput, Modal } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, TextInput, Modal, ActivityIndicator } from 'react-native';
 import { Ionicons, AntDesign, FontAwesome } from '@expo/vector-icons';
+import { CardField, useStripe } from '@stripe/stripe-react-native';
 import Colors from '@/constants/color';
 import { useLocalSearchParams, router } from 'expo-router';
 import ShowMessage from '@/constants/toast';
 import { useConfirmPaymentMutation } from '@/src/services/paymentApi';
+import { useAttachCardMutation, useGetSavedCardsQuery } from '@/src/services/cardApi';
 import { formatOrderNumber } from '@/src/utils/orderNumber';
+import { STRIPE_PUBLISHABLE_KEY } from '@/src/constants/api';
 
 export default function DeliveredSuccessScreen() {
   const { name, image, orderId, service, bags, bagPrice, tip } = useLocalSearchParams<{
@@ -21,13 +24,71 @@ export default function DeliveredSuccessScreen() {
   const [tipValue, setTipValue] = useState(tip ?? '');
   const [tipValueCustom, setTipValueCustom] = useState('');
   const [confirmPaymentModal, setConfirmPaymentModal] = useState(false);
+  const [paymentMethodModal, setPaymentMethodModal] = useState(false);
+  const [cardComplete, setCardComplete] = useState(false);
+  const [cardDetails, setCardDetails] = useState<any>(null);
   const [rating, setRating] = useState(0);
+  const { createPaymentMethod } = useStripe();
   const [confirmPayment, { isLoading }] = useConfirmPaymentMutation();
+  const [attachCard, { isLoading: isSavingCard }] = useAttachCardMutation();
+  const { data: cardsRes } = useGetSavedCardsQuery();
 
   const bagsCount = Number(bags ?? 0);
   const perBag = Number(bagPrice ?? 0);
   const tipAmount = Number(tipValue || tipValueCustom || tip || 0);
   const total = bagsCount * perBag + tipAmount;
+  const defaultCard = cardsRes?.data?.find(card => card.isDefault) ?? cardsRes?.data?.[0];
+  const defaultCardLabel =
+    defaultCard && defaultCard.brand && defaultCard.last4
+      ? `${defaultCard.brand.toUpperCase()} ${String.fromCharCode(8226)}${String.fromCharCode(8226)}${String.fromCharCode(8226)}${String.fromCharCode(8226)} ${defaultCard.last4}`
+      : 'Add a card';
+
+  const openPaymentMethodModal = () => {
+    if (!STRIPE_PUBLISHABLE_KEY) {
+      ShowMessage.error('Stripe publishable key is missing');
+      return;
+    }
+
+    setPaymentMethodModal(true);
+  };
+
+  const handleSavePaymentMethod = async () => {
+    if (!cardComplete) {
+      ShowMessage.error('Please enter a valid card');
+      return;
+    }
+
+    try {
+      const { paymentMethod, error } = await createPaymentMethod({
+        paymentMethodType: 'Card',
+      });
+
+      if (error || !paymentMethod?.id) {
+        ShowMessage.error(error?.message ?? 'Failed to create payment method');
+        return;
+      }
+
+      await attachCard({
+        paymentMethodId: paymentMethod.id,
+        brand: cardDetails?.brand,
+        last4: cardDetails?.last4,
+        expMonth: cardDetails?.expiryMonth,
+        expYear: cardDetails?.expiryYear,
+        isDefault: true,
+      }).unwrap();
+
+      setPaymentMethodModal(false);
+      setCardComplete(false);
+      setCardDetails(null);
+      ShowMessage.show('Payment method updated');
+    } catch (error: any) {
+      ShowMessage.error(
+        error && error.data && error.data.message
+          ? error.data.message
+          : 'Failed to save payment method',
+      );
+    }
+  };
 
   const handleCompletePayment = async () => {
     if (!orderId) {
@@ -207,18 +268,22 @@ export default function DeliveredSuccessScreen() {
           </View>
 
           {/* Payment Method */}
-          <View className="flex-row items-center justify-between bg-gray-50 p-4 rounded-xl mb-8">
+          <TouchableOpacity
+            onPress={openPaymentMethodModal}
+            activeOpacity={0.8}
+            className="flex-row items-center justify-between bg-gray-50 p-4 rounded-xl mb-8"
+          >
             <View className="flex-row items-center">
               <View style={{ backgroundColor: Colors.primary }} className="rounded-full p-2">
                 <Ionicons name="card" size={22} color="#fff" />
               </View>
               <View className="ml-3">
                 <Text className="text-gray-500 text-sm mb-1">Payment Method</Text>
-                <Text className="text-black">Visa •••• 4242</Text>
+                <Text className="text-black">{defaultCardLabel}</Text>
               </View>
             </View>
             <Text className="text-[#0A8CFF] font-semibold">Change</Text>
-          </View>
+          </TouchableOpacity>
 
           {/* Button */}
           <TouchableOpacity
@@ -286,6 +351,64 @@ export default function DeliveredSuccessScreen() {
           </View>
         </Modal>
       )}
+
+      <Modal
+        transparent
+        visible={paymentMethodModal}
+        animationType="slide"
+        onRequestClose={() => setPaymentMethodModal(false)}
+      >
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="bg-white rounded-t-3xl px-5 pt-5 pb-8">
+            <View className="flex-row items-center justify-between mb-5">
+              <Text className="text-xl font-bold text-black">Payment Method</Text>
+              <TouchableOpacity
+                onPress={() => setPaymentMethodModal(false)}
+                className="w-9 h-9 rounded-full bg-gray-100 items-center justify-center"
+              >
+                <Ionicons name="close" size={20} color="#111827" />
+              </TouchableOpacity>
+            </View>
+
+            <View className="bg-gray-50 rounded-2xl p-4 mb-4">
+              <Text className="text-gray-500 text-sm mb-3">Card Details</Text>
+              <CardField
+                postalCodeEnabled={false}
+                placeholders={{ number: '4242 4242 4242 4242' }}
+                cardStyle={{
+                  backgroundColor: '#FFFFFF',
+                  textColor: '#111827',
+                  borderColor: '#E5E7EB',
+                  borderWidth: 1,
+                  borderRadius: 12,
+                  fontSize: 16,
+                }}
+                style={{ height: 52 }}
+                onCardChange={details => {
+                  setCardDetails(details);
+                  setCardComplete(Boolean(details.complete));
+                }}
+              />
+            </View>
+
+            <TouchableOpacity
+              onPress={handleSavePaymentMethod}
+              disabled={!cardComplete || isSavingCard}
+              style={{ backgroundColor: cardComplete && !isSavingCard ? Colors.primary : '#93C5FD' }}
+              className="py-4 rounded-2xl flex-row items-center justify-center"
+            >
+              {isSavingCard ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <>
+                  <Ionicons name="card-outline" size={21} color="#fff" className="mr-2" />
+                  <Text className="text-white text-center font-bold text-lg">Save Card</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

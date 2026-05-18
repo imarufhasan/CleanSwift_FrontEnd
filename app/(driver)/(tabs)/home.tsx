@@ -31,7 +31,6 @@ import {
 } from "@/src/services/driverApi";
 import type { Order } from "@/src/services/orderApi";
 import { useOrderSocket } from "@/src/hooks/useOrderSocket";
-import { livePricingQueryOptions, useGetPricingQuery } from "@/src/services/pricingApi";
 import { formatOrderNumber } from "@/src/utils/orderNumber";
 import { useGetDriverRatingsQuery } from "@/src/services/ratingApi";
 
@@ -40,6 +39,12 @@ const getEffectiveBagCount = (order: Order) =>
 
 const getEffectiveOrderTotal = (order: Order) =>
   getEffectiveBagCount(order) * Number(order.pricePerBag ?? 0);
+
+const getOrderDriverEarningPercentage = (order: Pick<Order, "driverEarningPercentage">) =>
+  Number(order.driverEarningPercentage ?? 70);
+
+const getDriverEarning = (order: Order) =>
+  (getEffectiveOrderTotal(order) * getOrderDriverEarningPercentage(order)) / 100;
 
 // Sub-component to handle per-order animated progress bar
 function ActiveOrderCard({
@@ -171,7 +176,6 @@ export default function HomeScreen() {
   const { data: myJobsRes, refetch: refetchMyJobs } = useGetMyDriverJobsQuery();
   const { data: availableJobsRes, refetch: refetchAvailableJobs } =
     useGetAvailableJobsQuery();
-  const { data: pricingRes } = useGetPricingQuery(undefined, livePricingQueryOptions);
   const [updateAvailability, { isLoading: isUpdatingAvailability }] =
     useUpdateDriverAvailabilityMutation();
   const [acceptJob, { isLoading: isAcceptingJob }] = useAcceptJobMutation();
@@ -212,11 +216,6 @@ export default function HomeScreen() {
   const myJobs = myJobsRes && myJobsRes.data ? myJobsRes.data : [];
   const availableJobs =
     availableJobsRes && availableJobsRes.data ? availableJobsRes.data : [];
-  const driverEarningPercentage =
-    pricingRes && pricingRes.data
-      ? pricingRes.data.driverEarningPercentage
-      : 70;
-
   const activeOrders = myJobs.filter(
     (order) => !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
   );
@@ -275,8 +274,7 @@ export default function HomeScreen() {
   const driverRatingSummary = driverRatingsRes?.data?.summary;
 
   const completedTodayEarnings = completedTodayJobs.reduce(
-    (sum, order) =>
-      sum + (getEffectiveOrderTotal(order) * Number(driverEarningPercentage)) / 100,
+    (sum, order) => sum + getDriverEarning(order),
     0,
   );
 
@@ -737,7 +735,7 @@ export default function HomeScreen() {
                       ${Number(job.total ?? 0).toFixed(2)}
                     </Text>
                     <Text className="font-sm text-gray-500">
-                      You earn {driverEarningPercentage}%
+                      You earn {getOrderDriverEarningPercentage(job)}%
                     </Text>
                   </View>
                 </View>

@@ -21,16 +21,18 @@ import {
   useUpdateDriverJobStageMutation,
 } from "@/src/services/driverApi";
 import { useGetOrderByIdQuery, type Order } from "@/src/services/orderApi";
-import { livePricingQueryOptions, useGetPricingQuery } from "@/src/services/pricingApi";
 import { formatOrderNumber } from "@/src/utils/orderNumber";
 
-type DriverStage = "PICKUP" | "WASHING" | "DRYING" | "DELIVERY";
+type DriverStage = "PICKUP" | "WASHING" | "DRYING" | "FOLDING" | "DELIVERY";
 
 const inactiveStatuses = ["DELIVERED", "COMPLETED", "CANCELED"];
 const steps = ["Pickup", "Washing", "Drying", "Folding", "Delivery"];
 
 const getEffectiveBagCount = (order?: Order) =>
   Math.max(0, order?.bagCountAtDelivery ?? order?.bagCountAtPickup ?? order?.bags ?? 0);
+
+const getOrderDriverEarningPercentage = (order?: Pick<Order, "driverEarningPercentage">) =>
+  Number(order?.driverEarningPercentage ?? 70);
 
 const getStepFromOrder = (order?: Order) => {
   if (!order) return 0;
@@ -62,7 +64,6 @@ export default function LiveTrackScreenDriverMain() {
     isFetching: isFetchingJobs,
     refetch: refetchJobs,
   } = useGetMyDriverJobsQuery();
-  const { data: pricingRes } = useGetPricingQuery(undefined, livePricingQueryOptions);
   const [updateDriverJobStage, { isLoading: isUpdatingStage }] =
     useUpdateDriverJobStageMutation();
   const [activeStep, setActiveStep] = useState(0);
@@ -99,19 +100,14 @@ export default function LiveTrackScreenDriverMain() {
       : undefined,
   ]);
 
-  const driverEarningPercentage =
-    pricingRes && pricingRes.data
-      ? pricingRes.data.driverEarningPercentage
-      : 70;
+  const driverEarningPercentage = getOrderDriverEarningPercentage(activeOrder);
   const displayBags = activeOrder
     ? getEffectiveBagCount(activeOrder)
     : 0;
   const displayPricePerBag =
     activeOrder && activeOrder.pricePerBag !== undefined
       ? activeOrder.pricePerBag
-      : pricingRes && pricingRes.data
-        ? pricingRes.data.pricePerBag
-        : 0;
+      : 0;
   const displayTotal =
     displayBags * Number(displayPricePerBag);
   const driverEarning =

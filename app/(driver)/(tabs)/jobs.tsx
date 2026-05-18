@@ -21,7 +21,6 @@ import {
   useGetMyDriverProfileQuery,
 } from "@/src/services/driverApi";
 import type { Order } from "@/src/services/orderApi";
-import { livePricingQueryOptions, useGetPricingQuery } from "@/src/services/pricingApi";
 import { formatOrderNumber } from "@/src/utils/orderNumber";
 import RecentOrdersList from "@/components/home/components/RecentOrdersList";
 
@@ -36,6 +35,7 @@ type JobCardData = {
   pickupTypeLabel: string;
   quantity: number;
   status: string;
+  driverEarningPercentage: number;
 };
 
 const formatStatus = (status?: string) => (status ?? "").replaceAll("_", " ");
@@ -50,6 +50,9 @@ const getEffectiveBagCount = (order: Order) =>
 
 const getEffectiveOrderTotal = (order: Order) => getEffectiveBagCount(order) * Number(order.pricePerBag ?? 0);
 
+const getOrderDriverEarningPercentage = (order: Pick<Order, "driverEarningPercentage">) =>
+  Number(order.driverEarningPercentage ?? 70);
+
 const mapOrderToJob = (order: Order): JobCardData => ({
   id: order._id,
   address: order.address ?? "Pickup address",
@@ -60,6 +63,7 @@ const mapOrderToJob = (order: Order): JobCardData => ({
   pickupTypeLabel: order.pickupType === "ASAP" ? "ASAP" : "Scheduled",
   quantity: order.bags,
   status: order.status,
+  driverEarningPercentage: getOrderDriverEarningPercentage(order),
 });
 
 const TopTab = ({
@@ -306,11 +310,8 @@ export default function JobsScreen() {
     refetch: refetchMyJobs,
   } = useGetMyDriverJobsQuery();
   const { data: driverProfileRes } = useGetMyDriverProfileQuery();
-  const { data: pricingRes } = useGetPricingQuery(undefined, livePricingQueryOptions);
   const [acceptJob, { isLoading: isAccepting }] = useAcceptJobMutation();
   const [declineJob, { isLoading: isDeclining }] = useDeclineJobMutation();
-  const driverEarningPercentage =
-    pricingRes?.data?.driverEarningPercentage ?? 70;
 
   const refreshJobs = useCallback(() => {
     refetchAvailableJobs();
@@ -450,7 +451,7 @@ export default function JobsScreen() {
             <JobCard
               key={item.id}
               item={item}
-              driverEarningPercentage={Number(driverEarningPercentage)}
+              driverEarningPercentage={item.driverEarningPercentage}
               showActions
               acceptDisabled={isAtCapacity}
               onAccept={() => {
@@ -481,7 +482,7 @@ export default function JobsScreen() {
             <JobCard
               key={item.id}
               item={item}
-              driverEarningPercentage={Number(driverEarningPercentage)}
+              driverEarningPercentage={item.driverEarningPercentage}
               onDetails={() =>
                 router.push({
                   pathname:

@@ -5,11 +5,13 @@ import Colors from '@/constants/color';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGetMyDriverJobsQuery } from '@/src/services/driverApi';
 import type { Order } from '@/src/services/orderApi';
-import { livePricingQueryOptions, useGetPricingQuery } from '@/src/services/pricingApi';
 import { formatOrderNumber } from '@/src/utils/orderNumber';
 
 const getEffectiveBagCount = (order?: Order) =>
   Math.max(0, order?.bagCountAtDelivery ?? order?.bagCountAtPickup ?? order?.bags ?? 0);
+
+const getOrderDriverEarningPercentage = (order?: Pick<Order, 'driverEarningPercentage'>) =>
+  Number(order?.driverEarningPercentage ?? 70);
 
 type Props = {
   order?: Order;
@@ -21,13 +23,12 @@ export default function DeliveryStep({ order, onStartOutForDelivery }: Props) {
     order?.status === 'OUT_FOR_DELIVERY',
   );
   const { data: myJobsRes } = useGetMyDriverJobsQuery();
-  const { data: pricingRes } = useGetPricingQuery(undefined, livePricingQueryOptions);
-  const driverEarningPercentage = pricingRes?.data?.driverEarningPercentage ?? 70;
   const activeJob =
     order ??
     (myJobsRes && myJobsRes.data
       ? myJobsRes.data.find(order => !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(order.status))
       : undefined);
+  const driverEarningPercentage = getOrderDriverEarningPercentage(activeJob);
   const canStartOutForDelivery = activeJob?.status === 'FOLDING';
   const isButtonWaiting = isWaitingForConfirmation || activeJob?.status === 'OUT_FOR_DELIVERY';
 

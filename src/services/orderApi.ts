@@ -24,6 +24,7 @@ export type Order = {
   address?: string;
   status: OrderStatus;
   pricePerBag: number;
+  driverEarningPercentage?: number;
   total: number;
   bagCountAtPickup?: number;
   bagCountAtDelivery?: number;

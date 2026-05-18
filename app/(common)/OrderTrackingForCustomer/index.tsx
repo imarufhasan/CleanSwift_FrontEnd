@@ -19,6 +19,9 @@ const serviceLabel: Record<string, string> = {
   DRY_CLEAN: "Dry Cleaning",
 };
 
+const getEffectiveBagCount = (order?: Order) =>
+  Math.max(0, order?.bagCountAtDelivery ?? order?.bagCountAtPickup ?? order?.bags ?? 0);
+
 const buildSteps = (order?: Order) => {
   const current = !order
     ? 0
@@ -76,7 +79,7 @@ const toActiveOrder = (order?: Order) => {
         ? new Date(order.scheduledPickupAt).toLocaleString()
         : "As soon as possible"
       : "--",
-  progressSteps: order ? buildSteps(order) : [],
+    progressSteps: order ? buildSteps(order) : [],
   };
 };
 
@@ -400,32 +403,14 @@ export default function OrderTrackingForCustomer() {
           <View className="border-t border-gray-200 pt-3">
             <View className="flex-row justify-between mb-2">
               <Text className="text-gray-600">
-                {Math.max(
-                  0,
-                  activeOrderFromApi
-                    ? activeOrderFromApi.bagCountAtDelivery ??
-                      activeOrderFromApi.bagCountAtPickup ??
-                      activeOrderFromApi.bags ??
-                      0
-                    : 0,
-                )} bags × $
+                {getEffectiveBagCount(activeOrderFromApi)} bags × $
                 {activeOrderFromApi ? (activeOrderFromApi.pricePerBag ?? 0) : 0}
               </Text>
               <Text>
                 $
                 {Number(
-                  (Math.max(
-                    0,
-                    activeOrderFromApi
-                      ? activeOrderFromApi.bagCountAtDelivery ??
-                        activeOrderFromApi.bagCountAtPickup ??
-                        activeOrderFromApi.bags ??
-                        0
-                      : 0,
-                  ) *
-                    (activeOrderFromApi
-                      ? (activeOrderFromApi.pricePerBag ?? 0)
-                      : 0),
+                  getEffectiveBagCount(activeOrderFromApi) *
+                    (activeOrderFromApi ? (activeOrderFromApi.pricePerBag ?? 0) : 0),
                 ).toFixed(2)}
               </Text>
             </View>

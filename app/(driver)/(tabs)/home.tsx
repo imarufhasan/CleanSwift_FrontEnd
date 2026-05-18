@@ -376,6 +376,11 @@ export default function HomeScreen() {
     return Math.round(((currentStep + 1) / 6) * 100);
   };
 
+  const getPickupTime = (order: Order) =>
+    order.pickupType === "SCHEDULED" && order.scheduledPickupAt
+      ? new Date(order.scheduledPickupAt).toLocaleString()
+      : "ASAP";
+
   const handleAcceptJob = async () => {
     if (isAtCapacity) {
       ShowMessage.error("Capacity full. Finish one active order first.");
@@ -708,7 +713,7 @@ export default function HomeScreen() {
                       <View className="flex-row">
                         <Ionicons name="time-outline" size={14} color="gray" />
                         <Text className="text-sm text-gray-500 mb-1 ml-1">
-                          {job.pickupType}
+                          {getPickupTime(job)}
                         </Text>
                       </View>
                     </View>

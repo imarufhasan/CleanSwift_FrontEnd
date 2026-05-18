@@ -40,12 +40,15 @@ type JobCardData = {
 
 const formatStatus = (status?: string) => (status ?? "").replaceAll("_", " ");
 
+const formatPickupTime = (order: Order) =>
+  order.pickupType === "SCHEDULED" && order.scheduledPickupAt
+    ? new Date(order.scheduledPickupAt).toLocaleString()
+    : "ASAP";
+
 const mapOrderToJob = (order: Order): JobCardData => ({
   id: order._id,
   address: order.address ?? "Pickup address",
-  time: order.createdAt
-    ? new Date(order.createdAt).toLocaleString()
-    : "Recently posted",
+  time: formatPickupTime(order),
   price: `$${Number(order.total ?? 0).toFixed(2)}`,
   bags: `${order.bags} Bags`,
   distance: order.pickupType === "ASAP" ? "ASAP" : "Scheduled",

@@ -62,7 +62,7 @@ export default function RecentOrdersList({ orders, onOrderPress }: Props) {
               onPress={() => {
                 console.log("recent order cus: ", order);
 
-                //onOrderPress(order);
+                onOrderPress(order);
               }}
               className="my-2"
             >

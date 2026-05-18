@@ -60,10 +60,15 @@ const buildSteps = (order?: Order) => {
 };
 
 const toActiveOrder = (order?: Order) => {
+  const bags = Math.max(
+    0,
+    order?.bagCountAtDelivery ?? order?.bagCountAtPickup ?? order?.bags ?? 0,
+  );
+
   return {
     id: order ? order._id : "-",
     status: order ? statusLabel(order.status) : "No active order",
-    quantity: order ? (order.bags ?? 0) : 0,
+    quantity: bags,
     bagPrice: order ? (order.pricePerBag ?? 0) : 0,
     tip: 0,
     estimatedDelivery: order
@@ -395,14 +400,29 @@ export default function OrderTrackingForCustomer() {
           <View className="border-t border-gray-200 pt-3">
             <View className="flex-row justify-between mb-2">
               <Text className="text-gray-600">
-                {activeOrderFromApi ? (activeOrderFromApi.bags ?? 0) : 0} bags ×
-                $
+                {Math.max(
+                  0,
+                  activeOrderFromApi
+                    ? activeOrderFromApi.bagCountAtDelivery ??
+                      activeOrderFromApi.bagCountAtPickup ??
+                      activeOrderFromApi.bags ??
+                      0
+                    : 0,
+                )} bags × $
                 {activeOrderFromApi ? (activeOrderFromApi.pricePerBag ?? 0) : 0}
               </Text>
               <Text>
                 $
                 {Number(
-                  (activeOrderFromApi ? (activeOrderFromApi.bags ?? 0) : 0) *
+                  (Math.max(
+                    0,
+                    activeOrderFromApi
+                      ? activeOrderFromApi.bagCountAtDelivery ??
+                        activeOrderFromApi.bagCountAtPickup ??
+                        activeOrderFromApi.bags ??
+                        0
+                      : 0,
+                  ) *
                     (activeOrderFromApi
                       ? (activeOrderFromApi.pricePerBag ?? 0)
                       : 0),

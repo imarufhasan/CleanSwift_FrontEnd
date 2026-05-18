@@ -5,61 +5,30 @@ import Colors from "@/constants/color";
 import RatingStars from "@/components/home/RatingStars";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useGetMyOrdersQuery } from "@/src/services/orderApi";
+import { useGetMyOrdersQuery, type Order } from "@/src/services/orderApi";
 import { useOrderSocket } from "@/src/hooks/useOrderSocket";
 import { useLocalSearchParams } from "expo-router";
 
-const buildSteps2 = (status?: string) => {
-  const currentByStatus: Record<string, number> = {
-    REQUESTED: 0,
-    DRIVER_ASSIGNED: 0,
-    PICKED_UP: 1,
-    WASHING_DRYING: 2,
-    OUT_FOR_DELIVERY: 3,
-    DELIVERED: 4,
-    COMPLETED: 4,
-  };
-  const current = currentByStatus[status ?? "REQUESTED"] ?? 0;
+const buildSteps = (order?: Order) => {
+  const current = !order
+    ? 0
+    : order.status === "DELIVERED" || order.status === "COMPLETED"
+      ? 7
+      : order.status === "OUT_FOR_DELIVERY"
+        ? 6
+        : order.timeline?.foldingAt
+          ? 5
+          : order.timeline?.dryingAt
+            ? 4
+            : order.status === "WASHING_DRYING"
+              ? 3
+              : order.status === "PICKED_UP"
+                ? 2
+                : order.status === "DRIVER_ASSIGNED"
+                  ? 1
+                  : 0;
 
-  return [
-    { key: "requested", title: "Requested", time: "", status: "done" },
-    { key: "picked", title: "Picked Up", time: "", status: "done" },
-    {
-      key: "washing",
-      title: "Washing",
-      time: "",
-      subtitle: "Currently in progress",
-      status: "active",
-    },
-    {
-      key: "delivery",
-      title: "Out for Delivery",
-      time: "",
-      status: "pending",
-      icon: "truck",
-    },
-    {
-      key: "delivered",
-      title: "Delivered",
-      time: "",
-      status: "pending",
-      icon: "home",
-    },
-  ]?.map((step, index) => ({
-    ...step,
-    status:
-      index < current
-        ? "done"
-        : index === current
-          ? step.status === "pending"
-            ? "active"
-            : step.status
-          : "pending",
-  }));
-};
-
-const buildSteps = (status?: string) => {
-  const order = [
+  const orderSteps = [
     {
       key: "requested",
       title: "Requested",
@@ -98,6 +67,18 @@ const buildSteps = (status?: string) => {
       icon: "water-outline",
     },
     {
+      key: "drying",
+      title: "Drying",
+      match: ["OUT_FOR_DELIVERY", "DELIVERED"],
+      icon: "cloud-outline",
+    },
+    {
+      key: "folding",
+      title: "Folding",
+      match: ["OUT_FOR_DELIVERY", "DELIVERED"],
+      icon: "inbox-outline",
+    },
+    {
       key: "delivery",
       title: "Out for Delivery",
       match: ["OUT_FOR_DELIVERY", "DELIVERED"],
@@ -111,9 +92,9 @@ const buildSteps = (status?: string) => {
     },
   ];
 
-  return order.map((step) => {
-    const isDone = step.match.includes(status ?? "REQUESTED");
-    const isActive = !isDone && step.match[0] === status;
+  return orderSteps.map((step, index) => {
+    const isDone = index < current;
+    const isActive = index === current;
 
     return {
       ...step,
@@ -127,8 +108,6 @@ export default function LiveTrackingScreen() {
   const { orderId } = useLocalSearchParams<{ orderId?: string }>();
   const { data: ordersRes, refetch } = useGetMyOrdersQuery();
   const orders = ordersRes?.data ?? [];
-  console.log("tracking order details: ", orders);
-
   const clickedOrder = orderId
     ? orders.find((order) => order._id === orderId)
     : undefined;
@@ -236,7 +215,7 @@ export default function LiveTrackingScreen() {
             </Text>
           </View>
           <View className="bg-white rounded-2xl p-4 shadow">
-            {buildSteps(activeOrder?.status)?.map((step, index) => {
+              {buildSteps(activeOrder)?.map((step, index) => {
               if (step.status === "done") {
                 return (
                   <View key={step.key}>
@@ -458,32 +437,33 @@ export default function LiveTrackingScreen() {
           </View>
         </View>
 
-        {/* Mark as Delivered Button */}
-        <View className="px-5 mb-5">
-          <TouchableOpacity
-            onPress={() =>
-              router.push({
-                pathname: "/(common)/DeliveredSuccessScreen" as any,
-                params: {
-                  orderId: String(activeOrder?._id ?? ""),
-                  name: driver?.name ?? "Driver",
-                  image: driver?.image ?? "",
-                  service: orderDetails.service,
-                  address: orderDetails.address.street,
-                  bags: String(orderDetails.pricing.bags),
-                  bagPrice: String(orderDetails.pricing.bagPrice),
-                  tip: String(orderDetails.pricing.tip),
-                },
-              })
-            }
-            className="bg-green-600 gap-2 rounded-xl py-3 flex-row justify-center items-center"
-          >
-            <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
-            <Text className="text-white text-lg font-semibold">
-              Mark as Delivered
-            </Text>
-          </TouchableOpacity>
-        </View>
+        {activeOrder?.status === "OUT_FOR_DELIVERY" && (
+          <View className="px-5 mb-5">
+            <TouchableOpacity
+              onPress={() =>
+                router.push({
+                  pathname: "/(common)/DeliveredSuccessScreen" as any,
+                  params: {
+                    orderId: String(activeOrder?._id ?? ""),
+                    name: driver?.name ?? "Driver",
+                    image: driver?.image ?? "",
+                    service: orderDetails.service,
+                    address: orderDetails.address.street,
+                    bags: String(orderDetails.pricing.bags),
+                    bagPrice: String(orderDetails.pricing.bagPrice),
+                    tip: String(orderDetails.pricing.tip),
+                  },
+                })
+              }
+              className="bg-green-600 gap-2 rounded-xl py-3 flex-row justify-center items-center"
+            >
+              <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
+              <Text className="text-white text-lg font-semibold">
+                Mark as Delivered
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </SafeAreaView>
     </ScrollView>
   );

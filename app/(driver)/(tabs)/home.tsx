@@ -45,19 +45,19 @@ function ActiveOrderCard({
 }: {
   order: Order;
   router: any;
-  getOrderProgress: (status: Order["status"]) => number;
-  getOrderStep: (status: Order["status"]) => number;
+  getOrderProgress: (order: Order) => number;
+  getOrderStep: (order: Order) => number;
   getStatusStyle: (status: any) => string;
 }) {
   const progressAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.timing(progressAnim, {
-      toValue: getOrderProgress(order.status),
+      toValue: getOrderProgress(order),
       duration: 800,
       useNativeDriver: false,
     }).start();
-  }, [order.status]);
+  }, [order.status, order.timeline?.dryingAt, order.timeline?.foldingAt]);
 
   return (
     <View className="bg-white rounded-2xl px-4 py-6 shadow-sm mb-4 border border-gray-100">
@@ -70,10 +70,17 @@ function ActiveOrderCard({
             <Ionicons name="cube-outline" size={20} color={Colors.primary} />
           </View>
 
-          <View className="ml-2">
-            <Text className="font-semibold">
-              Order #{formatOrderNumber(order._id)}
-            </Text>
+        <View className="ml-2">
+            <View className="flex-row items-center gap-2">
+              <Text className="font-semibold">
+                Order #{formatOrderNumber(order._id)}
+              </Text>
+              <View className="rounded-full bg-blue-50 px-2 py-0.5">
+                <Text className="text-[10px] font-semibold text-blue-600">
+                  {order.pickupType === "ASAP" ? "ASAP" : "Scheduled"}
+                </Text>
+              </View>
+            </View>
             <Text className="text-sm text-gray-500 mb-3">
               {order.bags} bags • ${order.total}.00
             </Text>
@@ -91,11 +98,11 @@ function ActiveOrderCard({
 
       {/* Steps */}
       <View className="flex-row justify-between mb-2">
-        {["Picked Up", "Washing", "Delivery"].map((step, index) => (
+        {["Requested", "Picked Up", "Washing", "Drying", "Folding", "Delivery"].map((step, index) => (
           <Text
             key={step}
             className={`text-xs ${
-              index <= getOrderStep(order.status)
+              index <= getOrderStep(order)
                 ? "text-blue-500"
                 : "text-gray-400"
             }`}
@@ -355,30 +362,18 @@ export default function HomeScreen() {
     refetch,
   ]);
 
-  const getOrderProgress = (status: Order["status"]) => {
-    switch (status) {
-      case "REQUESTED":
-        return 10;
-      case "DRIVER_ASSIGNED":
-        return 25;
-      case "PICKED_UP":
-        return 50;
-      case "WASHING_DRYING":
-        return 70;
-      case "OUT_FOR_DELIVERY":
-        return 90;
-      case "DELIVERED":
-      case "COMPLETED":
-        return 100;
-      default:
-        return 0;
-    }
+  const getOrderStep = (order: Order) => {
+    if (order.status === "REQUESTED" || order.status === "DRIVER_ASSIGNED") return 0;
+    if (order.status === "PICKED_UP") return 1;
+    if (order.status === "WASHING_DRYING") return 2;
+    if (order.timeline?.dryingAt) return 3;
+    if (order.timeline?.foldingAt) return 4;
+    return 5;
   };
 
-  const getOrderStep = (status: Order["status"]) => {
-    if (status === "REQUESTED" || status === "DRIVER_ASSIGNED") return 0;
-    if (status === "PICKED_UP" || status === "WASHING_DRYING") return 1;
-    return 2;
+  const getOrderProgress = (order: Order) => {
+    const currentStep = getOrderStep(order);
+    return Math.round(((currentStep + 1) / 6) * 100);
   };
 
   const handleAcceptJob = async () => {

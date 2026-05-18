@@ -33,6 +33,7 @@ type JobCardData = {
   price: string;
   bags: string;
   distance: string;
+  pickupTypeLabel: string;
   quantity: number;
   status: string;
 };
@@ -48,6 +49,7 @@ const mapOrderToJob = (order: Order): JobCardData => ({
   price: `$${Number(order.total ?? 0).toFixed(2)}`,
   bags: `${order.bags} Bags`,
   distance: order.pickupType === "ASAP" ? "ASAP" : "Scheduled",
+  pickupTypeLabel: order.pickupType === "ASAP" ? "ASAP" : "Scheduled",
   quantity: order.bags,
   status: order.status,
 });
@@ -134,7 +136,7 @@ const JobCard = ({
 
       <View className="flex-1">
         <Text className="text-xs text-gray-400">Pickup</Text>
-        <Text className="font-semibold text-black">{item.distance}</Text>
+        <Text className="font-semibold text-black">{item.pickupTypeLabel}</Text>
       </View>
     </View>
 
@@ -468,25 +470,17 @@ export default function JobsScreen() {
             <Text className="mb-3 text-gray-500">Loading jobs...</Text>
           )}
           {activeJobs.map((item) => (
-            // <JobCard
-            //   key={item.id}
-            //   item={item}
-            //   driverEarningPercentage={Number(driverEarningPercentage)}
-            //   onDetails={() =>
-            //     router.push({
-            //       pathname: "/(common)/OrderDetailsDriver",
-            //       params: { id: item.id },
-            //     })
-            //   }
-            // />
-
-            <ActiveOrderCard
+            <JobCard
               key={item.id}
-              order={item}
-              router={router}
-              getOrderProgress={getOrderProgress}
-              getOrderStep={getOrderStep}
-              getStatusStyle={getStatusStyle}
+              item={item}
+              driverEarningPercentage={Number(driverEarningPercentage)}
+              onDetails={() =>
+                router.push({
+                  pathname:
+                    "/(common)/LiveTrackScreenDriver/LiveTrackScreenDriverMain" as any,
+                  params: { id: item.id },
+                })
+              }
             />
           ))}
         </>

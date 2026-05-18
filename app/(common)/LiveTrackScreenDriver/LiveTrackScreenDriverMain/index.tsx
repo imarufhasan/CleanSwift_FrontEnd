@@ -35,8 +35,9 @@ const getStepFromOrder = (order?: Order) => {
   if (["OUT_FOR_DELIVERY", "DELIVERED", "COMPLETED"].includes(order.status)) {
     return 4;
   }
-  if (order.timeline && order.timeline.dryingAt) return 3;
-  if (order.status === "WASHING_DRYING") return 2;
+  if (order.timeline && order.timeline.foldingAt) return 3;
+  if (order.timeline && order.timeline.dryingAt) return 2;
+  if (order.status === "WASHING_DRYING") return 1;
   if (order.status === "PICKED_UP") return 1;
 
   return 0;
@@ -85,6 +86,9 @@ export default function LiveTrackScreenDriverMain() {
     activeOrder ? activeOrder.status : undefined,
     activeOrder && activeOrder.timeline
       ? activeOrder.timeline.dryingAt
+      : undefined,
+    activeOrder && activeOrder.timeline
+      ? activeOrder.timeline.foldingAt
       : undefined,
     activeOrder && activeOrder.timeline
       ? activeOrder.timeline.washingDryingAt

@@ -24,6 +24,7 @@ export default function DeliveryStep({ order, setDeliverySuccessModal }: Props) 
     (myJobsRes && myJobsRes.data
       ? myJobsRes.data.find(order => !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(order.status))
       : undefined);
+  const canCompleteDelivery = activeJob?.status === 'OUT_FOR_DELIVERY';
   const customer = activeJob ? activeJob.customer : null;
   const status = {
     label: activeJob && activeJob.status ? activeJob.status.replaceAll('_', ' ') : 'No active job',
@@ -49,6 +50,11 @@ export default function DeliveryStep({ order, setDeliverySuccessModal }: Props) 
   const handleCompleteDelivery = async () => {
     if (!activeJob || !activeJob._id) {
       ShowMessage.error('No active job found');
+      return;
+    }
+
+    if (!canCompleteDelivery) {
+      ShowMessage.error('Order is not out for delivery yet');
       return;
     }
 
@@ -185,7 +191,7 @@ export default function DeliveryStep({ order, setDeliverySuccessModal }: Props) 
           <TouchableOpacity
             //onPress={() => router.push("/DeliveredSuccessScreen")}
             onPress={handleCompleteDelivery}
-            disabled={isCompletingDelivery}
+            disabled={isCompletingDelivery || !canCompleteDelivery}
             style={{ backgroundColor: Colors.primary }}
             className="gap-2 rounded-xl py-3 flex-row justify-center items-center"
           >

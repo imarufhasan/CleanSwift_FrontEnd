@@ -19,23 +19,33 @@ const serviceLabel: Record<string, string> = {
   DRY_CLEAN: "Dry Cleaning",
 };
 
-const buildSteps = (status?: string) => {
-  const currentByStatus: Record<string, number> = {
-    REQUESTED: 0,
-    DRIVER_ASSIGNED: 0,
-    PICKED_UP: 1,
-    WASHING_DRYING: 2,
-    OUT_FOR_DELIVERY: 3,
-    DELIVERED: 4,
-    COMPLETED: 4,
-  };
-  const current = currentByStatus[status ?? "REQUESTED"] ?? 0;
+const buildSteps = (order?: Order) => {
+  const current = !order
+    ? 0
+    : order.status === "DELIVERED" || order.status === "COMPLETED"
+      ? 7
+      : order.status === "OUT_FOR_DELIVERY"
+        ? 6
+        : order.timeline?.foldingAt
+          ? 5
+          : order.timeline?.dryingAt
+            ? 4
+            : order.status === "WASHING_DRYING"
+              ? 3
+              : order.status === "PICKED_UP"
+                ? 2
+                : order.status === "DRIVER_ASSIGNED"
+                  ? 1
+                  : 0;
 
   return [
     { key: "requested", title: "Requested", icon: "clockcircleo" },
+    { key: "driver", title: "Driver Assigned", icon: "user" },
     { key: "picked", title: "Picked Up", icon: "checkcircleo" },
     { key: "washing", title: "Washing", icon: "sync" },
-    { key: "delivery", title: "Delivery", icon: "car" },
+    { key: "drying", title: "Drying", icon: "cloud" },
+    { key: "folding", title: "Folding", icon: "inbox" },
+    { key: "delivery", title: "Out for Delivery", icon: "car" },
     { key: "delivered", title: "Delivered", icon: "home" },
   ].map((step, index) => ({
     ...step,
@@ -57,7 +67,7 @@ const toActiveOrder = (order?: Order) => {
         ? new Date(order.scheduledPickupAt).toLocaleString()
         : "As soon as possible"
       : "--",
-    progressSteps: order ? buildSteps(order.status) : [],
+  progressSteps: order ? buildSteps(order) : [],
   };
 };
 
@@ -66,31 +76,20 @@ export default function OrderTrackingForCustomer() {
   const router = useRouter();
   const { data: ordersRes, isLoading, refetch } = useGetMyOrdersQuery();
 
-  useOrderSocket({
-    role: "CUSTOMER",
-    orderId:
-      ordersRes && ordersRes.data
-        ? (
-            ordersRes.data.find(
-              (order) =>
-                !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
-            ) || {}
-          )._id
-        : undefined,
-    onCustomerUpdate: refetch,
-  });
-
   const orders = ordersRes && ordersRes.data ? ordersRes.data : [];
-  const activeOrderFromApi2 = orders.find(
-    (order) => !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
-  );
-
   const activeOrderFromApi = orderId
     ? orders.find((o) => o._id === orderId)
     : orders.find(
         (order) =>
           !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
       );
+
+  useOrderSocket({
+    role: "CUSTOMER",
+    orderId: activeOrderFromApi?._id,
+    onCustomerUpdate: refetch,
+  });
+
   const activeOrder = toActiveOrder(activeOrderFromApi);
   const pastOrders = orders
     .filter((order) => ["DELIVERED", "COMPLETED"].includes(order.status))
@@ -173,7 +172,7 @@ export default function OrderTrackingForCustomer() {
 
       {/* Order Progress */}
       <View className="px-5 mt-6">
-        <Text className="font-bold text-lg mb-4">Order Progress</Text>
+            <Text className="font-bold text-lg mb-4">Order Progress</Text>
 
         <View className="bg-white rounded-2xl p-4 shadow">
           {activeOrder.progressSteps.map((step, index) => {

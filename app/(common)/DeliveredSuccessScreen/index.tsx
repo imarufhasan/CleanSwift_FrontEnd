@@ -67,7 +67,8 @@ export default function DeliveredSuccessScreen() {
 
   const handleSavePaymentMethod = async () => {
     if (!cardComplete) {
-      ShowMessage.error(getCardInputMessage(cardDetails));
+      console.log("getCardInputMessage(cardDetails): ", getCardInputMessage(cardDetails));
+      ShowMessage.error( getCardInputMessage(cardDetails));
       return;
     }
 
@@ -77,6 +78,8 @@ export default function DeliveredSuccessScreen() {
       });
 
       if (error || !paymentMethod?.id) {
+        console.log("error?.message: ", error?.message);
+        
         ShowMessage.error(error?.message ?? 'Failed to create payment method');
         return;
       }
@@ -96,6 +99,9 @@ export default function DeliveredSuccessScreen() {
       setCardInputMessage('Enter card number, expiry date, and CVC.');
       ShowMessage.show('Payment method updated');
     } catch (error: any) {
+      console.log("erroe 2",error && error.data && error.data.message
+          && error.data.message);
+      
       ShowMessage.error(
         error && error.data && error.data.message
           ? error.data.message

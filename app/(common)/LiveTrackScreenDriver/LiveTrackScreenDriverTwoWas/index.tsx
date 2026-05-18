@@ -9,7 +9,7 @@ import { formatOrderNumber } from "@/src/utils/orderNumber";
 type Props = {
   order?: Order;
   isUpdating?: boolean;
-  onStartWashing: () => Promise<void> | void;
+  onStartWashing: () => Promise<boolean | void> | boolean | void;
 };
 
 const formatDateTime = (value?: string) => {

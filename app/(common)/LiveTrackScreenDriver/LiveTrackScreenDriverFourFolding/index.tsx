@@ -8,7 +8,7 @@ import type { Order } from "@/src/services/orderApi";
 type Props = {
   order?: Order;
   isUpdating?: boolean;
-  onStartDelivery: () => Promise<void> | void;
+  onStartDelivery: () => Promise<boolean | void> | boolean | void;
 };
 
 const formatDateTime = (value?: string) => {

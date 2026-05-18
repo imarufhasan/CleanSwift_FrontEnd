@@ -123,10 +123,10 @@ export default function LiveTrackScreenDriverMain() {
     stage: DriverStage,
     nextStep: number,
     bagCount?: number,
-  ) => {
+  ): Promise<boolean> => {
     if (!activeOrder || !activeOrder._id) {
       ShowMessage.error("No active order found");
-      return;
+      return false;
     }
 
     try {
@@ -137,12 +137,14 @@ export default function LiveTrackScreenDriverMain() {
       }).unwrap();
       await Promise.all([refetchJobs(), orderId ? refetchOrder() : undefined]);
       setActiveStep(nextStep);
+      return true;
     } catch (error: any) {
       ShowMessage.error(
         error && error.data && error.data.message
           ? error.data.message
           : "Failed to update order stage",
       );
+      return false;
     }
   };
 

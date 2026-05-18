@@ -9,7 +9,7 @@ import type { Order } from "@/src/services/orderApi";
 type Props = {
   order?: Order;
   isUpdating?: boolean;
-  onStartDrying: () => Promise<void> | void;
+  onStartDrying: () => Promise<boolean | void> | boolean | void;
 };
 
 const formatDateTime = (value?: string) => {

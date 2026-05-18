@@ -8,7 +8,7 @@ import type { Order } from "@/src/services/orderApi";
 type Props = {
   order?: Order;
   isUpdating?: boolean;
-  onCompletePickup: (bagCount: number) => Promise<void> | void;
+  onCompletePickup: (bagCount: number) => Promise<boolean | void> | boolean | void;
 };
 
 export default function PickupStep({

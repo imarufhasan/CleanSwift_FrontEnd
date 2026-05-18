@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import Colors from '@/constants/color';
@@ -13,10 +13,13 @@ const getEffectiveBagCount = (order?: Order) =>
 
 type Props = {
   order?: Order;
-  onStartOutForDelivery: () => Promise<void> | void;
+  onStartOutForDelivery: () => Promise<boolean | void> | boolean | void;
 };
 
 export default function DeliveryStep({ order, onStartOutForDelivery }: Props) {
+  const [isWaitingForConfirmation, setIsWaitingForConfirmation] = useState(
+    order?.status === 'OUT_FOR_DELIVERY',
+  );
   const { data: myJobsRes } = useGetMyDriverJobsQuery();
   const { data: pricingRes } = useGetPricingQuery(undefined, livePricingQueryOptions);
   const driverEarningPercentage = pricingRes?.data?.driverEarningPercentage ?? 70;
@@ -26,6 +29,11 @@ export default function DeliveryStep({ order, onStartOutForDelivery }: Props) {
       ? myJobsRes.data.find(order => !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(order.status))
       : undefined);
   const canStartOutForDelivery = activeJob?.status === 'FOLDING';
+  const isButtonWaiting = isWaitingForConfirmation || activeJob?.status === 'OUT_FOR_DELIVERY';
+
+  useEffect(() => {
+    setIsWaitingForConfirmation(order?.status === 'OUT_FOR_DELIVERY' || activeJob?.status === 'OUT_FOR_DELIVERY');
+  }, [activeJob?.status, order?.status]);
   const customer = activeJob ? activeJob.customer : null;
   const status = {
     label: activeJob && activeJob.status ? activeJob.status.replaceAll('_', ' ') : 'No active job',
@@ -169,13 +177,21 @@ export default function DeliveryStep({ order, onStartOutForDelivery }: Props) {
         {/* Out for Delivery Button */}
         <View className="px-5 mb-2 mt-[50px]">
           <TouchableOpacity
-            onPress={onStartOutForDelivery}
-            disabled={!canStartOutForDelivery}
+            onPress={async () => {
+              if (!canStartOutForDelivery) return;
+              const result = await onStartOutForDelivery();
+              if (result !== false) {
+                setIsWaitingForConfirmation(true);
+              }
+            }}
+            disabled={!canStartOutForDelivery || isButtonWaiting}
             style={{ backgroundColor: Colors.primary }}
             className="gap-2 rounded-xl py-3 flex-row justify-center items-center"
           >
             <Ionicons name="car-outline" size={18} color="#fff" />
-            <Text className="text-white text-lg font-semibold">Out for Delivery</Text>
+            <Text className="text-white text-lg font-semibold">
+              {isButtonWaiting ? 'Waiting for Customer Confirmation' : 'Out for Delivery'}
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>

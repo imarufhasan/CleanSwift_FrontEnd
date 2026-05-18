@@ -376,6 +376,7 @@ export default function HomeScreen() {
     if (order.status === "REQUESTED" || order.status === "DRIVER_ASSIGNED") return 0;
     if (order.status === "PICKED_UP") return 1;
     if (order.status === "WASHING_DRYING") return 2;
+    if (order.status === "OUT_FOR_DELIVERY") return 5;
     if (order.timeline?.dryingAt) return 3;
     if (order.timeline?.foldingAt) return 4;
     return 5;

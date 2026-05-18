@@ -8,6 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useGetMyOrdersQuery, type Order } from "@/src/services/orderApi";
 import { useOrderSocket } from "@/src/hooks/useOrderSocket";
 import { useLocalSearchParams } from "expo-router";
+import { formatOrderNumber } from "@/src/utils/orderNumber";
 
 const buildSteps = (order?: Order) => {
   const current = !order
@@ -222,19 +223,11 @@ export default function LiveTrackingScreen() {
                     <View className="flex-row">
                       <View className="items-center mr-3">
                         <View className="w-9 h-9 rounded-full bg-green-200 justify-center items-center">
-                          {step.title === "Delivered" ? (
-                            <Ionicons
-                              name="home-outline"
-                              size={22}
-                              color={"green"}
-                            />
-                          ) : (
-                            <Ionicons
-                              name="checkmark-circle-outline"
-                              size={22}
-                              color={"green"}
-                            />
-                          )}
+                          <Ionicons
+                            name={step.icon as any}
+                            size={22}
+                            color={"green"}
+                          />
                         </View>
                         <View className="w-[2px] flex-1 bg-green-500 mt-1" />
                       </View>
@@ -257,10 +250,9 @@ export default function LiveTrackingScreen() {
                 return (
                   <View key={step.key} className="flex-row mb-6">
                     <View className="items-center mr-3">
-                      {/* loader icon */}
                       <View className="w-9 h-9 rounded-full bg-blue-100 justify-center items-center">
                         <Ionicons
-                          name="refresh-outline"
+                          name={step.icon as any}
                           size={22}
                           color="#3B82F6"
                         />
@@ -395,11 +387,16 @@ export default function LiveTrackingScreen() {
         <View className="mx-5 mb-5">
           <Text className="font-bold text-[20px] mb-3">Order Details</Text>
 
-          <View className="bg-white rounded-2xl p-4 shadow mb-8">
-            <View className="mb-3">
-              <Text className="text-gray-500 text-xs">Service</Text>
-              <Text className="font-medium">{orderDetails.service}</Text>
-            </View>
+            <View className="bg-white rounded-2xl p-4 shadow mb-8">
+              <View className="mb-3">
+                <Text className="text-gray-500 text-xs">Order ID</Text>
+                <Text className="font-medium">#{formatOrderNumber(activeOrder?._id ?? "")}</Text>
+              </View>
+
+              <View className="mb-3">
+                <Text className="text-gray-500 text-xs">Service</Text>
+                <Text className="font-medium">{orderDetails.service}</Text>
+              </View>
 
             <View className="mb-3">
               <Text className="text-gray-500 text-xs">Pickup Address</Text>

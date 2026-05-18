@@ -65,6 +65,12 @@ export default function DeliveredSuccessScreen() {
     return 'Complete the remaining card details.';
   };
 
+  const normalizeExpiryYear = (year?: number) => {
+    if (!year) return undefined;
+
+    return year < 100 ? 2000 + year : year;
+  };
+
   const handleSavePaymentMethod = async () => {
     if (!cardComplete) {
       console.log("getCardInputMessage(cardDetails): ", getCardInputMessage(cardDetails));
@@ -89,7 +95,7 @@ export default function DeliveredSuccessScreen() {
         brand: cardDetails?.brand,
         last4: cardDetails?.last4,
         expMonth: cardDetails?.expiryMonth,
-        expYear: cardDetails?.expiryYear,
+        expYear: normalizeExpiryYear(cardDetails?.expiryYear),
         isDefault: true,
       }).unwrap();
 

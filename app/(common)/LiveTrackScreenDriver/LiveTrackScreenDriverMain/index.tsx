@@ -29,6 +29,9 @@ type DriverStage = "PICKUP" | "WASHING" | "DRYING" | "DELIVERY";
 const inactiveStatuses = ["DELIVERED", "COMPLETED", "CANCELED"];
 const steps = ["Pickup", "Washing", "Drying", "Folding", "Delivery"];
 
+const getEffectiveBagCount = (order?: Order) =>
+  Math.max(0, order?.bagCountAtDelivery ?? order?.bagCountAtPickup ?? order?.bags ?? 0);
+
 const getStepFromOrder = (order?: Order) => {
   if (!order) return 0;
   if (["OUT_FOR_DELIVERY", "DELIVERED", "COMPLETED"].includes(order.status)) {
@@ -101,7 +104,7 @@ export default function LiveTrackScreenDriverMain() {
       ? pricingRes.data.driverEarningPercentage
       : 70;
   const displayBags = activeOrder
-    ? (activeOrder.bagCountAtPickup ?? activeOrder.bags ?? 0)
+    ? getEffectiveBagCount(activeOrder)
     : 0;
   const displayPricePerBag =
     activeOrder && activeOrder.pricePerBag !== undefined
@@ -110,9 +113,7 @@ export default function LiveTrackScreenDriverMain() {
         ? pricingRes.data.pricePerBag
         : 0;
   const displayTotal =
-    activeOrder && activeOrder.total !== undefined
-      ? activeOrder.total
-      : displayBags * Number(displayPricePerBag);
+    displayBags * Number(displayPricePerBag);
   const driverEarning =
     (Number(displayTotal ?? 0) * Number(driverEarningPercentage)) / 100;
   const isLoading = isFetchingOrder || isFetchingJobs;

@@ -11,6 +11,7 @@ import {
   useDeclineJobMutation,
   useGetAvailableJobsQuery,
   useGetMyDriverJobsQuery,
+  useGetMyDriverProfileQuery,
 } from '@/src/services/driverApi';
 import type { Order } from '@/src/services/orderApi';
 import { useGetPricingQuery } from '@/src/services/pricingApi';
@@ -58,6 +59,7 @@ const JobCard = ({
   item,
   driverEarningPercentage,
   showActions,
+  acceptDisabled,
   onAccept,
   onDecline,
   onDetails,
@@ -65,6 +67,7 @@ const JobCard = ({
   item: JobCardData;
   driverEarningPercentage: number;
   showActions?: boolean;
+  acceptDisabled?: boolean;
   onAccept?: () => void;
   onDecline?: () => void;
   onDetails?: () => void;
@@ -114,7 +117,11 @@ const JobCard = ({
           <Text className="py-1 text-center text-lg font-medium text-red-500">Decline</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={onAccept} className="flex-1 rounded-xl bg-blue-500 py-2">
+        <TouchableOpacity
+          onPress={onAccept}
+          disabled={acceptDisabled}
+          className={`flex-1 rounded-xl py-2 ${acceptDisabled ? 'bg-blue-300' : 'bg-blue-500'}`}
+        >
           <Text className="py-1 text-center text-lg font-medium text-white">Accept</Text>
         </TouchableOpacity>
       </View>
@@ -141,13 +148,11 @@ export default function JobsScreen() {
     refetch: refetchAvailableJobs,
   } = useGetAvailableJobsQuery();
   const { data: myJobsRes, isFetching: isMyJobsLoading, refetch: refetchMyJobs } = useGetMyDriverJobsQuery();
+  const { data: driverProfileRes } = useGetMyDriverProfileQuery();
   const { data: pricingRes } = useGetPricingQuery();
   const [acceptJob, { isLoading: isAccepting }] = useAcceptJobMutation();
   const [declineJob, { isLoading: isDeclining }] = useDeclineJobMutation();
-  const driverEarningPercentage =
-    pricingRes && pricingRes.data
-      ? pricingRes.data.driverEarningPercentage
-      : 70;
+  const driverEarningPercentage = pricingRes?.data?.driverEarningPercentage ?? 70;
 
   const refreshJobs = useCallback(() => {
     refetchAvailableJobs();
@@ -163,6 +168,10 @@ export default function JobsScreen() {
   const myJobs = (myJobsRes && myJobsRes.data ? myJobsRes.data : []).map(mapOrderToJob);
   const activeJobs = myJobs.filter(job => !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(job.status));
   const completedJobs = myJobs.filter(job => ['DELIVERED', 'COMPLETED'].includes(job.status));
+  const capacityLimit = Math.max(1, Number(driverProfileRes?.data?.capacityLimit ?? 3));
+  const isAtCapacity =
+    (driverProfileRes?.data?.status ?? 'PENDING') === 'APPROVED' &&
+    activeJobs.length >= capacityLimit;
 
   useEffect(() => {
     if (tab === 'Active') setActiveTab('Active');
@@ -171,6 +180,11 @@ export default function JobsScreen() {
   }, [tab]);
 
   const handleAccept = async () => {
+    if (isAtCapacity) {
+      ShowMessage.error('Capacity full. Finish one active order first.');
+      return;
+    }
+
     if (!selectedJob) return;
 
     try {
@@ -202,6 +216,12 @@ export default function JobsScreen() {
       return (
         <>
           <Text className="mb-3 text-lg font-bold text-black">Available Jobs ({availableJobs.length})</Text>
+          {isAtCapacity && (
+            <View className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <Text className="font-semibold text-amber-700">Capacity full</Text>
+              <Text className="mt-1 text-sm text-amber-700">Finish one active order to accept more.</Text>
+            </View>
+          )}
           {isAvailableLoading && <Text className="mb-3 text-gray-500">Loading jobs...</Text>}
           {availableJobs.map(item => (
             <JobCard
@@ -209,7 +229,9 @@ export default function JobsScreen() {
               item={item}
               driverEarningPercentage={driverEarningPercentage}
               showActions
+              acceptDisabled={isAtCapacity}
               onAccept={() => {
+                if (isAtCapacity) return;
                 setSelectedJob(item);
                 setAcceptModal(true);
               }}
@@ -370,11 +392,11 @@ export default function JobsScreen() {
 
               <TouchableOpacity
                 onPress={handleAccept}
-                disabled={isAccepting}
-                className="flex-1 rounded-xl bg-blue-500 py-3"
+                disabled={isAccepting || isAtCapacity}
+                className={`flex-1 rounded-xl py-3 ${isAccepting || isAtCapacity ? 'bg-blue-300' : 'bg-blue-500'}`}
               >
                 <Text className="text-center text-lg font-semibold text-white">
-                  {isAccepting ? 'Accepting...' : 'Yes'}
+                  {isAtCapacity ? 'Capacity full' : isAccepting ? 'Accepting...' : 'Yes'}
                 </Text>
               </TouchableOpacity>
             </View>

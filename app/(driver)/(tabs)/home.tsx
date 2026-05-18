@@ -249,6 +249,10 @@ export default function HomeScreen() {
     ? Math.round((completedJobs.length / myJobs.length) * 100)
     : 0;
 
+  const capacityLimit = Math.max(1, Number(driverProfile?.capacityLimit ?? 3));
+  const isAtCapacity =
+    driverApproved && activeOrders.length >= capacityLimit;
+
   const tierNumber = driverProfile?.reputationTier ?? 0;
   const tierText = tierNumber > 0 ? `Tier ${tierNumber}` : "N/A";
   const tierSubtitle =
@@ -378,6 +382,11 @@ export default function HomeScreen() {
   };
 
   const handleAcceptJob = async () => {
+    if (isAtCapacity) {
+      ShowMessage.error("Capacity full. Finish one active order first.");
+      return;
+    }
+
     if (!selectedJobId) return;
     try {
       await acceptJob(selectedJobId).unwrap();
@@ -670,6 +679,15 @@ export default function HomeScreen() {
             )}
           </View>
 
+          {isAtCapacity && (
+            <View className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <Text className="font-semibold text-amber-700">Capacity full</Text>
+              <Text className="mt-1 text-sm text-amber-700">
+                Finish one active order to accept more.
+              </Text>
+            </View>
+          )}
+
           {availableOrder.length > 0 ? (
             availableOrder.map((job) => (
               <View
@@ -740,10 +758,14 @@ export default function HomeScreen() {
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => {
+                      if (isAtCapacity) return;
                       setSelectedJobId(job._id);
                       setAcceptModal(true);
                     }}
-                    className="flex-1 bg-blue-500 py-2 rounded-xl"
+                    disabled={isAtCapacity}
+                    className={`flex-1 py-2 rounded-xl ${
+                      isAtCapacity ? "bg-blue-300" : "bg-blue-500"
+                    }`}
                   >
                     <Text className="text-center text-lg py-1 text-white font-medium">
                       Accept
@@ -880,11 +902,17 @@ export default function HomeScreen() {
 
               <TouchableOpacity
                 onPress={handleAcceptJob}
-                disabled={isAcceptingJob}
-                className="flex-1 bg-blue-500 rounded-xl py-3"
+                disabled={isAcceptingJob || isAtCapacity}
+                className={`flex-1 rounded-xl py-3 ${
+                  isAcceptingJob || isAtCapacity ? "bg-blue-300" : "bg-blue-500"
+                }`}
               >
                 <Text className="text-white text-lg text-center font-semibold">
-                  {isAcceptingJob ? "Accepting..." : "Yes"}
+                  {isAtCapacity
+                    ? "Capacity full"
+                    : isAcceptingJob
+                      ? "Accepting..."
+                      : "Yes"}
                 </Text>
               </TouchableOpacity>
             </View>

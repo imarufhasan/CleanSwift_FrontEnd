@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Modal,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -64,7 +63,6 @@ export default function LiveTrackScreenDriverMain() {
   const [updateDriverJobStage, { isLoading: isUpdatingStage }] =
     useUpdateDriverJobStageMutation();
   const [activeStep, setActiveStep] = useState(0);
-  const [deliverySuccessModal, setDeliverySuccessModal] = useState(false);
 
   const activeOrder = useMemo(() => {
     if (orderRes && orderRes.data) return orderRes.data;
@@ -289,101 +287,16 @@ export default function LiveTrackScreenDriverMain() {
           <FoldingStep
             order={activeOrder}
             isUpdating={isUpdatingStage}
-            onStartDelivery={() => handleStageUpdate("DELIVERY", 4)}
+            onStartDelivery={() => handleStageUpdate("FOLDING", 4)}
           />
         )}
         {activeStep === 4 && (
           <DeliveryStep
             order={activeOrder}
-            setDeliverySuccessModal={setDeliverySuccessModal}
+            onStartOutForDelivery={() => handleStageUpdate("DELIVERY", 4)}
           />
         )}
       </ScrollView>
-
-      <Modal transparent visible={deliverySuccessModal} animationType="fade">
-        <View className="flex-1 justify-center items-center bg-black/50">
-          <View className="bg-white rounded-2xl p-8 w-[90%]">
-            <View className="items-center mt-2">
-              <View className="w-20 h-20 rounded-full bg-blue-100 items-center justify-center">
-                <View
-                  style={{ backgroundColor: Colors.primary }}
-                  className="w-16 h-16 rounded-full items-center justify-center"
-                >
-                  <Ionicons name="checkmark" size={32} color="white" />
-                </View>
-              </View>
-
-              <Text className="text-2xl font-bold mt-4">Congratulations!</Text>
-              <Text className="text-gray-500 text-center mt-1">
-                Your delivery has been completed successfully
-              </Text>
-            </View>
-
-            <View className="bg-gray-50 rounded-2xl p-4 mt-6 border border-gray-200">
-              <Text className="text-gray-500 text-sm">Service</Text>
-              <Text className="text-base font-semibold mb-3">
-                {activeOrder.serviceType
-                  ? activeOrder.serviceType.replaceAll("_", " ")
-                  : "Laundry Service"}
-              </Text>
-
-              <Text className="text-gray-500 text-sm">Pickup Address</Text>
-              <Text className="text-base font-semibold">
-                {activeOrder.address ?? "No address available"}
-              </Text>
-              <Text className="text-sm text-gray-500 mb-3">
-                Order #{formatOrderNumber(activeOrder._id)}
-              </Text>
-
-              <Text className="text-gray-500 text-sm">
-                Special Instructions
-              </Text>
-              <Text className="text-base font-semibold mb-3">
-                {activeOrder.specialInstructions ?? "No special instructions"}
-              </Text>
-
-              <View className="border-t border-gray-200 pt-3 mt-2">
-                <View className="flex-row justify-between mb-2">
-                  <Text className="text-gray-600">
-                    {displayBags} bags x $
-                    {Number(displayPricePerBag).toFixed(2)}
-                  </Text>
-                  <Text className="text-gray-600">
-                    ${Number(displayTotal ?? 0).toFixed(2)}
-                  </Text>
-                </View>
-
-                <View className="border-t border-gray-200 my-2" />
-
-                <View className="flex-row justify-between">
-                  <Text className="font-bold text-base">Total</Text>
-                  <Text className="font-bold text-blue-500 text-base">
-                    ${Number(displayTotal ?? 0).toFixed(2)}
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            <TouchableOpacity className="flex-row justify-center gap-4 px-4 border border-blue-500 rounded-full py-3 mt-6 items-center">
-              <Text className="text-blue-500 font-medium">
-                Download Invoice
-              </Text>
-              <Ionicons name="cloud-download-sharp" size={18} color="blue" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => {
-                setDeliverySuccessModal(false);
-                router.push("/(driver)/(tabs)/jobs?tab=Completed");
-              }}
-              style={{ backgroundColor: Colors.primary }}
-              className="rounded-xl py-4 mt-4 items-center"
-            >
-              <Text className="text-white font-semibold text-base">Done</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }

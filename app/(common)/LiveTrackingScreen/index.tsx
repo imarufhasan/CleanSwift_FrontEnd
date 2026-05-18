@@ -460,7 +460,7 @@ export default function LiveTrackingScreen() {
             >
               <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
               <Text className="text-white text-lg font-semibold">
-                Mark as Delivered
+                Complete Delivery
               </Text>
             </TouchableOpacity>
           </View>

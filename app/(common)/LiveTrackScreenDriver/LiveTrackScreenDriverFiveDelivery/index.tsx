@@ -1,30 +1,28 @@
 import React from 'react';
-import { ActivityIndicator, View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import Colors from '@/constants/color';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGetMyDriverJobsQuery } from '@/src/services/driverApi';
-import { useMarkOrderDeliveredMutation, type Order } from '@/src/services/orderApi';
-import ShowMessage from '@/constants/toast';
+import type { Order } from '@/src/services/orderApi';
 import { useGetPricingQuery } from '@/src/services/pricingApi';
 import { formatOrderNumber } from '@/src/utils/orderNumber';
 
 type Props = {
   order?: Order;
-  setDeliverySuccessModal: (value: boolean) => void;
+  onStartOutForDelivery: () => Promise<void> | void;
 };
 
-export default function DeliveryStep({ order, setDeliverySuccessModal }: Props) {
+export default function DeliveryStep({ order, onStartOutForDelivery }: Props) {
   const { data: myJobsRes } = useGetMyDriverJobsQuery();
   const { data: pricingRes } = useGetPricingQuery();
-  const [markOrderDelivered, { isLoading: isCompletingDelivery }] = useMarkOrderDeliveredMutation();
   const driverEarningPercentage = pricingRes?.data?.driverEarningPercentage ?? 70;
   const activeJob =
     order ??
     (myJobsRes && myJobsRes.data
       ? myJobsRes.data.find(order => !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(order.status))
       : undefined);
-  const canCompleteDelivery = activeJob?.status === 'OUT_FOR_DELIVERY';
+  const canStartOutForDelivery = activeJob?.status === 'FOLDING';
   const customer = activeJob ? activeJob.customer : null;
   const status = {
     label: activeJob && activeJob.status ? activeJob.status.replaceAll('_', ' ') : 'No active job',
@@ -46,27 +44,6 @@ export default function DeliveryStep({ order, setDeliverySuccessModal }: Props) 
   };
 
   const total = orderDetails.pricing.bags * orderDetails.pricing.bagPrice + orderDetails.pricing.tip;
-
-  const handleCompleteDelivery = async () => {
-    if (!activeJob || !activeJob._id) {
-      ShowMessage.error('No active job found');
-      return;
-    }
-
-    if (!canCompleteDelivery) {
-      ShowMessage.error('Order is not out for delivery yet');
-      return;
-    }
-
-    try {
-      await markOrderDelivered({ orderId: activeJob._id }).unwrap();
-      setDeliverySuccessModal(true);
-    } catch (error: any) {
-      ShowMessage.error(
-        error && error.data && error.data.message ? error.data.message : 'Failed to complete delivery',
-      );
-    }
-  };
 
   return (
     <ScrollView className="flex-1">
@@ -186,23 +163,16 @@ export default function DeliveryStep({ order, setDeliverySuccessModal }: Props) 
           </View>
         </View>
 
-        {/* Mark as Delivered Button */}
+        {/* Out for Delivery Button */}
         <View className="px-5 mb-2 mt-[50px]">
           <TouchableOpacity
-            //onPress={() => router.push("/DeliveredSuccessScreen")}
-            onPress={handleCompleteDelivery}
-            disabled={isCompletingDelivery || !canCompleteDelivery}
+            onPress={onStartOutForDelivery}
+            disabled={!canStartOutForDelivery}
             style={{ backgroundColor: Colors.primary }}
             className="gap-2 rounded-xl py-3 flex-row justify-center items-center"
           >
-            {isCompletingDelivery ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
-                <Text className="text-white text-lg font-semibold">Complete Delivery</Text>
-              </>
-            )}
+            <Ionicons name="car-outline" size={18} color="#fff" />
+            <Text className="text-white text-lg font-semibold">Out for Delivery</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>

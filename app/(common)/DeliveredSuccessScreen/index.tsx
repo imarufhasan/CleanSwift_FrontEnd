@@ -27,6 +27,9 @@ export default function DeliveredSuccessScreen() {
   const [paymentMethodModal, setPaymentMethodModal] = useState(false);
   const [cardComplete, setCardComplete] = useState(false);
   const [cardDetails, setCardDetails] = useState<any>(null);
+  const [cardInputMessage, setCardInputMessage] = useState(
+    'Enter card number, expiry date, and CVC.',
+  );
   const [rating, setRating] = useState(0);
   const { createPaymentMethod } = useStripe();
   const [confirmPayment, { isLoading }] = useConfirmPaymentMutation();
@@ -44,17 +47,27 @@ export default function DeliveredSuccessScreen() {
       : 'Add a card';
 
   const openPaymentMethodModal = () => {
-    // if (!STRIPE_PUBLISHABLE_KEY) {
-    //   ShowMessage.error('Stripe publishable key is missing');
-    //   return;
-    // }
+    if (!STRIPE_PUBLISHABLE_KEY) {
+      ShowMessage.error('Stripe publishable key is missing');
+      return;
+    }
 
     setPaymentMethodModal(true);
   };
 
+  const getCardInputMessage = (details: any) => {
+    if (!details) return 'Enter card number, expiry date, and CVC.';
+    if (details.complete) return 'Card is ready to save.';
+    if (details.validNumber !== 'Valid') return 'Enter a valid card number.';
+    if (details.validExpiryDate !== 'Valid') return 'Enter a valid future expiry date.';
+    if (details.validCVC !== 'Valid') return 'Enter the card CVC.';
+
+    return 'Complete the remaining card details.';
+  };
+
   const handleSavePaymentMethod = async () => {
     if (!cardComplete) {
-      ShowMessage.error('Please enter a valid card');
+      ShowMessage.error(getCardInputMessage(cardDetails));
       return;
     }
 
@@ -80,6 +93,7 @@ export default function DeliveredSuccessScreen() {
       setPaymentMethodModal(false);
       setCardComplete(false);
       setCardDetails(null);
+      setCardInputMessage('Enter card number, expiry date, and CVC.');
       ShowMessage.show('Payment method updated');
     } catch (error: any) {
       ShowMessage.error(
@@ -374,7 +388,12 @@ export default function DeliveredSuccessScreen() {
               <Text className="text-gray-500 text-sm mb-3">Card Details</Text>
               <CardField
                 postalCodeEnabled={false}
-                placeholders={{ number: '4242 4242 4242 4242' }}
+                autofocus
+                placeholders={{
+                  number: '4242 4242 4242 4242',
+                  expiration: 'MM/YY',
+                  cvc: 'CVC',
+                }}
                 cardStyle={{
                   backgroundColor: '#FFFFFF',
                   textColor: '#111827',
@@ -387,13 +406,22 @@ export default function DeliveredSuccessScreen() {
                 onCardChange={details => {
                   setCardDetails(details);
                   setCardComplete(Boolean(details.complete));
+                  setCardInputMessage(getCardInputMessage(details));
                 }}
               />
+              <Text
+                className={`mt-3 text-sm ${cardComplete ? 'text-green-600' : 'text-gray-500'}`}
+              >
+                {cardInputMessage}
+              </Text>
+              <Text className="mt-1 text-xs text-gray-400">
+                Test card: 4242 4242 4242 4242, any future expiry, any 3-digit CVC.
+              </Text>
             </View>
 
             <TouchableOpacity
               onPress={handleSavePaymentMethod}
-              disabled={!cardComplete || isSavingCard}
+              disabled={isSavingCard}
               style={{ backgroundColor: cardComplete && !isSavingCard ? Colors.primary : '#93C5FD' }}
               className="py-4 rounded-2xl flex-row items-center justify-center"
             >

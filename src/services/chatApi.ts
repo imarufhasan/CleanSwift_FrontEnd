@@ -49,6 +49,7 @@ export type ChatThread = {
 };
 
 export const chatApi = api.injectEndpoints({
+  overrideExisting: true,
   endpoints: builder => ({
     getChatThreads: builder.query<ApiResponse<ChatThread[]>, void>({
       query: () => ({

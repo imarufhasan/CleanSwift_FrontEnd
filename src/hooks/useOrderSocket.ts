@@ -52,6 +52,7 @@ export function useOrderSocket({
         socket.on('order:driver:accepted', () => onCustomerUpdate?.());
         socket.on('order:assigned', () => onCustomerUpdate?.());
         socket.on('order:stage:updated', () => onCustomerUpdate?.());
+        socket.on('order:payment:confirmed', () => onCustomerUpdate?.());
         socket.on('order:tracking:location', () => onCustomerUpdate?.());
       }
 
@@ -59,6 +60,8 @@ export function useOrderSocket({
         socket.on('driver:job:new', () => onDriverJobsUpdate?.());
         socket.on('order:hidden', () => onDriverJobsUpdate?.());
         socket.on('order:assigned', () => onDriverJobsUpdate?.());
+        socket.on('order:stage:updated', () => onDriverJobsUpdate?.());
+        socket.on('order:payment:confirmed', () => onDriverJobsUpdate?.());
       }
 
       socket.connect();

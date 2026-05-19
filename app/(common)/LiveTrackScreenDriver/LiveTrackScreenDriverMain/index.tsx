@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -21,6 +21,7 @@ import {
   useUpdateDriverJobStageMutation,
 } from "@/src/services/driverApi";
 import { useGetOrderByIdQuery, type Order } from "@/src/services/orderApi";
+import { useOrderSocket } from "@/src/hooks/useOrderSocket";
 import { formatOrderNumber } from "@/src/utils/orderNumber";
 
 type DriverStage = "PICKUP" | "WASHING" | "DRYING" | "FOLDING" | "DELIVERY";
@@ -67,6 +68,19 @@ export default function LiveTrackScreenDriverMain() {
   const [updateDriverJobStage, { isLoading: isUpdatingStage }] =
     useUpdateDriverJobStageMutation();
   const [activeStep, setActiveStep] = useState(0);
+
+  const refreshDriverOrder = useCallback(() => {
+    refetchJobs();
+    if (orderId) {
+      refetchOrder();
+    }
+  }, [orderId, refetchJobs, refetchOrder]);
+
+  useOrderSocket({
+    role: "DRIVER",
+    orderId,
+    onDriverJobsUpdate: refreshDriverOrder,
+  });
 
   const activeOrder = useMemo(() => {
     if (orderRes && orderRes.data) return orderRes.data;

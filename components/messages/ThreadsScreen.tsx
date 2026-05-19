@@ -34,6 +34,9 @@ export default function ThreadsScreen() {
   const { data, isLoading, refetch, isFetching } = useGetChatThreadsQuery();
   const currentRole =
     profileInfo && profileInfo.data ? profileInfo.data.role : undefined;
+  const threads = (data && data.data ? data.data : []).filter(
+    (item) => item.threadType !== "SUPPORT" && Boolean(item.orderId),
+  );
 
   const getPeer = (item: ChatThread) =>
     currentRole === "DRIVER" ? item.customer : item.driver ?? item.customer;
@@ -120,7 +123,7 @@ export default function ThreadsScreen() {
           </View>
         ) : (
           <FlatList
-            data={data && data.data ? data.data : []}
+            data={threads}
             keyExtractor={(item) => String(item.orderId)}
             renderItem={renderItem}
             refreshing={isFetching}

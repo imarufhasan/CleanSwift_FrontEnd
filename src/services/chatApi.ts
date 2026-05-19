@@ -30,6 +30,7 @@ export type ChatMessage = {
 
 export type ChatThread = {
   _id?: string;
+  threadType?: 'ORDER' | 'SUPPORT';
   orderId: string;
   lastMessageAt?: string;
   lastMessage?: string;
@@ -46,6 +47,7 @@ export type ChatThread = {
   };
   customer?: ChatUser;
   driver?: ChatUser;
+  supportUser?: ChatUser;
 };
 
 export const chatApi = api.injectEndpoints({

@@ -18,6 +18,7 @@ export type SavedCard = {
 };
 
 export const cardApi = api.injectEndpoints({
+  overrideExisting: true,
   endpoints: builder => ({
     getSavedCards: builder.query<ApiResponse<SavedCard[]>, void>({
       query: () => ({

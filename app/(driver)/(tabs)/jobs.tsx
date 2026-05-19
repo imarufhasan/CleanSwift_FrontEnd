@@ -46,12 +46,17 @@ const formatPickupTime = (order: Order) =>
     : "ASAP";
 
 const getEffectiveBagCount = (order: Order) =>
-  Math.max(0, order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0);
+  Math.max(
+    0,
+    order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0,
+  );
 
-const getEffectiveOrderTotal = (order: Order) => getEffectiveBagCount(order) * Number(order.pricePerBag ?? 0);
+const getEffectiveOrderTotal = (order: Order) =>
+  getEffectiveBagCount(order) * Number(order.pricePerBag ?? 0);
 
-const getOrderDriverEarningPercentage = (order: Pick<Order, "driverEarningPercentage">) =>
-  Number(order.driverEarningPercentage ?? 70);
+const getOrderDriverEarningPercentage = (
+  order: Pick<Order, "driverEarningPercentage">,
+) => Number(order.driverEarningPercentage ?? 70);
 
 const mapOrderToJob = (order: Order): JobCardData => ({
   id: order._id,
@@ -437,6 +442,13 @@ export default function JobsScreen() {
     });
   };
 
+  const EmptyState = ({ title }: { title: string }) => (
+    <View className="mt-10 items-center justify-center">
+      <Ionicons name="cube-outline" size={40} color="#9CA3AF" />
+      <Text className="mt-3 text-gray-500 text-base font-medium">{title}</Text>
+    </View>
+  );
+
   const renderJobs = () => {
     if (activeTab === "Available") {
       return (
@@ -444,9 +456,10 @@ export default function JobsScreen() {
           <Text className="mb-3 text-lg font-bold text-black">
             Available Jobs ({availableJobs.length})
           </Text>
-          {isAvailableLoading && (
-            <Text className="mb-3 text-gray-500">Loading jobs...</Text>
+          {availableJobs?.length === 0 && (
+            <EmptyState title="No available jobs right now" />
           )}
+
           {availableJobs.map((item) => (
             <JobCard
               key={item.id}
@@ -475,8 +488,8 @@ export default function JobsScreen() {
           <Text className="mb-3 text-lg font-bold text-black">
             Active Jobs ({activeJobs.length})
           </Text>
-          {isMyJobsLoading && (
-            <Text className="mb-3 text-gray-500">Loading jobs...</Text>
+          {activeJobs?.length === 0 && (
+            <EmptyState title="No active jobs right now" />
           )}
           {activeJobs.map((item) => (
             <JobCard
@@ -500,64 +513,11 @@ export default function JobsScreen() {
         <Text className="mb-3 text-lg font-bold">
           Completed ({completedJobs.length})
         </Text>
-        {/* {completedJobs.map((order) => (
-          <View
-            key={order.id}
-            className="mb-4 rounded-2xl border border-gray-200 bg-white p-4"
-          >
-            <View className="flex-row items-center justify-center">
-              <View className="mb-1 ml-2 flex-1 justify-between">
-                <Text className="font-semibold">
-                  Order #{formatOrderNumber(order.id)}
-                </Text>
-                <Text className="mb-2 text-sm text-gray-500">
-                  {order.quantity} bags
-                </Text>
-              </View>
 
-              <View className="items-end justify-center">
-                <Text className="text-lg font-bold text-green-600">
-                  {order.price}
-                </Text>
-                <View className="flex-row items-center">
-                  <RatingStars rating={5} />
-                  <Text className="ml-1 text-sm">5.00</Text>
-                </View>
-              </View>
-            </View>
+        {completedJobs?.length === 0 && (
+          <EmptyState title="No complete jobs right now" />
+        )}
 
-            <View className="mt-3 h-[1px] w-full bg-gray-100" />
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center">
-                <Ionicons
-                  name="checkmark-circle-outline"
-                  size={16}
-                  color="green"
-                />
-                <Text className="ml-1 text-sm text-green-600">
-                  {formatStatus(order.status)}
-                </Text>
-              </View>
-
-              <TouchableOpacity
-                onPress={() =>
-                  router.push({
-                    pathname: "/(common)/OrderDetailsDriver",
-                    params: { id: order.id },
-                  })
-                }
-                className="my-2"
-              >
-                <Text
-                  style={{ color: Colors.primary }}
-                  className="font-semibold"
-                >
-                  View Details
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))} */}
         <RecentOrdersList
           orders={completedJobs.map((job) => ({
             id: job.id,

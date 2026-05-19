@@ -85,6 +85,10 @@ export default function CommonLayout() {
         name="OrderTrackingForCustomer/index"
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name="PaymentMethods/index"
+        options={{ headerShown: false }}
+      />
     </Stack>
   );
 }

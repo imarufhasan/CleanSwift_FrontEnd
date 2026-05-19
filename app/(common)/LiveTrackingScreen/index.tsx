@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import {
 } from "@expo/vector-icons";
 import Colors from "@/constants/color";
 import RatingStars from "@/components/home/RatingStars";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useGetMyOrdersQuery, type Order } from "@/src/services/orderApi";
 import { useOrderSocket } from "@/src/hooks/useOrderSocket";
@@ -130,6 +130,12 @@ export default function LiveTrackingScreen() {
     orderId: activeOrder?._id,
     onCustomerUpdate: refetch,
   });
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch]),
+  );
 
   const steps = buildSteps(activeOrder);
   const completedCount = steps.filter((s) => s.status === "done").length;

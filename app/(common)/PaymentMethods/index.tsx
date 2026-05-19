@@ -2,7 +2,9 @@ import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   RefreshControl,
   ScrollView,
   Text,
@@ -48,11 +50,7 @@ const getApiErrorMessage = (error: any, fallback: string) =>
 
 export default function PaymentMethodsScreen() {
   const { createPaymentMethod } = useStripe();
-  const {
-    data: cardsRes,
-    isFetching,
-    refetch,
-  } = useGetSavedCardsQuery();
+  const { data: cardsRes, isFetching, refetch } = useGetSavedCardsQuery();
   const [attachCard, { isLoading: isSavingCard }] = useAttachCardMutation();
   const [setDefaultCard, { isLoading: isSettingDefault }] =
     useSetDefaultCardMutation();
@@ -209,11 +207,7 @@ export default function PaymentMethodsScreen() {
               >
                 <View className="flex-row items-center">
                   <View className="w-12 h-12 rounded-2xl bg-blue-50 items-center justify-center">
-                    <Ionicons
-                      name="card"
-                      size={24}
-                      color={Colors.primary}
-                    />
+                    <Ionicons name="card" size={24} color={Colors.primary} />
                   </View>
                   <View className="ml-3 flex-1">
                     <Text className="font-bold text-gray-900">
@@ -287,76 +281,82 @@ export default function PaymentMethodsScreen() {
         animationType="slide"
         onRequestClose={() => setAddModalVisible(false)}
       >
-        <View className="flex-1 bg-black/50 justify-end">
-          <View className="bg-white rounded-t-[28px] p-5">
-            <View className="flex-row items-center justify-between mb-5">
-              <View>
-                <Text className="text-[22px] font-bold text-gray-900">
-                  Add Card
-                </Text>
-                <Text className="text-gray-500 mt-1">
-                  Use Stripe test card 4242 4242 4242 4242.
-                </Text>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={0}
+        >
+          <View className="flex-1 bg-black/50 justify-end">
+            <View className="bg-white rounded-t-[28px] p-5">
+              <View className="flex-row items-center justify-between mb-5">
+                <View>
+                  <Text className="text-[22px] font-bold text-gray-900">
+                    Add Card
+                  </Text>
+                  <Text className="text-gray-500 mt-1">
+                    Use Stripe test card 4242 4242 4242 4242.
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => {
+                    setAddModalVisible(false);
+                    resetCardInput();
+                  }}
+                  className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center"
+                >
+                  <Ionicons name="close" size={22} color="#111827" />
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                onPress={() => {
-                  setAddModalVisible(false);
-                  resetCardInput();
-                }}
-                className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center"
+
+              <View className="border border-blue-100 rounded-2xl p-3 bg-white">
+                <CardField
+                  postalCodeEnabled={false}
+                  placeholders={{ number: "4242 4242 4242 4242" }}
+                  cardStyle={{
+                    backgroundColor: "#FFFFFF",
+                    textColor: "#111827",
+                    placeholderColor: "#9CA3AF",
+                  }}
+                  style={{ width: "100%", height: 52 }}
+                  onCardChange={(details) => {
+                    setCardDetails(details);
+                    setCardComplete(Boolean(details?.complete));
+                    setCardInputMessage(getCardInputMessage(details));
+                  }}
+                />
+              </View>
+
+              <Text
+                className={`mt-3 text-sm ${
+                  cardComplete ? "text-green-600" : "text-gray-500"
+                }`}
               >
-                <Ionicons name="close" size={22} color="#111827" />
+                {cardInputMessage}
+              </Text>
+
+              <TouchableOpacity
+                onPress={handleAddCard}
+                disabled={!cardComplete || isSavingCard}
+                style={{
+                  backgroundColor:
+                    cardComplete && !isSavingCard ? Colors.primary : "#93C5FD",
+                }}
+                className="mt-6 rounded-2xl py-4 flex-row items-center justify-center"
+              >
+                {isSavingCard ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <>
+                    <Ionicons name="card-outline" size={22} color="#fff" />
+                    <Text className="text-white font-bold text-[16px] ml-2">
+                      Save Card
+                    </Text>
+                  </>
+                )}
               </TouchableOpacity>
             </View>
-
-            <View className="border border-blue-100 rounded-2xl p-3 bg-white">
-              <CardField
-                postalCodeEnabled={false}
-                placeholders={{ number: "4242 4242 4242 4242" }}
-                cardStyle={{
-                  backgroundColor: "#FFFFFF",
-                  textColor: "#111827",
-                  placeholderColor: "#9CA3AF",
-                }}
-                style={{ width: "100%", height: 52 }}
-                onCardChange={(details) => {
-                  setCardDetails(details);
-                  setCardComplete(Boolean(details?.complete));
-                  setCardInputMessage(getCardInputMessage(details));
-                }}
-              />
-            </View>
-
-            <Text
-              className={`mt-3 text-sm ${
-                cardComplete ? "text-green-600" : "text-gray-500"
-              }`}
-            >
-              {cardInputMessage}
-            </Text>
-
-            <TouchableOpacity
-              onPress={handleAddCard}
-              disabled={!cardComplete || isSavingCard}
-              style={{
-                backgroundColor:
-                  cardComplete && !isSavingCard ? Colors.primary : "#93C5FD",
-              }}
-              className="mt-6 mb-3 rounded-2xl py-4 flex-row items-center justify-center"
-            >
-              {isSavingCard ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <>
-                  <Ionicons name="card-outline" size={22} color="#fff" />
-                  <Text className="text-white font-bold text-[16px] ml-2">
-                    Save Card
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

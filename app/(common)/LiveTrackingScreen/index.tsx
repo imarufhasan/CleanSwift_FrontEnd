@@ -1,6 +1,18 @@
 import React from "react";
-import { View, Text, TouchableOpacity, ScrollView, Image } from "react-native";
-import { Ionicons, Feather, AntDesign } from "@expo/vector-icons";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+  Linking,
+} from "react-native";
+import {
+  Ionicons,
+  Feather,
+  AntDesign,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
 import Colors from "@/constants/color";
 import RatingStars from "@/components/home/RatingStars";
 import { useRouter } from "expo-router";
@@ -14,102 +26,55 @@ const buildSteps = (order?: Order) => {
   const current = !order
     ? 0
     : order.status === "DELIVERED" || order.status === "COMPLETED"
-      ? 7
-    : order.status === "OUT_FOR_DELIVERY"
+      ? 8
+      : order.status === "OUT_FOR_DELIVERY"
         ? 6
         : order.status === "FOLDING"
           ? 5
           : order.status === "DRYING"
             ? 4
-        : order.timeline?.foldingAt
-          ? 5
-          : order.timeline?.dryingAt
-            ? 4
-            : order.status === "WASHING_DRYING"
-              ? 3
-              : order.status === "PICKED_UP"
-                ? 2
-                : order.status === "DRIVER_ASSIGNED"
-                  ? 1
-                  : 0;
+            : order.timeline?.foldingAt
+              ? 5
+              : order.timeline?.dryingAt
+                ? 4
+                : order.status === "WASHING_DRYING"
+                  ? 3
+                  : order.status === "PICKED_UP"
+                    ? 2
+                    : order.status === "DRIVER_ASSIGNED"
+                      ? 1
+                      : 0;
 
   const orderSteps = [
-    {
-      key: "requested",
-      title: "Requested",
-      match: [
-        "REQUESTED",
-        "DRIVER_ASSIGNED",
-        "PICKED_UP",
-        "WASHING_DRYING",
-        "OUT_FOR_DELIVERY",
-        "DELIVERED",
-      ],
-      icon: "time-outline",
-    },
+    { key: "requested", title: "Requested", icon: "time-outline" },
     {
       key: "driver_assigned",
       title: "Driver Assigned",
-      match: [
-        "DRIVER_ASSIGNED",
-        "PICKED_UP",
-        "WASHING_DRYING",
-        "OUT_FOR_DELIVERY",
-        "DELIVERED",
-      ],
       icon: "person-outline",
     },
-    {
-      key: "picked",
-      title: "Picked Up",
-      match: ["PICKED_UP", "WASHING_DRYING", "OUT_FOR_DELIVERY", "DELIVERED"],
-      icon: "cube-outline",
-    },
-    {
-      key: "washing",
-      title: "Washing",
-      match: ["WASHING_DRYING", "OUT_FOR_DELIVERY", "DELIVERED"],
-      icon: "water-outline",
-    },
-    {
-      key: "drying",
-      title: "Drying",
-      match: ["OUT_FOR_DELIVERY", "DELIVERED"],
-      icon: "cloud-outline",
-    },
-    {
-      key: "folding",
-      title: "Folding",
-      match: ["OUT_FOR_DELIVERY", "DELIVERED"],
-      icon: "inbox-outline",
-    },
-    {
-      key: "delivery",
-      title: "Out for Delivery",
-      match: ["OUT_FOR_DELIVERY", "DELIVERED"],
-      icon: "bicycle-outline",
-    },
+    { key: "picked", title: "Picked Up", icon: "cube-outline" },
+    { key: "washing", title: "Washing", icon: "water-outline" },
+    { key: "drying", title: "Drying", icon: "cloud-outline" },
+    { key: "folding", title: "Folding", icon: "layers-outline" },
+    { key: "delivery", title: "Out for Delivery", icon: "bicycle-outline" },
     {
       key: "delivered",
       title: "Delivered",
-      match: ["DELIVERED"],
       icon: "checkmark-done-circle-outline",
     },
   ];
 
-  return orderSteps.map((step, index) => {
-    const isDone = index < current;
-    const isActive = index === current;
-
-    return {
-      ...step,
-      status: isDone ? "done" : isActive ? "active" : "pending",
-    };
-  });
+  return orderSteps.map((step, index) => ({
+    ...step,
+    status: index < current ? "done" : index === current ? "active" : "pending",
+  }));
 };
 
 const getEffectiveBagCount = (order?: Order) =>
-  Math.max(0, order?.bagCountAtDelivery ?? order?.bagCountAtPickup ?? order?.bags ?? 0);
+  Math.max(
+    0,
+    order?.bagCountAtDelivery ?? order?.bagCountAtPickup ?? order?.bags ?? 0,
+  );
 
 export default function LiveTrackingScreen() {
   const router = useRouter();
@@ -117,27 +82,29 @@ export default function LiveTrackingScreen() {
   const { data: ordersRes, refetch } = useGetMyOrdersQuery();
   const orders = ordersRes?.data ?? [];
   const clickedOrder = orderId
-    ? orders.find((order) => order._id === orderId)
+    ? orders.find((o) => o._id === orderId)
     : undefined;
   const activeOrder = orderId
     ? clickedOrder
     : orders.find(
-        (order) =>
-          !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
+        (o) => !["DELIVERED", "COMPLETED", "CANCELED"].includes(o.status),
       );
+
   const driver = activeOrder?.driver ?? null;
   const driverName =
-    activeOrder && typeof activeOrder.driver === 'object' && activeOrder.driver
-      ? activeOrder.driver.name ?? 'Driver'
-      : 'Driver';
+    activeOrder && typeof activeOrder.driver === "object" && activeOrder.driver
+      ? (activeOrder.driver.name ?? "Driver")
+      : "Driver";
   const driverImage =
-    activeOrder && typeof activeOrder.driver === 'object' && activeOrder.driver
-      ? activeOrder.driver.image ?? ''
-      : '';
+    activeOrder && typeof activeOrder.driver === "object" && activeOrder.driver
+      ? (activeOrder.driver.image ?? "")
+      : "";
+
   const status = {
     label: activeOrder?.status?.replaceAll("_", " ") ?? "No active order",
     etaMinutes: activeOrder?.scheduledPickupAt ? 12 : 0,
   };
+
   const orderDetails = {
     service: activeOrder?.serviceType
       ? activeOrder.serviceType.replaceAll("_", " ")
@@ -164,13 +131,26 @@ export default function LiveTrackingScreen() {
     onCustomerUpdate: refetch,
   });
 
+  const steps = buildSteps(activeOrder);
+  const completedCount = steps.filter((s) => s.status === "done").length;
+  const progressPercent = Math.round((completedCount / steps.length) * 100);
+
+  const driverPhone =
+    activeOrder && typeof activeOrder.driver === "object" && activeOrder.driver
+      ? (activeOrder.driver.phone ?? "")
+      : "";
+
   return (
-    <ScrollView className="flex-1">
-      <SafeAreaView edges={["bottom"]} className="bg-[#F6F9FF] flex-1">
-        {/* Map Placeholder */}
-        <View className="h-[300px] bg-blue-100 relative">
-          {/* Fake Map Grid Background */}
-          <View className="absolute inset-0 opacity-40">
+    <View className="flex-1 bg-[#F6F9FF]">
+      <ScrollView
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 32 }}
+      >
+        {/* ═══════════════ MAP HERO ═══════════════ */}
+        <View className="h-[340px] bg-blue-50 relative overflow-hidden">
+          {/* Map grid */}
+          <View className="absolute inset-0 opacity-25">
             <View className="flex-1 flex-row flex-wrap">
               {[...Array(100)]?.map((_, i) => (
                 <View
@@ -181,272 +161,493 @@ export default function LiveTrackingScreen() {
             </View>
           </View>
 
-          {/* Fake Location Marker */}
-          <View className="absolute self-center top-1/2 -mt-10 items-center">
-            <View className="w-[100px] h-[100px] p-4 items-center justify-center bg-transparent border-blue-400 border-[1px] rounded-full">
-              <Ionicons name="location-sharp" size={30} color="#2563eb" />
-              <View className="w-3 h-3 bg-blue-600 rounded-full mt-1" />
+          {/* Faux route line */}
+          <View className="absolute inset-0 items-center justify-center">
+            <View
+              className="bg-blue-400 opacity-30"
+              style={{
+                width: 2,
+                height: 180,
+                transform: [{ rotate: "25deg" }],
+              }}
+            />
+          </View>
+
+          {/* Pulse location marker */}
+          <View className="absolute self-center top-1/2 -mt-14 items-center">
+            <View className="w-[140px] h-[140px] items-center justify-center rounded-full bg-blue-500/5">
+              <View className="w-[100px] h-[100px] items-center justify-center rounded-full bg-blue-500/10">
+                <View className="w-[68px] h-[68px] items-center justify-center rounded-full bg-blue-500/20">
+                  <View
+                    className="w-[56px] h-[56px] items-center justify-center rounded-full bg-white"
+                    style={{
+                      shadowColor: "#2563eb",
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.25,
+                      shadowRadius: 8,
+                      elevation: 6,
+                    }}
+                  >
+                    <Ionicons name="location-sharp" size={28} color="#2563eb" />
+                  </View>
+                </View>
+              </View>
             </View>
           </View>
 
-          {/* back icon */}
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="absolute top-12 left-4 bg-white p-2 rounded-full shadow"
+          {/* Top bar */}
+          <SafeAreaView
+            edges={["top"]}
+            className="absolute top-0 left-0 right-0"
           >
-            <Ionicons name="arrow-back" size={20} color="#000" />
-          </TouchableOpacity>
+            <View className="flex-row items-center justify-between px-4 pt-2">
+              <TouchableOpacity
+                onPress={() => router.back()}
+                className="bg-white w-11 h-11 rounded-full items-center justify-center"
+                style={{
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 8,
+                  elevation: 4,
+                }}
+              >
+                <Ionicons name="arrow-back" size={20} color="#111" />
+              </TouchableOpacity>
 
-          {/* Status Badge */}
-          <View className="absolute top-12 self-center bg-white px-4 py-2 rounded-full flex-row items-center shadow">
-            <View className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
-            <Text className="font-semibold text-lg">{status.label}</Text>
-          </View>
+              <View
+                className="bg-white px-4 py-2.5 rounded-full flex-row items-center"
+                style={{
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 8,
+                  elevation: 4,
+                }}
+              >
+                <View className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
+                <Text className="font-semibold text-sm text-gray-900">
+                  {status.label}
+                </Text>
+              </View>
 
-          {/* Zoom buttons */}
+              <View className="w-11" />
+            </View>
+          </SafeAreaView>
+
+          {/* Zoom */}
           <View className="absolute right-4 top-28">
-            <TouchableOpacity className="bg-white w-10 h-10 rounded-lg justify-center items-center mb-2 shadow">
+            <TouchableOpacity
+              className="bg-white w-10 h-10 rounded-xl justify-center items-center mb-2"
+              style={{
+                shadowColor: "#000",
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 3,
+              }}
+            >
               <Feather name="plus" size={18} />
             </TouchableOpacity>
-            <TouchableOpacity className="bg-white w-10 h-10 rounded-lg justify-center items-center shadow">
+            <TouchableOpacity
+              className="bg-white w-10 h-10 rounded-xl justify-center items-center"
+              style={{
+                shadowColor: "#000",
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 3,
+              }}
+            >
               <Feather name="minus" size={18} />
             </TouchableOpacity>
           </View>
+        </View>
 
-          {/* ETA Bubble */}
-          <View className="absolute left-4 bottom-4 bg-white px-4 py-2 rounded-xl shadow">
-            <Text className="text-sm text-gray-500">Estimated Ready Time</Text>
-            <Text className="font-bold text-[22px]">
-              {status.etaMinutes ? `${status.etaMinutes} mins` : "--"}
-            </Text>
+        {/* ═══════════════ ETA + PROGRESS OVERLAY CARD ═══════════════ */}
+        <View className="-mt-12 mx-5 mb-6">
+          <View
+            className="bg-white rounded-3xl p-5"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.1,
+              shadowRadius: 16,
+              elevation: 8,
+            }}
+          >
+            <View className="flex-row items-center justify-between mb-4">
+              <View>
+                <Text className="text-xs text-gray-500 font-medium">
+                  Estimated Ready Time
+                </Text>
+                <Text className="font-bold text-3xl text-gray-900 mt-1">
+                  {status.etaMinutes ? `${status.etaMinutes}` : "--"}
+                  <Text className="text-base font-semibold text-gray-500">
+                    {" "}
+                    mins
+                  </Text>
+                </Text>
+              </View>
+              <View className="bg-blue-50 w-14 h-14 rounded-2xl items-center justify-center">
+                <Ionicons name="time-outline" size={26} color="#2563eb" />
+              </View>
+            </View>
+
+            {/* Progress bar */}
+            <View>
+              <View className="flex-row justify-between mb-2">
+                <Text className="text-xs font-semibold text-gray-600">
+                  {completedCount} of {steps.length} steps
+                </Text>
+                <Text className="text-xs font-semibold text-blue-600">
+                  {progressPercent}%
+                </Text>
+              </View>
+              <View className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <View
+                  className="h-full bg-blue-500 rounded-full"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </View>
+            </View>
           </View>
         </View>
 
-        {/* Order Progress */}
-        <View className="px-5 mt-6">
-          <View className="flex-row items-center mb-3 justify-between">
-            <Text className="font-bold text-[22px]">Order Progress</Text>
-            <Text className="text-sm bg-red-100 rounded-full px-3 py-2 font-bold text-red-500 ml-2">
-              In Progress
+        {/* ═══════════════ ORDER PROGRESS ═══════════════ */}
+        <View className="px-5 mb-6">
+          <View className="flex-row items-center justify-between mb-4">
+            <Text className="font-bold text-xl text-gray-900">
+              Order Progress
             </Text>
+            <View className="bg-blue-50 rounded-full px-3 py-1.5 flex-row items-center">
+              <View className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5" />
+              <Text className="text-xs font-semibold text-blue-600">Live</Text>
+            </View>
           </View>
-          <View className="bg-white rounded-2xl p-4 shadow">
-              {buildSteps(activeOrder)?.map((step, index) => {
-              if (step.status === "done") {
-                return (
-                  <View key={step.key}>
-                    <View className="flex-row">
-                      <View className="items-center mr-3">
-                        <View className="w-9 h-9 rounded-full bg-green-200 justify-center items-center">
-                          <Ionicons
-                            name={step.icon as any}
-                            size={22}
-                            color={"green"}
-                          />
-                        </View>
-                        <View className="w-[2px] flex-1 bg-green-500 mt-1" />
-                      </View>
 
-                      <View>
-                        <Text className="font-medium">{step.title}</Text>
-                        <Text className="text-xs text-gray-500">
-                          {/* {step.time} */}
-                        </Text>
-                      </View>
-                    </View>
-                    {step.title !== "Delivered" ? (
-                      <View className="bg-green-200 h-[30px] w-[1px] ml-4 my-2 rounded-full" />
-                    ) : null}
-                  </View>
-                );
-              }
-
-              if (step.status === "active") {
-                return (
-                  <View key={step.key} className="flex-row mb-6">
-                    <View className="items-center mr-3">
-                      <View className="w-9 h-9 rounded-full bg-blue-100 justify-center items-center">
-                        <Ionicons
-                          name={step.icon as any}
-                          size={22}
-                          color="#3B82F6"
-                        />
-                      </View>
-                    </View>
-
-                    <View>
-                      <Text className="font-medium text-black">
-                        {step.title}
-                      </Text>
-                      <Text className="text-xs text-black">In Progress</Text>
-                      <Text className="text-xs text-blue-500 font-semibold">
-                        {/* {step.subtitle} */}
-                      </Text>
-                    </View>
-                  </View>
-                );
-              }
+          <View
+            className="bg-white rounded-3xl p-5"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06,
+              shadowRadius: 12,
+              elevation: 3,
+            }}
+          >
+            {steps?.map((step, index) => {
+              const isLast = index === steps.length - 1;
+              const isDone = step.status === "done";
+              const isActive = step.status === "active";
+              const nextIsDone = !isLast && steps[index + 1].status === "done";
 
               return (
-                <View key={step.key} className="flex-row mb-5 opacity-40">
-                  <View className="items-center mr-3">
-                    <View className="w-9 h-9 rounded-full bg-gray-300 justify-center items-center">
-                      <Ionicons
-                        name={step.icon as any}
-                        size={20}
-                        color="#000"
-                      />
+                <View key={step.key} className="flex-row">
+                  {/* Icon + line column — continuous, no gaps */}
+                  <View className="items-center mr-4" style={{ width: 40 }}>
+                    <View
+                      className={`w-10 h-10 rounded-full justify-center items-center ${
+                        isDone
+                          ? "bg-green-500"
+                          : isActive
+                            ? "bg-blue-500"
+                            : "bg-gray-100"
+                      }`}
+                      style={
+                        isActive
+                          ? {
+                              shadowColor: "#3B82F6",
+                              shadowOffset: { width: 0, height: 0 },
+                              shadowOpacity: 0.4,
+                              shadowRadius: 8,
+                              elevation: 4,
+                            }
+                          : undefined
+                      }
+                    >
+                      {isDone ? (
+                        <Ionicons name="checkmark" size={20} color="#fff" />
+                      ) : (
+                        <Ionicons
+                          name={step.icon as any}
+                          size={18}
+                          color={isActive ? "#fff" : "#9ca3af"}
+                        />
+                      )}
                     </View>
+
+                    {!isLast && (
+                      <View
+                        className={`w-[2px] flex-1 ${
+                          isDone && nextIsDone
+                            ? "bg-green-500"
+                            : isDone
+                              ? "bg-blue-400"
+                              : "bg-gray-200"
+                        }`}
+                      />
+                    )}
                   </View>
-                  <Text className="font-medium">{step.title}</Text>
+
+                  {/* Text column */}
+                  <View className={`flex-1 ${!isLast ? "pb-6" : ""} pt-2`}>
+                    <Text
+                      className={`font-semibold text-base ${
+                        isDone || isActive ? "text-gray-900" : "text-gray-400"
+                      }`}
+                    >
+                      {step.title}
+                    </Text>
+                    {isActive && (
+                      <View className="flex-row items-center mt-1">
+                        <View className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5" />
+                        <Text className="text-xs text-blue-600 font-semibold">
+                          In Progress
+                        </Text>
+                      </View>
+                    )}
+                    {isDone && (
+                      <Text className="text-xs text-green-600 font-medium mt-0.5">
+                        Completed
+                      </Text>
+                    )}
+                  </View>
                 </View>
               );
             })}
           </View>
         </View>
 
-        {/* Driver Card */}
-        <View className="bg-white rounded-2xl p-4 shadow mx-5 mb-5 mt-4">
-          <View className="flex-row items-center mb-3">
-              <Image
-                source={driverImage ? { uri: driverImage } : require("@/assets/images/profile.png")}
-                style={{ width: 40, height: 40, borderRadius: 25 }}
-                resizeMode="cover"
-              />
-            <View className="flex-1 ml-2">
-              <Text className="font-semibold text-base">
-                {driverName}
-              </Text>
-              <View className="flex-row items-center mt-1">
-                <RatingStars rating={driverImage || driverName !== 'Driver' ? 4.9 : 0} />
-                <Text className="text-sm ml-1 text-gray-600">
-                  {driverImage || driverName !== 'Driver' ? "Assigned driver" : "No driver yet"}
-                </Text>
+        {/* ═══════════════ DRIVER CARD ═══════════════ */}
+        <View className="mx-5 mb-6">
+          <Text className="font-bold text-xl text-gray-900 mb-3">
+            Your Driver
+          </Text>
+
+          <View
+            className="bg-white rounded-3xl p-5"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06,
+              shadowRadius: 12,
+              elevation: 3,
+            }}
+          >
+            <View className="flex-row items-center mb-4">
+              <View className="relative">
+                <Image
+                  source={
+                    driverImage
+                      ? { uri: driverImage }
+                      : require("@/assets/images/profile.png")
+                  }
+                  style={{ width: 56, height: 56, borderRadius: 28 }}
+                  resizeMode="cover"
+                />
+                <View className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
               </View>
+
+              <View className="flex-1 ml-3">
+                <Text className="font-bold text-base text-gray-900">
+                  {driverName}
+                </Text>
+                <View className="flex-row items-center mt-1">
+                  <RatingStars
+                    rating={driverImage || driverName !== "Driver" ? 4.9 : 0}
+                  />
+                  <Text className="text-xs ml-1.5 text-gray-500">
+                    {driverImage || driverName !== "Driver"
+                      ? "Assigned driver"
+                      : "No driver yet"}
+                  </Text>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                onPress={() =>
+                  router.push({
+                    pathname: "/(common)/DriverDetails" as any,
+                    params: {
+                      orderId: String(activeOrder?._id ?? ""),
+                      name: driver?.name ?? "Driver",
+                      image: driverImage,
+                      rating: "4.9",
+                      trips: "0",
+                      vehicle: "Vehicle info unavailable",
+                    },
+                  })
+                }
+                className="bg-gray-50 w-9 h-9 rounded-full items-center justify-center"
+              >
+                <Feather name="chevron-right" size={18} color="#6b7280" />
+              </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
-              onPress={() =>
-                router.push({
-                  pathname: "/(common)/DriverDetails" as any,
-                  params: {
-                    orderId: String(activeOrder?._id ?? ""),
-                    name: driver?.name ?? "Driver",
-                    image: driverImage,
-                    rating: "4.9",
-                    trips: "0",
-                    vehicle: "Vehicle info unavailable",
-                  },
-                })
-              }
-            >
-              <Text
-                style={{ color: Colors.primary }}
-                className="text-sm font-semibold text-right"
+            <View className="flex-row gap-3">
+              <TouchableOpacity
+                onPress={() =>
+                  router.push({
+                    pathname: "/(common)/ChatScreen" as any,
+                    params: {
+                      orderId: String(activeOrder?._id ?? ""),
+                      name: driverName,
+                      avatar: driverImage,
+                    },
+                  })
+                }
+                className="flex-1 bg-blue-50 rounded-2xl py-3.5 flex-row justify-center items-center"
               >
-                View Details
-              </Text>
-            </TouchableOpacity>
-          </View>
+                <AntDesign name="message" size={16} color={Colors.primary} />
+                <Text
+                  style={{ color: Colors.primary }}
+                  className="ml-2 font-semibold text-sm"
+                >
+                  Message
+                </Text>
+              </TouchableOpacity>
 
-          <View className="flex-row">
-            <TouchableOpacity
-              onPress={() =>
-                router.push({
-                  pathname: "/(common)/ChatScreen" as any,
-                  params: {
-                    orderId: String(activeOrder?._id ?? ""),
-                    name: driverName,
-                    avatar: driverImage,
-                  },
-                })
-              }
-              className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center mr-2"
-            >
-              <AntDesign name="message" size={18} color={Colors.primary} />
-              <Text
-                style={{ color: Colors.primary }}
-                className="ml-2 font-semibold"
+              <TouchableOpacity
+                onPress={() => {
+                  if (driverPhone) {
+                    Linking.openURL(`tel:${driverPhone}`);
+                  } else {
+                    router.push({
+                      pathname: "/(common)/CallScreen" as any,
+                      params: { name: driverName, image: driverImage },
+                    });
+                  }
+                }}
+                style={{ backgroundColor: Colors.primary }}
+                className="flex-1 rounded-2xl py-3.5 flex-row justify-center items-center"
               >
-                Message
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() =>
-                router.push({
-                  pathname: "/(common)/CallScreen" as any,
-                  params: {
-                    name: driverName,
-                    image: driverImage,
-                  },
-                })
-              }
-              className="flex-1 border bg-blue-100 border-blue-400 rounded-xl py-3 flex-row justify-center items-center ml-2"
-            >
-              <Ionicons name="call-outline" size={18} color={Colors.primary} />
-              <Text
-                style={{ color: Colors.primary }}
-                className="ml-2 font-semibold"
-              >
-                Call Driver
-              </Text>
-            </TouchableOpacity>
+                <Ionicons name="call-outline" size={16} color="#fff" />
+                <Text className="ml-2 font-semibold text-sm text-white">
+                  Call Driver
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
-        <View className="mx-5 mb-5">
-          <Text className="font-bold text-[20px] mb-3">Order Details</Text>
+        {/* ═══════════════ ORDER DETAILS ═══════════════ */}
+        <View className="mx-5 mb-6">
+          <Text className="font-bold text-xl text-gray-900 mb-3">
+            Order Details
+          </Text>
 
-            <View className="bg-white rounded-2xl p-4 shadow mb-8">
-              <View className="mb-3">
-                <Text className="text-gray-500 text-xs">Order ID</Text>
-                <Text className="font-medium">#{formatOrderNumber(activeOrder?._id ?? "")}</Text>
+          <View
+            className="bg-white rounded-3xl p-5"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06,
+              shadowRadius: 12,
+              elevation: 3,
+            }}
+          >
+            {/* Top row: Order ID + Service */}
+            <View className="flex-row mb-5">
+              <View className="flex-1 flex-row items-center">
+                <View className="bg-blue-50 w-10 h-10 rounded-xl items-center justify-center mr-3">
+                  <Feather name="hash" size={16} color="#2563eb" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-gray-400 text-xs font-medium">
+                    Order ID
+                  </Text>
+                  <Text
+                    className="font-semibold text-gray-900 text-sm"
+                    numberOfLines={1}
+                  >
+                    {formatOrderNumber(activeOrder?._id ?? "")}
+                  </Text>
+                </View>
               </View>
-
-              <View className="mb-3">
-                <Text className="text-gray-500 text-xs">Service</Text>
-                <Text className="font-medium">{orderDetails.service}</Text>
-              </View>
-
-            <View className="mb-3">
-              <Text className="text-gray-500 text-xs">Pickup Address</Text>
-              <Text className="font-medium">{orderDetails.address.street}</Text>
             </View>
 
-            <View className="mb-3">
-              <Text className="text-gray-500 text-xs">
-                Special Instructions
-              </Text>
-              <Text className="font-medium">{orderDetails.instructions}</Text>
+            <View className="flex-row items-center mb-5">
+              <View className="bg-purple-50 w-10 h-10 rounded-xl items-center justify-center mr-3">
+                <MaterialCommunityIcons
+                  name="washing-machine"
+                  size={18}
+                  color="#9333ea"
+                />
+              </View>
+              <View className="flex-1">
+                <Text className="text-gray-400 text-xs font-medium">
+                  Service
+                </Text>
+                <Text className="font-semibold text-gray-900 text-sm">
+                  {orderDetails.service}
+                </Text>
+              </View>
             </View>
 
-            <View className="pt-3">
-              <View className="border-t border-b border-gray-200 py-3 flex-row justify-between mb-2">
-                <Text className="text-gray-600">
+            <View className="flex-row items-start mb-5">
+              <View className="bg-orange-50 w-10 h-10 rounded-xl items-center justify-center mr-3">
+                <Ionicons name="location-outline" size={18} color="#ea580c" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-gray-400 text-xs font-medium">
+                  Pickup Address
+                </Text>
+                <Text className="font-semibold text-gray-900 text-sm leading-5">
+                  {orderDetails.address.street}
+                </Text>
+              </View>
+            </View>
+
+            <View className="flex-row items-start mb-5">
+              <View className="bg-amber-50 w-10 h-10 rounded-xl items-center justify-center mr-3">
+                <Feather name="info" size={16} color="#d97706" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-gray-400 text-xs font-medium">
+                  Instructions
+                </Text>
+                <Text className="font-medium text-gray-700 text-sm leading-5">
+                  {orderDetails.instructions}
+                </Text>
+              </View>
+            </View>
+
+            {/* Price summary */}
+            <View className="bg-gray-50 rounded-2xl p-4">
+              <View className="flex-row justify-between mb-2">
+                <Text className="text-gray-600 text-sm">
                   {orderDetails.pricing.bags} bags × $
                   {orderDetails.pricing.bagPrice}
                 </Text>
-                <Text>
+                <Text className="text-gray-900 font-semibold text-sm">
                   ${orderDetails.pricing.bags * orderDetails.pricing.bagPrice}
                 </Text>
               </View>
 
-              <View className="flex-row justify-between mb-2">
-                <Text className="text-gray-600">Tip</Text>
-                <Text>${orderDetails.pricing.tip}</Text>
+              <View className="flex-row justify-between mb-3">
+                <Text className="text-gray-600 text-sm">Tip</Text>
+                <Text className="text-gray-900 font-semibold text-sm">
+                  ${orderDetails.pricing.tip}
+                </Text>
               </View>
 
-              <View className="flex-row justify-between mt-2">
-                <Text className="font-bold">Total</Text>
-                <Text className="font-bold text-blue-600">${total}</Text>
+              <View className="h-[1px] bg-gray-200 mb-3" />
+
+              <View className="flex-row justify-between items-center">
+                <Text className="font-bold text-base text-gray-900">Total</Text>
+                <Text
+                  className="font-bold text-xl"
+                  style={{ color: Colors.primary }}
+                >
+                  ${total}
+                </Text>
               </View>
             </View>
           </View>
         </View>
 
+        {/* ═══════════════ COMPLETE DELIVERY CTA ═══════════════ */}
         {activeOrder?.status === "OUT_FOR_DELIVERY" && (
-          <View className="px-5 mb-5">
+          <View className="px-5 mb-6">
             <TouchableOpacity
               onPress={() =>
                 router.push({
@@ -463,16 +664,25 @@ export default function LiveTrackingScreen() {
                   },
                 })
               }
-              className="bg-green-600 gap-2 rounded-xl py-3 flex-row justify-center items-center"
+              className="bg-green-600 rounded-2xl py-4 flex-row justify-center items-center"
+              style={{
+                shadowColor: "#16a34a",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 12,
+                elevation: 6,
+              }}
             >
-              <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
-              <Text className="text-white text-lg font-semibold">
+              <Ionicons name="checkmark-circle" size={22} color="#fff" />
+              <Text className="text-white text-base font-bold ml-2">
                 Complete Delivery
               </Text>
             </TouchableOpacity>
           </View>
         )}
-      </SafeAreaView>
-    </ScrollView>
+
+        <SafeAreaView edges={["bottom"]} />
+      </ScrollView>
+    </View>
   );
 }

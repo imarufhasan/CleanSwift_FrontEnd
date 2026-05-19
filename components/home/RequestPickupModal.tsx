@@ -455,7 +455,7 @@ export default function RequestPickupModal({
         )}
 
         {/* Footer Buttons */}
-        <View className="flex-row mt-6 px-5">
+        <View className="flex-row mt-6 px-5 mb-4">
           {step > 0 && (
             <TouchableOpacity
               onPress={() => setStep(prev => (prev - 1) as Step)}

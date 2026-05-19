@@ -33,18 +33,25 @@ import type { Order } from "@/src/services/orderApi";
 import { useOrderSocket } from "@/src/hooks/useOrderSocket";
 import { formatOrderNumber } from "@/src/utils/orderNumber";
 import { useGetDriverRatingsQuery } from "@/src/services/ratingApi";
+import SkeletonPlaceholder from "@/components/common/SkeletonPlaceholder";
+import { Dimensions } from "react-native";
 
 const getEffectiveBagCount = (order: Order) =>
-  Math.max(0, order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0);
+  Math.max(
+    0,
+    order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0,
+  );
 
 const getEffectiveOrderTotal = (order: Order) =>
   getEffectiveBagCount(order) * Number(order.pricePerBag ?? 0);
 
-const getOrderDriverEarningPercentage = (order: Pick<Order, "driverEarningPercentage">) =>
-  Number(order.driverEarningPercentage ?? 70);
+const getOrderDriverEarningPercentage = (
+  order: Pick<Order, "driverEarningPercentage">,
+) => Number(order.driverEarningPercentage ?? 70);
 
 const getDriverEarning = (order: Order) =>
-  (getEffectiveOrderTotal(order) * getOrderDriverEarningPercentage(order)) / 100;
+  (getEffectiveOrderTotal(order) * getOrderDriverEarningPercentage(order)) /
+  100;
 
 // Sub-component to handle per-order animated progress bar
 function ActiveOrderCard({
@@ -81,7 +88,7 @@ function ActiveOrderCard({
             <Ionicons name="cube-outline" size={20} color={Colors.primary} />
           </View>
 
-        <View className="ml-2">
+          <View className="ml-2">
             <View className="flex-row items-center gap-2">
               <Text className="font-semibold">
                 Order #{formatOrderNumber(order._id)}
@@ -93,7 +100,8 @@ function ActiveOrderCard({
               </View>
             </View>
             <Text className="text-sm text-gray-500 mb-3">
-              {getEffectiveBagCount(order)} bags • ${getEffectiveOrderTotal(order).toFixed(2)}
+              {getEffectiveBagCount(order)} bags • $
+              {getEffectiveOrderTotal(order).toFixed(2)}
             </Text>
           </View>
         </View>
@@ -109,13 +117,18 @@ function ActiveOrderCard({
 
       {/* Steps */}
       <View className="flex-row justify-between mb-2">
-        {["Requested", "Picked Up", "Washing", "Drying", "Folding", "Delivery"].map((step, index) => (
+        {[
+          "Requested",
+          "Picked Up",
+          "Washing",
+          "Drying",
+          "Folding",
+          "Delivery",
+        ].map((step, index) => (
           <Text
             key={step}
             className={`text-xs ${
-              index <= getOrderStep(order)
-                ? "text-blue-500"
-                : "text-gray-400"
+              index <= getOrderStep(order) ? "text-blue-500" : "text-gray-400"
             }`}
           >
             {step}
@@ -162,6 +175,98 @@ function ActiveOrderCard({
     </View>
   );
 }
+
+const { width } = Dimensions.get("window");
+
+const ContentSkeleton = () => {
+  const CARD_WIDTH = (width - 40) / 2;
+
+  return (
+    <View className="flex-1 bg-white px-5 pt-4">
+      {/* ── Header Skeleton ── */}
+      <View className="flex-row items-center justify-between mb-6">
+        <View>
+          <SkeletonPlaceholder>
+            <SkeletonPlaceholder.Item
+              width={140}
+              height={18}
+              borderRadius={6}
+            />
+          </SkeletonPlaceholder>
+          <View className="mt-2">
+            <SkeletonPlaceholder>
+              <SkeletonPlaceholder.Item
+                width={180}
+                height={14}
+                borderRadius={6}
+              />
+            </SkeletonPlaceholder>
+          </View>
+        </View>
+
+        <SkeletonPlaceholder>
+          <SkeletonPlaceholder.Item width={40} height={40} borderRadius={20} />
+        </SkeletonPlaceholder>
+      </View>
+
+      {/* ── Request Pickup Card Skeleton ── */}
+      <SkeletonPlaceholder borderRadius={20}>
+        <SkeletonPlaceholder.Item
+          width="100%"
+          height={120}
+          borderRadius={20}
+          marginBottom={20}
+        />
+      </SkeletonPlaceholder>
+
+      {/* ── Active Orders Title ── */}
+      <View className="flex-row items-center justify-between mb-3">
+        <SkeletonPlaceholder>
+          <SkeletonPlaceholder.Item width={140} height={20} borderRadius={6} />
+        </SkeletonPlaceholder>
+
+        <SkeletonPlaceholder>
+          <SkeletonPlaceholder.Item width={80} height={28} borderRadius={20} />
+        </SkeletonPlaceholder>
+      </View>
+
+      {/* ── Active Order Cards ── */}
+      {[1, 2].map((i) => (
+        <SkeletonPlaceholder key={i} borderRadius={16}>
+          <SkeletonPlaceholder.Item
+            width="100%"
+            height={140}
+            borderRadius={16}
+            marginBottom={12}
+          />
+        </SkeletonPlaceholder>
+      ))}
+
+      {/* ── Recent Orders Title ── */}
+      <View className="flex-row items-center justify-between mt-6 mb-3">
+        <SkeletonPlaceholder>
+          <SkeletonPlaceholder.Item width={130} height={18} borderRadius={6} />
+        </SkeletonPlaceholder>
+
+        <SkeletonPlaceholder>
+          <SkeletonPlaceholder.Item width={70} height={24} borderRadius={20} />
+        </SkeletonPlaceholder>
+      </View>
+
+      {/* ── Recent Orders List ── */}
+      {[1, 2, 3].map((i) => (
+        <SkeletonPlaceholder key={i} borderRadius={12}>
+          <SkeletonPlaceholder.Item
+            width="100%"
+            height={70}
+            borderRadius={12}
+            marginBottom={10}
+          />
+        </SkeletonPlaceholder>
+      ))}
+    </View>
+  );
+};
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -262,8 +367,7 @@ export default function HomeScreen() {
     : 0;
 
   const capacityLimit = Math.max(1, Number(driverProfile?.capacityLimit ?? 3));
-  const isAtCapacity =
-    driverApproved && activeOrders.length >= capacityLimit;
+  const isAtCapacity = driverApproved && activeOrders.length >= capacityLimit;
 
   const tierNumber = driverProfile?.reputationTier ?? 0;
   const tierText = tierNumber > 0 ? `Tier ${tierNumber}` : "N/A";
@@ -371,7 +475,8 @@ export default function HomeScreen() {
   ]);
 
   const getOrderStep = (order: Order) => {
-    if (order.status === "REQUESTED" || order.status === "DRIVER_ASSIGNED") return 0;
+    if (order.status === "REQUESTED" || order.status === "DRIVER_ASSIGNED")
+      return 0;
     if (order.status === "PICKED_UP") return 1;
     if (order.status === "WASHING_DRYING") return 2;
     if (order.status === "DRYING") return 3;
@@ -486,312 +591,325 @@ export default function HomeScreen() {
     }).start();
   }, [selected]);
 
+  const showSkeletonFirstTime =
+    isLoading && !driverProfileRes?.data && !myJobsRes?.data;
+
   return (
     <View className="flex-1 bg-blue-50">
-      <ScrollView
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            progressViewOffset={50}
-          />
-        }
-        className="flex-1 bg-blue-50"
-      >
-        {/* Header */}
-        <View
-          style={{
-            backgroundColor: Colors.primary,
-          }}
-          className=" rounded-b-[40px] pb-[60px]"
+      {showSkeletonFirstTime ? (
+        <ContentSkeleton />
+      ) : (
+        <ScrollView
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              progressViewOffset={50}
+            />
+          }
+          className="flex-1 bg-blue-50"
         >
-          <View className="flex-row px-5 pt-12 justify-between items-center">
-            <View className="flex-1">
-              <Text className="text-[16px] text-white/80">Welcome back,</Text>
-              <Text className="text-[22px] font-bold text-white">
-                {profileInfo && profileInfo.data ? profileInfo.data.name : ""}
-              </Text>
-            </View>
-
-            <View className="flex-row items-center gap-1">
-              <View
-                className={`w-4 h-4 rounded-full ${
-                  selected ? "bg-green-400" : "bg-gray-400"
-                }`}
-              />
-              <Text className="text-white text-base">
-                {selected ? "Online" : "Offline"}
-              </Text>
-            </View>
-          </View>
-
-          {/* Availability Status */}
-          <View className="px-5 mt-8">
-            <View
-              style={{
-                backgroundColor: Colors.primary,
-              }}
-              className="border border-white/40 rounded-2xl p-4"
-            >
-              <View className="flex-row justify-between items-start">
-                <View className="flex-row items-start">
-                  <View className="ml-3">
-                    <Text className="text-white font-semibold">
-                      Availability Status
-                    </Text>
-                    <Text className="text-white text-sm">
-                      {selected ? "Accepting new jobs" : "Not accepting jobs"}
-                    </Text>
-                  </View>
-                </View>
-
-                <TouchableOpacity
-                  onPress={handleToggleAvailability}
-                  activeOpacity={0.8}
-                  disabled={isUpdatingAvailability}
-                  className={`w-[70px] h-[36px] rounded-full justify-center ${
-                    selected ? "bg-green-500" : "bg-gray-400"
-                  }`}
-                >
-                  <Animated.View
-                    style={{ transform: [{ translateX }] }}
-                    className="w-[26px] h-[26px] rounded-full bg-white"
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Driver pending/rejected banner */}
-        {!driverApproved && (
-          <View className="px-5 -mt-8 z-20">
-            <View className="rounded-2xl border border-yellow-200 bg-yellow-50 p-4">
-              <Text className="text-base font-bold text-yellow-700">
-                Driver profile {driverStatus.toLowerCase()}
-              </Text>
-              <Text className="mt-1 text-sm text-yellow-700">
-                {driverStatus === "PENDING"
-                  ? "Your driver profile is under approval. You can start taking jobs after admin approval."
-                  : "Please contact support for more details."}
-              </Text>
-            </View>
-          </View>
-        )}
-
-        {/* Today's Earnings */}
-        <View className="px-5 -mt-12 z-10">
+          {/* Header */}
           <View
             style={{
               backgroundColor: Colors.primary,
             }}
-            className="border border-white/40 shadow-xl rounded-2xl p-5 flex-row justify-between items-center"
+            className=" rounded-b-[40px] pb-[60px]"
           >
-            <View>
-              <Text className="text-white text-base">Today's Earnings</Text>
-              <Text className="text-white/90 text-2xl font-bold mt-1">
-                ${completedTodayEarnings.toFixed(2)}
-              </Text>
-            </View>
-
-            <View className="bg-white w-12 h-12 rounded-full justify-center items-center shadow">
-              <Feather name="dollar-sign" size={26} color={Colors.primary} />
-            </View>
-          </View>
-        </View>
-
-        {/* Content */}
-        <View className="px-5 mt-6">
-          {/* Today's Status */}
-          <TodayStats
-            deliveries={completedTodayJobs.length}
-            hours={activeHours}
-            ratingText={
-              driverRatingSummary && driverRatingSummary.count > 0
-                ? Number(driverRatingSummary.avg ?? 0).toFixed(1)
-                : "N/A"
-            }
-            ratingSubtitle={
-              driverRatingSummary && driverRatingSummary.count > 0
-                ? `${driverRatingSummary.count} reviews`
-                : "No reviews yet"
-            }
-            tierText={tierText}
-            tierSubtitle={tierSubtitle}
-          />
-
-          {/* Active Route */}
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-xl font-bold">Active Route</Text>
-            {activeOrders.length > 2 && (
-              <TouchableOpacity
-                onPress={() => {
-                  router.push("/(driver)/(tabs)/jobs?tab=Active");
-                }}
-                activeOpacity={0.7}
-                className="flex-row items-center bg-blue-50 px-4 py-2 rounded-full border border-blue-100"
-              >
-                <Text
-                  style={{ color: Colors.primary }}
-                  className="text-sm font-semibold mr-1"
-                >
-                  View All
+            <View className="flex-row px-5 pt-12 justify-between items-center">
+              <View className="flex-1">
+                <Text className="text-[16px] text-white/80">Welcome back,</Text>
+                <Text className="text-[22px] font-bold text-white">
+                  {profileInfo && profileInfo.data ? profileInfo.data.name : ""}
                 </Text>
-                <Ionicons
-                  name="arrow-forward"
-                  size={16}
-                  color={Colors.primary}
+              </View>
+
+              <View className="flex-row items-center gap-1">
+                <View
+                  className={`w-4 h-4 rounded-full ${
+                    selected ? "bg-green-400" : "bg-gray-400"
+                  }`}
                 />
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {activeOrders.length > 0 ? (
-            activeOrders.map((order) => (
-              <ActiveOrderCard
-                key={order._id}
-                order={order}
-                router={router}
-                getOrderProgress={getOrderProgress}
-                getOrderStep={getOrderStep}
-                getStatusStyle={getStatusStyle}
-              />
-            ))
-          ) : (
-            <View className="bg-white rounded-2xl p-6 shadow-sm mb-6 border border-gray-100">
-              <Text className="text-gray-500">No active route right now</Text>
-            </View>
-          )}
-
-          {/* Available Jobs */}
-          <View className="mb-3 mt-4 flex-row items-center justify-between">
-            <Text className="text-lg font-bold">Available Jobs</Text>
-
-            {availableOrder?.length > 2 && (
-              <TouchableOpacity
-                onPress={() => {
-                  router.push("/(driver)/(tabs)/jobs?tab=Available");
-                }}
-                activeOpacity={0.7}
-                className="flex-row items-center bg-blue-50 px-4 py-2 rounded-full border border-blue-100"
-              >
-                <Text
-                  style={{ color: Colors.primary }}
-                  className="text-sm font-semibold mr-1"
-                >
-                  View All
+                <Text className="text-white text-base">
+                  {selected ? "Online" : "Offline"}
                 </Text>
-                <Ionicons
-                  name="arrow-forward"
-                  size={16}
-                  color={Colors.primary}
-                />
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {isAtCapacity && (
-            <View className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-              <Text className="font-semibold text-amber-700">Capacity full</Text>
-              <Text className="mt-1 text-sm text-amber-700">
-                Finish one active order to accept more.
-              </Text>
+              </View>
             </View>
-          )}
 
-          {availableOrder.length > 0 ? (
-            availableOrder?.slice(0,2)?.map((job) => (
+            {/* Availability Status */}
+            <View className="px-5 mt-8">
               <View
-                key={job._id}
-                className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100"
+                style={{
+                  backgroundColor: Colors.primary,
+                }}
+                className="border border-white/40 rounded-2xl p-4"
               >
-                <View className="flex-row justify-between items-start mb-3">
-                  <View className="flex-row mr-2 w-[65%]">
-                    <View className="ml-2">
-                      <Text className="font-semibold mb-1">
-                        Order #{formatOrderNumber(job._id)}
+                <View className="flex-row justify-between items-start">
+                  <View className="flex-row items-start">
+                    <View className="ml-3">
+                      <Text className="text-white font-semibold">
+                        Availability Status
                       </Text>
-                      <View className="flex-row">
-                        <Ionicons
-                          name="location-outline"
-                          size={14}
-                          color="gray"
-                        />
-                        <Text className="text-sm text-gray-500 mb-1 ml-1 flex-shrink flex-wrap">
-                          {job.address || "Pickup address unavailable"}
-                        </Text>
-                      </View>
-                      <View className="flex-row">
-                        <Ionicons name="time-outline" size={14} color="gray" />
-                        <Text className="text-sm text-gray-500 mb-1 ml-1">
-                          {getPickupTime(job)}
-                        </Text>
-                      </View>
+                      <Text className="text-white text-sm">
+                        {selected ? "Accepting new jobs" : "Not accepting jobs"}
+                      </Text>
                     </View>
                   </View>
 
-                  <View className="items-end justify-end w-[35%]">
-                    <Text className="font-bold text-green-500 text-[24px]">
-                      ${Number(job.total ?? 0).toFixed(2)}
-                    </Text>
-                    <Text className="font-sm text-gray-500">
-                      You earn {getOrderDriverEarningPercentage(job)}%
-                    </Text>
-                  </View>
-                </View>
-
-                <View className="flex-row justify-between bg-blue-50 rounded-[10px] py-4 px-6">
-                  <View className="flex-1 items-start justify-center">
-                    <Text className="text-base text-gray-500">Bags</Text>
-                    <Text className="text-lg font-bold text-black">
-                      {job.bags} Bags
-                    </Text>
-                  </View>
-                  <View className="flex-1 items-start justify-center ml-[20px]">
-                    <Text className="text-base text-gray-500">Service</Text>
-                    <Text className="text-lg font-bold text-black">
-                      {job.serviceType.replaceAll("_", " ")}
-                    </Text>
-                  </View>
-                </View>
-
-                <View className="mt-5 flex-row items-center justify-center gap-4">
                   <TouchableOpacity
-                    onPress={() => {
-                      setSelectedJobId(job._id);
-                      setDeclineModal(true);
-                    }}
-                    className="flex-1 border border-red-400 py-2 rounded-xl"
-                  >
-                    <Text className="text-center text-lg py-1 text-red-500 font-medium">
-                      Decline
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => {
-                      if (isAtCapacity) return;
-                      setSelectedJobId(job._id);
-                      setAcceptModal(true);
-                    }}
-                    disabled={isAtCapacity}
-                    className={`flex-1 py-2 rounded-xl ${
-                      isAtCapacity ? "bg-blue-300" : "bg-blue-500"
+                    onPress={handleToggleAvailability}
+                    activeOpacity={0.8}
+                    disabled={isUpdatingAvailability}
+                    className={`w-[70px] h-[36px] rounded-full justify-center ${
+                      selected ? "bg-green-500" : "bg-gray-400"
                     }`}
                   >
-                    <Text className="text-center text-lg py-1 text-white font-medium">
-                      Accept
-                    </Text>
+                    <Animated.View
+                      style={{ transform: [{ translateX }] }}
+                      className="w-[26px] h-[26px] rounded-full bg-white"
+                    />
                   </TouchableOpacity>
                 </View>
               </View>
-            ))
-          ) : (
-            <View className="bg-white rounded-2xl p-6 shadow-sm mb-6 border border-gray-100">
-              <Text className="text-gray-500">No available jobs now</Text>
+            </View>
+          </View>
+
+          {/* Driver pending/rejected banner */}
+          {!driverApproved && (
+            <View className="px-5 -mt-8 z-20">
+              <View className="rounded-2xl border border-yellow-200 bg-yellow-50 p-4">
+                <Text className="text-base font-bold text-yellow-700">
+                  Driver profile {driverStatus.toLowerCase()}
+                </Text>
+                <Text className="mt-1 text-sm text-yellow-700">
+                  {driverStatus === "PENDING"
+                    ? "Your driver profile is under approval. You can start taking jobs after admin approval."
+                    : "Please contact support for more details."}
+                </Text>
+              </View>
             </View>
           )}
-        </View>
-      </ScrollView>
+
+          {/* Today's Earnings */}
+          <View className="px-5 -mt-12 z-10">
+            <View
+              style={{
+                backgroundColor: Colors.primary,
+              }}
+              className="border border-white/40 shadow-xl rounded-2xl p-5 flex-row justify-between items-center"
+            >
+              <View>
+                <Text className="text-white text-base">Today's Earnings</Text>
+                <Text className="text-white/90 text-2xl font-bold mt-1">
+                  ${completedTodayEarnings.toFixed(2)}
+                </Text>
+              </View>
+
+              <View className="bg-white w-12 h-12 rounded-full justify-center items-center shadow">
+                <Feather name="dollar-sign" size={26} color={Colors.primary} />
+              </View>
+            </View>
+          </View>
+
+          {/* Content */}
+          <View className="px-5 mt-6">
+            {/* Today's Status */}
+            <TodayStats
+              deliveries={completedTodayJobs.length}
+              hours={activeHours}
+              ratingText={
+                driverRatingSummary && driverRatingSummary.count > 0
+                  ? Number(driverRatingSummary.avg ?? 0).toFixed(1)
+                  : "N/A"
+              }
+              ratingSubtitle={
+                driverRatingSummary && driverRatingSummary.count > 0
+                  ? `${driverRatingSummary.count} reviews`
+                  : "No reviews yet"
+              }
+              tierText={tierText}
+              tierSubtitle={tierSubtitle}
+            />
+
+            {/* Active Route */}
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-xl font-bold">Active Route</Text>
+              {activeOrders.length > 2 && (
+                <TouchableOpacity
+                  onPress={() => {
+                    router.push("/(driver)/(tabs)/jobs?tab=Active");
+                  }}
+                  activeOpacity={0.7}
+                  className="flex-row items-center bg-blue-50 px-4 py-2 rounded-full border border-blue-100"
+                >
+                  <Text
+                    style={{ color: Colors.primary }}
+                    className="text-sm font-semibold mr-1"
+                  >
+                    View All
+                  </Text>
+                  <Ionicons
+                    name="arrow-forward"
+                    size={16}
+                    color={Colors.primary}
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {activeOrders.length > 0 ? (
+              activeOrders.map((order) => (
+                <ActiveOrderCard
+                  key={order._id}
+                  order={order}
+                  router={router}
+                  getOrderProgress={getOrderProgress}
+                  getOrderStep={getOrderStep}
+                  getStatusStyle={getStatusStyle}
+                />
+              ))
+            ) : (
+              <View className="bg-white rounded-2xl p-6 shadow-sm mb-6 border border-gray-100">
+                <Text className="text-gray-500">No active route right now</Text>
+              </View>
+            )}
+
+            {/* Available Jobs */}
+            <View className="mb-3 mt-4 flex-row items-center justify-between">
+              <Text className="text-lg font-bold">Available Jobs</Text>
+
+              {availableOrder?.length > 2 && (
+                <TouchableOpacity
+                  onPress={() => {
+                    router.push("/(driver)/(tabs)/jobs?tab=Available");
+                  }}
+                  activeOpacity={0.7}
+                  className="flex-row items-center bg-blue-50 px-4 py-2 rounded-full border border-blue-100"
+                >
+                  <Text
+                    style={{ color: Colors.primary }}
+                    className="text-sm font-semibold mr-1"
+                  >
+                    View All
+                  </Text>
+                  <Ionicons
+                    name="arrow-forward"
+                    size={16}
+                    color={Colors.primary}
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {isAtCapacity && (
+              <View className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+                <Text className="font-semibold text-amber-700">
+                  Capacity full
+                </Text>
+                <Text className="mt-1 text-sm text-amber-700">
+                  Finish one active order to accept more.
+                </Text>
+              </View>
+            )}
+
+            {availableOrder.length > 0 ? (
+              availableOrder?.slice(0, 2)?.map((job) => (
+                <View
+                  key={job._id}
+                  className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100"
+                >
+                  <View className="flex-row justify-between items-start mb-3">
+                    <View className="flex-row mr-2 w-[65%]">
+                      <View className="ml-2">
+                        <Text className="font-semibold mb-1">
+                          Order #{formatOrderNumber(job._id)}
+                        </Text>
+                        <View className="flex-row">
+                          <Ionicons
+                            name="location-outline"
+                            size={14}
+                            color="gray"
+                          />
+                          <Text className="text-sm text-gray-500 mb-1 ml-1 flex-shrink flex-wrap">
+                            {job.address || "Pickup address unavailable"}
+                          </Text>
+                        </View>
+                        <View className="flex-row">
+                          <Ionicons
+                            name="time-outline"
+                            size={14}
+                            color="gray"
+                          />
+                          <Text className="text-sm text-gray-500 mb-1 ml-1">
+                            {getPickupTime(job)}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    <View className="items-end justify-end w-[35%]">
+                      <Text className="font-bold text-green-500 text-[24px]">
+                        ${Number(job.total ?? 0).toFixed(2)}
+                      </Text>
+                      <Text className="font-sm text-gray-500">
+                        You earn {getOrderDriverEarningPercentage(job)}%
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View className="flex-row justify-between bg-blue-50 rounded-[10px] py-4 px-6">
+                    <View className="flex-1 items-start justify-center">
+                      <Text className="text-base text-gray-500">Bags</Text>
+                      <Text className="text-lg font-bold text-black">
+                        {job.bags} Bags
+                      </Text>
+                    </View>
+                    <View className="flex-1 items-start justify-center ml-[20px]">
+                      <Text className="text-base text-gray-500">Service</Text>
+                      <Text className="text-lg font-bold text-black">
+                        {job.serviceType.replaceAll("_", " ")}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View className="mt-5 flex-row items-center justify-center gap-4">
+                    <TouchableOpacity
+                      onPress={() => {
+                        setSelectedJobId(job._id);
+                        setDeclineModal(true);
+                      }}
+                      className="flex-1 border border-red-400 py-2 rounded-xl"
+                    >
+                      <Text className="text-center text-lg py-1 text-red-500 font-medium">
+                        Decline
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => {
+                        if (isAtCapacity) return;
+                        setSelectedJobId(job._id);
+                        setAcceptModal(true);
+                      }}
+                      disabled={isAtCapacity}
+                      className={`flex-1 py-2 rounded-xl ${
+                        isAtCapacity ? "bg-blue-300" : "bg-blue-500"
+                      }`}
+                    >
+                      <Text className="text-center text-lg py-1 text-white font-medium">
+                        Accept
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <View className="bg-white rounded-2xl p-6 shadow-sm mb-6 border border-gray-100">
+                <Text className="text-gray-500">No available jobs now</Text>
+              </View>
+            )}
+          </View>
+        </ScrollView>
+      )}
 
       <RequestPickupModal
         visible={bottomModal}

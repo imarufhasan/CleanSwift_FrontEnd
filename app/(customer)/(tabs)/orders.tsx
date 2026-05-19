@@ -10,6 +10,7 @@ import ShowMessage from "@/constants/toast";
 import { RefreshControl } from "react-native";
 import { useDispatch } from "react-redux";
 import { orderApi } from "@/src/services/orderApi";
+import SkeletonPlaceholder from "@/components/common/SkeletonPlaceholder";
 
 const getOrderProgress = (order: Order) => {
   const steps = [
@@ -29,26 +30,32 @@ const getOrderProgress = (order: Order) => {
         ? 4
         : order.status === "DRYING"
           ? 3
-      : order.timeline?.foldingAt
-        ? 4
-        : order.timeline?.dryingAt
-          ? 3
-          : order.status === "WASHING_DRYING"
-            ? 2
-            : order.status === "PICKED_UP"
-              ? 1
-              : 0;
+          : order.timeline?.foldingAt
+            ? 4
+            : order.timeline?.dryingAt
+              ? 3
+              : order.status === "WASHING_DRYING"
+                ? 2
+                : order.status === "PICKED_UP"
+                  ? 1
+                  : 0;
 
   return {
     steps,
     currentStep,
-    progress: Math.min(100, Math.max(15, Math.round(((currentStep + 1) / steps.length) * 100))),
+    progress: Math.min(
+      100,
+      Math.max(15, Math.round(((currentStep + 1) / steps.length) * 100)),
+    ),
   };
 };
 
 const mapOrderToCard = (order: Order) => {
   const progress = getOrderProgress(order);
-  const quantity = Math.max(0, order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0);
+  const quantity = Math.max(
+    0,
+    order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0,
+  );
   const price = quantity * Number(order.pricePerBag ?? 0);
 
   return {
@@ -61,6 +68,36 @@ const mapOrderToCard = (order: Order) => {
       : "As soon as possible",
     ...progress,
   };
+};
+
+const OrdersSkeleton = () => {
+  return (
+    <View className="flex-1 bg-[#F6F9FF] px-5 pt-10">
+      {/* Header skeleton */}
+      <View className="flex-row items-center justify-between mb-5">
+        <SkeletonPlaceholder>
+          <SkeletonPlaceholder.Item width={160} height={24} borderRadius={6} />
+        </SkeletonPlaceholder>
+
+        <SkeletonPlaceholder>
+          <SkeletonPlaceholder.Item width={70} height={24} borderRadius={20} />
+        </SkeletonPlaceholder>
+      </View>
+
+      {/* Order cards skeleton */}
+      {[1, 2, 3, 4, 5].map((i) => (
+        <View key={i} className="mb-3">
+          <SkeletonPlaceholder borderRadius={16}>
+            <SkeletonPlaceholder.Item
+              width="100%"
+              height={140}
+              borderRadius={16}
+            />
+          </SkeletonPlaceholder>
+        </View>
+      ))}
+    </View>
+  );
 };
 
 export default function Orders() {
@@ -100,7 +137,6 @@ export default function Orders() {
     orderId: activeOrder?.id,
     onCustomerUpdate: refetchOrders,
   });
-
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -144,43 +180,49 @@ export default function Orders() {
 
   return (
     <View className="flex-1 bg-[#F6F9FF]">
-      <FlatList
-        data={visibleOrders}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{
-          paddingHorizontal: 20,
-          paddingTop: 40,
-          paddingBottom: 40,
-        }}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        ListHeaderComponent={
-          <View className="flex-row items-center justify-between mb-5">
-            <Text className="text-2xl font-bold text-black">Active Orders</Text>
-
-            <View className="bg-blue-100 px-3 py-1 rounded-full">
-              <Text className="text-blue-600 text-xs font-semibold">
-                {activeOrdersMapped.length} Active
+      {isLoading && !ordersRes ? (
+        <OrdersSkeleton />
+      ) : (
+        <FlatList
+          data={visibleOrders}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingTop: 40,
+            paddingBottom: 40,
+          }}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          ListHeaderComponent={
+            <View className="flex-row items-center justify-between mb-5">
+              <Text className="text-2xl font-bold text-black">
+                Active Orders
               </Text>
+
+              <View className="bg-blue-100 px-3 py-1 rounded-full">
+                <Text className="text-blue-600 text-xs font-semibold">
+                  {activeOrdersMapped.length} Active
+                </Text>
+              </View>
             </View>
-          </View>
-        }
-        renderItem={({ item }) => <ActiveOrderCard data={item} />}
-        ListFooterComponent={renderFooter}
-        ListEmptyComponent={
-          isLoading ? (
-            <View className="bg-white rounded-2xl p-5">
-              <Text className="text-gray-500">Loading orders...</Text>
-            </View>
-          ) : (
-            <View className="bg-white rounded-2xl p-5 items-center">
-              <Text className="text-gray-500">No active orders</Text>
-            </View>
-          )
-        }
-      />
+          }
+          renderItem={({ item }) => <ActiveOrderCard data={item} />}
+          ListFooterComponent={renderFooter}
+          ListEmptyComponent={
+            isLoading ? (
+              <View className="bg-white rounded-2xl p-5">
+                <Text className="text-gray-500">Loading orders...</Text>
+              </View>
+            ) : (
+              <View className="bg-white rounded-2xl p-5 items-center">
+                <Text className="text-gray-500">No active orders</Text>
+              </View>
+            )
+          }
+        />
+      )}
     </View>
   );
 }

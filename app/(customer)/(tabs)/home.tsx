@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   Modal,
+  Dimensions,
 } from "react-native";
 import { AntDesign, Ionicons } from "@expo/vector-icons";
 import Colors from "@/constants/color";
@@ -24,8 +25,104 @@ import {
   useGetMyOrdersQuery,
   type Order,
 } from "@/src/services/orderApi";
-import { livePricingQueryOptions, useGetPricingQuery } from "@/src/services/pricingApi";
+import {
+  livePricingQueryOptions,
+  useGetPricingQuery,
+} from "@/src/services/pricingApi";
 import { useOrderSocket } from "@/src/hooks/useOrderSocket";
+import SkeletonPlaceholder from "@/components/common/SkeletonPlaceholder";
+
+const { width } = Dimensions.get("window");
+
+const ContentSkeleton = () => {
+  const CARD_WIDTH = (width - 40) / 2;
+
+  return (
+    <View className="flex-1 bg-white px-5 pt-4">
+      {/* ── Header Skeleton ── */}
+      <View className="flex-row items-center justify-between mb-6">
+        <View>
+          <SkeletonPlaceholder>
+            <SkeletonPlaceholder.Item
+              width={140}
+              height={18}
+              borderRadius={6}
+            />
+          </SkeletonPlaceholder>
+          <View className="mt-2">
+            <SkeletonPlaceholder>
+              <SkeletonPlaceholder.Item
+                width={180}
+                height={14}
+                borderRadius={6}
+              />
+            </SkeletonPlaceholder>
+          </View>
+        </View>
+
+        <SkeletonPlaceholder>
+          <SkeletonPlaceholder.Item width={40} height={40} borderRadius={20} />
+        </SkeletonPlaceholder>
+      </View>
+
+      {/* ── Request Pickup Card Skeleton ── */}
+      <SkeletonPlaceholder borderRadius={20}>
+        <SkeletonPlaceholder.Item
+          width="100%"
+          height={120}
+          borderRadius={20}
+          marginBottom={20}
+        />
+      </SkeletonPlaceholder>
+
+      {/* ── Active Orders Title ── */}
+      <View className="flex-row items-center justify-between mb-3">
+        <SkeletonPlaceholder>
+          <SkeletonPlaceholder.Item width={140} height={20} borderRadius={6} />
+        </SkeletonPlaceholder>
+
+        <SkeletonPlaceholder>
+          <SkeletonPlaceholder.Item width={80} height={28} borderRadius={20} />
+        </SkeletonPlaceholder>
+      </View>
+
+      {/* ── Active Order Cards ── */}
+      {[1, 2].map((i) => (
+        <SkeletonPlaceholder key={i} borderRadius={16}>
+          <SkeletonPlaceholder.Item
+            width="100%"
+            height={140}
+            borderRadius={16}
+            marginBottom={12}
+          />
+        </SkeletonPlaceholder>
+      ))}
+
+      {/* ── Recent Orders Title ── */}
+      <View className="flex-row items-center justify-between mt-6 mb-3">
+        <SkeletonPlaceholder>
+          <SkeletonPlaceholder.Item width={130} height={18} borderRadius={6} />
+        </SkeletonPlaceholder>
+
+        <SkeletonPlaceholder>
+          <SkeletonPlaceholder.Item width={70} height={24} borderRadius={20} />
+        </SkeletonPlaceholder>
+      </View>
+
+      {/* ── Recent Orders List ── */}
+      {[1, 2, 3].map((i) => (
+        <SkeletonPlaceholder key={i} borderRadius={12}>
+          <SkeletonPlaceholder.Item
+            width="100%"
+            height={70}
+            borderRadius={12}
+            marginBottom={10}
+          />
+        </SkeletonPlaceholder>
+      ))}
+    </View>
+  );
+};
 
 const getOrderProgress = (order: Order) => {
   const steps = [
@@ -45,26 +142,32 @@ const getOrderProgress = (order: Order) => {
         ? 4
         : order.status === "DRYING"
           ? 3
-      : order.timeline?.foldingAt
-        ? 4
-        : order.timeline?.dryingAt
-          ? 3
-          : order.status === "WASHING_DRYING"
-            ? 2
-            : order.status === "PICKED_UP"
-              ? 1
-              : 0;
+          : order.timeline?.foldingAt
+            ? 4
+            : order.timeline?.dryingAt
+              ? 3
+              : order.status === "WASHING_DRYING"
+                ? 2
+                : order.status === "PICKED_UP"
+                  ? 1
+                  : 0;
 
   return {
     steps,
     currentStep,
-    progress: Math.min(100, Math.max(15, Math.round(((currentStep + 1) / steps.length) * 100))),
+    progress: Math.min(
+      100,
+      Math.max(15, Math.round(((currentStep + 1) / steps.length) * 100)),
+    ),
   };
 };
 
 const mapOrderToCard = (order: Order) => {
   const progress = getOrderProgress(order);
-  const quantity = Math.max(0, order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0);
+  const quantity = Math.max(
+    0,
+    order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0,
+  );
 
   return {
     id: order._id,
@@ -80,8 +183,15 @@ const mapOrderToCard = (order: Order) => {
 
 const mapOrderToRecent = (order: Order) => ({
   id: order._id,
-  quantity: Math.max(0, order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0),
-  price: Math.max(0, order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0) * Number(order.pricePerBag ?? 0),
+  quantity: Math.max(
+    0,
+    order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0,
+  ),
+  price:
+    Math.max(
+      0,
+      order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0,
+    ) * Number(order.pricePerBag ?? 0),
   rating: 5,
   status: order.status.replaceAll("_", " "),
   date: order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "",
@@ -115,7 +225,10 @@ export default function HomeScreen() {
     isFetching: isOrdersFetching,
     refetch: refetchOrders,
   } = useGetMyOrdersQuery();
-  const { data: pricingRes } = useGetPricingQuery(undefined, livePricingQueryOptions);
+  const { data: pricingRes } = useGetPricingQuery(
+    undefined,
+    livePricingQueryOptions,
+  );
   const [createOrder, { isLoading: isCreatingOrder }] =
     useCreateOrderMutation();
 
@@ -239,127 +352,139 @@ export default function HomeScreen() {
     }
   };
 
+  //const isInitialLoading = isLoading || isOrdersFetching;
+  const isInitialLoading =
+    (isLoading && !profileInfo) || (isOrdersFetching && !ordersRes);
+
   return (
     <View className="flex-1 bg-gray-100">
-      <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        className="flex-1 bg-white"
-      >
-        {/* Header Section */}
-        <HeaderSection
-          userName={profileInfo?.data?.name || "User"}
-          notificationCount={0}
-          location={location}
-          profileInfo={profileInfo}
-        />
+      {isInitialLoading ? (
+        <ContentSkeleton />
+      ) : (
+        <>
+          <ScrollView
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            className="flex-1 bg-white"
+          >
+            {/* Header Section */}
+            <HeaderSection
+              userName={profileInfo?.data?.name || "User"}
+              notificationCount={0}
+              location={location}
+              profileInfo={profileInfo}
+            />
 
-        {/* Request Pickup Card */}
-        <RequestPickupCard onPressAdd={() => setBottomModal(true)} />
+            {/* Request Pickup Card */}
+            <RequestPickupCard onPressAdd={() => setBottomModal(true)} />
 
-        {/* Active Orders */}
-        <View className="px-5 mt-6">
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-xl font-bold">Active Orders</Text>
-            {activeOrdersMapped.length > 2 && (
-              // <View className="bg-purple-100 rounded-full px-3 py-1">
-              //   <Text
-              //     style={{ color: Colors.primary }}
-              //     className="text-xs font-semibold"
-              //   >
-              //     {activeOrdersMapped.length} order
-              //     {activeOrdersMapped.length !== 1 ? "s" : ""}
-              //   </Text>
-              // </View>
-              <TouchableOpacity
-                onPress={() => router.push("/orders")}
-                activeOpacity={0.7}
-                className="flex-row items-center bg-blue-50 px-4 py-2 rounded-full border border-blue-100"
-              >
-                <Text
-                  style={{ color: Colors.primary }}
-                  className="text-sm font-semibold mr-1"
-                >
-                  View All
-                </Text>
+            {/* Active Orders */}
+            <View className="px-5 mt-6">
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-xl font-bold">Active Orders</Text>
+                {activeOrdersMapped.length > 2 && (
+                  // <View className="bg-purple-100 rounded-full px-3 py-1">
+                  //   <Text
+                  //     style={{ color: Colors.primary }}
+                  //     className="text-xs font-semibold"
+                  //   >
+                  //     {activeOrdersMapped.length} order
+                  //     {activeOrdersMapped.length !== 1 ? "s" : ""}
+                  //   </Text>
+                  // </View>
+                  <TouchableOpacity
+                    onPress={() => router.push("/orders")}
+                    activeOpacity={0.7}
+                    className="flex-row items-center bg-blue-50 px-4 py-2 rounded-full border border-blue-100"
+                  >
+                    <Text
+                      style={{ color: Colors.primary }}
+                      className="text-sm font-semibold mr-1"
+                    >
+                      View All
+                    </Text>
 
-                <Ionicons
-                  name="arrow-forward"
-                  size={16}
-                  color={Colors.primary}
-                />
-              </TouchableOpacity>
-            )}
-          </View>
+                    <Ionicons
+                      name="arrow-forward"
+                      size={16}
+                      color={Colors.primary}
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
 
-          {activeOrdersMapped.length > 0 ? (
-            <>
-              {visibleOrders.map((order) => (
-                <ActiveOrderCard key={order.id} data={order} />
-              ))}
-            </>
-          ) : (
-            <View className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100">
-              <Text className="text-gray-500">
-                {isOrdersFetching ? "Loading orders..." : "No active orders"}
-              </Text>
+              {activeOrdersMapped.length > 0 ? (
+                <>
+                  {visibleOrders.map((order) => (
+                    <ActiveOrderCard key={order.id} data={order} />
+                  ))}
+                </>
+              ) : (
+                <View className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100">
+                  <Text className="text-gray-500">
+                    {isOrdersFetching
+                      ? "Loading orders..."
+                      : "No active orders"}
+                  </Text>
+                </View>
+              )}
             </View>
-          )}
-        </View>
 
-        {/* Recent Orders */}
-        <View className="px-5 mt-2">
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-lg font-bold">Recent Orders</Text>
-            <View className="bg-purple-100 rounded-full px-3 py-1">
-              <Text
-                style={{ color: Colors.primary }}
-                className="text-xs font-semibold"
-              >
-                {allRecentOrders.length} order
-                {allRecentOrders.length !== 1 ? "s" : ""}
-              </Text>
-            </View>
-          </View>
-          {allRecentOrders.length === 0 && (
-            <View className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100">
-              <Text className="text-gray-500">
-                {isOrdersFetching
-                  ? "Loading recent orders..."
-                  : "No recent orders"}
-              </Text>
-            </View>
-          )}
+            {/* Recent Orders */}
+            <View className="px-5 mt-2">
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-lg font-bold">Recent Orders</Text>
+                <View className="bg-purple-100 rounded-full px-3 py-1">
+                  <Text
+                    style={{ color: Colors.primary }}
+                    className="text-xs font-semibold"
+                  >
+                    {allRecentOrders.length} order
+                    {allRecentOrders.length !== 1 ? "s" : ""}
+                  </Text>
+                </View>
+              </View>
+              {allRecentOrders.length === 0 && (
+                <View className="bg-white rounded-2xl p-4 shadow-sm mb-6 border border-gray-100">
+                  <Text className="text-gray-500">
+                    {isOrdersFetching
+                      ? "Loading recent orders..."
+                      : "No recent orders"}
+                  </Text>
+                </View>
+              )}
 
-          <RecentOrdersList
-            orders={visibleRecentOrders}
-            onOrderPress={handleOrderPress}
-          />
-
-          {allRecentOrders.length > RECENT_VISIBLE_LIMIT && (
-            <TouchableOpacity
-              onPress={() => setShowAllRecent((prev) => !prev)}
-              className="flex-row items-center justify-center gap-2 mt-2 mb-6 py-3 rounded-2xl border border-dashed border-gray-300 bg-gray-50"
-              activeOpacity={0.7}
-            >
-              <AntDesign
-                name={showAllRecent ? "up" : "down"}
-                size={14}
-                color={Colors.primary}
+              <RecentOrdersList
+                orders={visibleRecentOrders}
+                onOrderPress={handleOrderPress}
               />
-              <Text
-                style={{ color: Colors.primary }}
-                className="text-sm font-medium"
-              >
-                {showAllRecent
-                  ? "Show less"
-                  : `View ${hiddenRecentCount} more order${hiddenRecentCount !== 1 ? "s" : ""}`}
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </ScrollView>
+
+              {allRecentOrders.length > RECENT_VISIBLE_LIMIT && (
+                <TouchableOpacity
+                  onPress={() => setShowAllRecent((prev) => !prev)}
+                  className="flex-row items-center justify-center gap-2 mt-2 mb-6 py-3 rounded-2xl border border-dashed border-gray-300 bg-gray-50"
+                  activeOpacity={0.7}
+                >
+                  <AntDesign
+                    name={showAllRecent ? "up" : "down"}
+                    size={14}
+                    color={Colors.primary}
+                  />
+                  <Text
+                    style={{ color: Colors.primary }}
+                    className="text-sm font-medium"
+                  >
+                    {showAllRecent
+                      ? "Show less"
+                      : `View ${hiddenRecentCount} more order${hiddenRecentCount !== 1 ? "s" : ""}`}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </ScrollView>
+        </>
+      )}
 
       <RequestPickupModal
         visible={bottomModal}
@@ -392,7 +517,6 @@ export default function HomeScreen() {
         />
       )}
 
-      {/* Confirm Modal */}
       {confirmed && (
         <Modal
           transparent

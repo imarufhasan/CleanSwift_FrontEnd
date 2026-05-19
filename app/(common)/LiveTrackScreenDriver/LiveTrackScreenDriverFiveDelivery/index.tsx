@@ -65,9 +65,9 @@ export default function DeliveryStep({ order, onStartOutForDelivery }: Props) {
           {/* Fake Map Grid Background */}
           <View className="absolute inset-0 opacity-40">
             <View className="flex-1 flex-row flex-wrap">
-              {[...Array(100)].map((_, i) => (
+              {/* {[...Array(100)].map((_, i) => (
                 <View key={i} className="w-[10%] h-[10%] border border-blue-200" />
-              ))}
+              ))} */}
             </View>
           </View>
 

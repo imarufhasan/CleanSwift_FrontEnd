@@ -28,7 +28,7 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="track"
         options={{
           title: "Track",
@@ -36,7 +36,7 @@ export default function TabLayout() {
             <Ionicons name="location-outline" size={size} color={color} />
           ),
         }}
-      />
+      /> */}
 
       <Tabs.Screen
         name="message"

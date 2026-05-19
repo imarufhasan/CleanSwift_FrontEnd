@@ -8,15 +8,18 @@ import "../global.css";
 import { Provider } from "react-redux";
 import { store } from "@/src/store";
 import { STRIPE_PUBLISHABLE_KEY } from "@/src/constants/api";
+import { SocketProvider } from "@/components/common/SocketContext";
 
 Splash.preventAutoHideAsync();
 
 export default function RootLayout() {
   return (
     <Provider store={store}>
-      <StripeProvider publishableKey={STRIPE_PUBLISHABLE_KEY}>
-        <Stack screenOptions={{ headerShown: false }} />
-      </StripeProvider>
+      <SocketProvider>
+        <StripeProvider publishableKey={STRIPE_PUBLISHABLE_KEY}>
+          <Stack screenOptions={{ headerShown: false }} />
+        </StripeProvider>
+      </SocketProvider>
     </Provider>
   );
 }

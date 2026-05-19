@@ -28,7 +28,7 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="routes"
         options={{
           title: "Routes",
@@ -36,7 +36,7 @@ export default function TabLayout() {
             <Ionicons name="location-outline" size={size} color={color} />
           ),
         }}
-      />
+      /> */}
 
       <Tabs.Screen
         name="message"

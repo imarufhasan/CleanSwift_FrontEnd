@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useGetMyDriverJobsQuery } from "@/src/services/driverApi";
 import type { Order } from "@/src/services/orderApi";
 import { formatOrderNumber } from "@/src/utils/orderNumber";
+import { useRouter } from "expo-router";
 
 const getEffectiveBagCount = (order?: Order) =>
   Math.max(
@@ -28,6 +29,7 @@ export default function DeliveryStep({
   readOnly = false,
   onStartOutForDelivery,
 }: Props) {
+  const router = useRouter();
   const [isWaitingForConfirmation, setIsWaitingForConfirmation] = useState(
     order?.status === "OUT_FOR_DELIVERY",
   );
@@ -41,7 +43,8 @@ export default function DeliveryStep({
         )
       : undefined);
   const driverEarningPercentage = getOrderDriverEarningPercentage(activeJob);
-  const isCompleted = readOnly || activeJob?.status === "COMPLETED";
+  const isPaymentConfirmed = activeJob?.status === "COMPLETED";
+  const isCompleted = readOnly || isPaymentConfirmed;
   const canStartOutForDelivery = activeJob?.status === "FOLDING";
   const isButtonWaiting =
     !isCompleted &&
@@ -244,6 +247,10 @@ export default function DeliveryStep({
         <View className="px-5 mb-6">
           <TouchableOpacity
             onPress={async () => {
+              if (isPaymentConfirmed) {
+                router.replace("/(driver)/(tabs)/home");
+                return;
+              }
               if (readOnly) return;
               if (!canStartOutForDelivery) return;
               const result = await onStartOutForDelivery();
@@ -251,7 +258,10 @@ export default function DeliveryStep({
                 setIsWaitingForConfirmation(true);
               }
             }}
-            disabled={isCompleted || !canStartOutForDelivery || isButtonWaiting}
+            disabled={
+              !isPaymentConfirmed &&
+              (isCompleted || !canStartOutForDelivery || isButtonWaiting)
+            }
             style={{
               backgroundColor: isCompleted
                 ? "#16A34A"

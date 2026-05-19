@@ -19,7 +19,6 @@ import {
   useGetMyDriverJobsQuery,
 } from '@/src/services/driverApi';
 import { useGetDriverRatingsQuery } from '@/src/services/ratingApi';
-import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 const menuItems = [
   { label: 'Profile Setting', icon: 'person-outline' },
@@ -75,11 +74,7 @@ export default function Profile() {
 
   const handleConnectStripe = async () => {
     try {
-      const returnUrl = Linking.createURL('/(driver)/(tabs)/profile');
-      const res = await createStripeConnectAccountLink({
-        returnUrl,
-        refreshUrl: returnUrl,
-      }).unwrap();
+      const res = await createStripeConnectAccountLink().unwrap();
 
       if (!res.data.onboardingUrl) {
         ShowMessage.error('Stripe onboarding link not available');

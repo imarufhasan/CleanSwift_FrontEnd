@@ -268,7 +268,10 @@ export default function Profile() {
                   router.push("/driverRegistration2");
                   console.log("make driver");
                 } else if (item.label === "Support") {
-                  router.push("/supportScreen");
+                  router.push({
+                    pathname: "/(common)/ChatScreen" as any,
+                    params: { support: "true", name: "Support" },
+                  });
                 } else if (item.label === "About Us") {
                   router.push({
                     pathname: "/PrivacyPolicyScreen",

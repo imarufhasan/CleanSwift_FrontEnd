@@ -17,6 +17,7 @@ import {
   useAcceptJobMutation,
   useDeclineJobMutation,
   useGetAvailableJobsQuery,
+  useGetDriverStripeConnectStatusQuery,
   useGetMyDriverJobsQuery,
   useGetMyDriverProfileQuery,
 } from "@/src/services/driverApi";
@@ -171,7 +172,10 @@ const JobCard = ({
 
         <TouchableOpacity
           onPress={onAccept}
-          className="flex-1 rounded-xl bg-blue-500 py-2"
+          disabled={acceptDisabled}
+          className={`flex-1 rounded-xl py-2 ${
+            acceptDisabled ? "bg-blue-300" : "bg-blue-500"
+          }`}
         >
           <Text className="py-1 text-center text-lg font-medium text-white">
             Accept
@@ -315,6 +319,7 @@ export default function JobsScreen() {
     refetch: refetchMyJobs,
   } = useGetMyDriverJobsQuery();
   const { data: driverProfileRes } = useGetMyDriverProfileQuery();
+  const { data: stripeStatusRes } = useGetDriverStripeConnectStatusQuery();
   const [acceptJob, { isLoading: isAccepting }] = useAcceptJobMutation();
   const [declineJob, { isLoading: isDeclining }] = useDeclineJobMutation();
 
@@ -347,6 +352,10 @@ export default function JobsScreen() {
   const isAtCapacity =
     (driverProfileRes?.data?.status ?? "PENDING") === "APPROVED" &&
     activeJobs.length >= capacityLimit;
+  const stripeStatus = stripeStatusRes?.data;
+  const isStripeConnected =
+    Boolean(stripeStatus?.detailsSubmitted) && Boolean(stripeStatus?.payoutsEnabled);
+  const acceptBlocked = isAtCapacity || !isStripeConnected;
 
   useEffect(() => {
     if (tab === "Active") setActiveTab("Active");
@@ -392,6 +401,11 @@ export default function JobsScreen() {
   };
 
   const handleAccept = async () => {
+    if (!isStripeConnected) {
+      ShowMessage.error("Please connect Stripe before accepting orders.");
+      return;
+    }
+
     if (isAtCapacity) {
       ShowMessage.error("Capacity full. Finish one active order first.");
       return;
@@ -457,7 +471,13 @@ export default function JobsScreen() {
             Available Jobs ({availableJobs.length})
           </Text>
           {availableJobs?.length === 0 && (
-            <EmptyState title="No available jobs right now" />
+            <EmptyState
+              title={
+                isStripeConnected
+                  ? "No available jobs right now"
+                  : "Connect Stripe to accept jobs"
+              }
+            />
           )}
 
           {availableJobs.map((item) => (
@@ -466,8 +486,12 @@ export default function JobsScreen() {
               item={item}
               driverEarningPercentage={item.driverEarningPercentage}
               showActions
-              acceptDisabled={isAtCapacity}
+              acceptDisabled={acceptBlocked}
               onAccept={() => {
+                if (!isStripeConnected) {
+                  ShowMessage.error("Please connect Stripe before accepting orders.");
+                  return;
+                }
                 if (isAtCapacity) return;
                 setSelectedJob(item);
                 setAcceptModal(true);
@@ -624,11 +648,15 @@ export default function JobsScreen() {
 
               <TouchableOpacity
                 onPress={handleAccept}
-                disabled={isAccepting || isAtCapacity}
-                className={`flex-1 rounded-xl py-3 ${isAccepting || isAtCapacity ? "bg-blue-300" : "bg-blue-500"}`}
+                disabled={isAccepting || acceptBlocked}
+                className={`flex-1 rounded-xl py-3 ${isAccepting || acceptBlocked ? "bg-blue-300" : "bg-blue-500"}`}
               >
                 <Text className="text-center text-lg font-semibold text-white">
-                  {isAccepting ? "Accepting..." : "Yes"}
+                  {!isStripeConnected
+                    ? "Connect Stripe"
+                    : isAccepting
+                      ? "Accepting..."
+                      : "Yes"}
                 </Text>
               </TouchableOpacity>
             </View>

@@ -12,8 +12,15 @@ import * as SecureStore from 'expo-secure-store';
 import { useDispatch } from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useProfileInfoQuery } from '@/src/services/userApi';
-import { useGetMyDriverProfileQuery, useGetMyDriverJobsQuery } from '@/src/services/driverApi';
+import {
+  useCreateStripeConnectAccountLinkMutation,
+  useGetDriverStripeConnectStatusQuery,
+  useGetMyDriverProfileQuery,
+  useGetMyDriverJobsQuery,
+} from '@/src/services/driverApi';
 import { useGetDriverRatingsQuery } from '@/src/services/ratingApi';
+import * as Linking from 'expo-linking';
+import * as WebBrowser from 'expo-web-browser';
 const menuItems = [
   { label: 'Profile Setting', icon: 'person-outline' },
   { label: 'Connect Stripe', icon: 'card-outline' },
@@ -29,6 +36,9 @@ export default function Profile() {
   const router = useRouter();
   const { data: profileInfo, error, isLoading } = useProfileInfoQuery();
   const { data: driverProfileRes, refetch: refetchDriverProfile } = useGetMyDriverProfileQuery();
+  const { data: stripeStatusRes, refetch: refetchStripeStatus } = useGetDriverStripeConnectStatusQuery();
+  const [createStripeConnectAccountLink, { isLoading: isConnectingStripe }] =
+    useCreateStripeConnectAccountLinkMutation();
   const { data: myJobsRes, refetch: refetchMyJobs } = useGetMyDriverJobsQuery();
   const dispatch = useDispatch();
 
@@ -47,17 +57,44 @@ export default function Profile() {
   const tierText = tierNumber > 0 ? `Tier ${tierNumber}` : 'N/A';
   const performanceText = driverProfile?.status ?? 'PENDING';
   const ratingText = driverRatingsRes?.data?.summary?.count ? Number(driverRatingsRes.data.summary.avg ?? 0).toFixed(1) : 'N/A';
+  const stripeStatus = stripeStatusRes?.data;
+  const isStripeConnected =
+    Boolean(stripeStatus?.detailsSubmitted) || Boolean(stripeStatus?.payoutsEnabled);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => {
       refetchDriverProfile();
+      refetchStripeStatus();
       refetchMyJobs();
       refetchDriverRatings();
       setRefreshing(false);
       ShowMessage.show('updated');
     }, 1500);
-  }, [refetchDriverProfile, refetchDriverRatings, refetchMyJobs]);
+  }, [refetchDriverProfile, refetchDriverRatings, refetchMyJobs, refetchStripeStatus]);
+
+  const handleConnectStripe = async () => {
+    try {
+      const returnUrl = Linking.createURL('/(driver)/(tabs)/profile');
+      const res = await createStripeConnectAccountLink({
+        returnUrl,
+        refreshUrl: returnUrl,
+      }).unwrap();
+
+      if (!res.data.onboardingUrl) {
+        ShowMessage.error('Stripe onboarding link not available');
+        return;
+      }
+
+      await WebBrowser.openBrowserAsync(res.data.onboardingUrl);
+      refetchDriverProfile();
+      refetchStripeStatus();
+    } catch (error: any) {
+      ShowMessage.error(
+        error?.data?.message ?? 'Failed to start Stripe onboarding',
+      );
+    }
+  };
 
   const logout = async () => {
     try {
@@ -178,15 +215,21 @@ export default function Profile() {
             <TouchableOpacity
               key={index}
               className="bg-white flex-row items-center p-4 rounded-xl mb-3 border border-blue-200"
+              disabled={item.label === 'Connect Stripe' && isConnectingStripe}
               onPress={() => {
                 if (item.label === 'Profile Setting') {
                   router.push('/profileSettings');
                 } else if (item.label === 'Payment Methods') {
                   ShowMessage.show('Payment Methods is coming soon!');
+                } else if (item.label === 'Connect Stripe') {
+                  handleConnectStripe();
                 } else if (item.label === 'Change password') {
                   router.push('/changePassword');
                 } else if (item.label === 'Support') {
-                  router.push('/supportScreen');
+                  router.push({
+                    pathname: '/(common)/ChatScreen' as any,
+                    params: { support: 'true', name: 'Support' },
+                  });
                 } else if (item.label === 'Earnings History') {
                   router.push('/DriverEarningHistory');
                 } else if (item.label === 'About Us') {
@@ -217,7 +260,14 @@ export default function Profile() {
               }}
             >
               <Ionicons name={item.icon as any} size={20} color={'black'} />
-              <Text className="ml-3 flex-1 font-medium">{item.label}</Text>
+              <Text className="ml-3 flex-1 font-medium">
+                {item.label === 'Connect Stripe' && isConnectingStripe
+                  ? 'Opening Stripe...'
+                  : item.label}
+              </Text>
+              {item.label === 'Connect Stripe' && isStripeConnected ? (
+                <Text className="mr-2 text-xs font-semibold text-green-600">Connected</Text>
+              ) : null}
               <MaterialIcons name="keyboard-arrow-right" size={22} color="#9CA3AF" />
             </TouchableOpacity>
           ))}

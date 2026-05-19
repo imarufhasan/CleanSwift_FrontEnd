@@ -11,6 +11,7 @@ export type DriverProfile = {
   _id: string;
   user: string;
   isAvailable?: boolean;
+  stripeConnectedAccountId?: string;
   backgroundCheckStatus?: 'PENDING' | 'APPROVED' | 'FAILED';
   status?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
   reputationTier?: number;
@@ -23,11 +24,39 @@ export type DriverProfile = {
   };
 };
 
+export type DriverStripeConnectStatus = {
+  accountId?: string;
+  onboardingUrl?: string;
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  detailsSubmitted: boolean;
+};
+
 export const driverApi = api.injectEndpoints({
   endpoints: builder => ({
     getMyDriverProfile: builder.query<ApiResponse<DriverProfile | null>, void>({
       query: () => ({
         url: '/drivers/me',
+        method: 'GET',
+      }),
+      providesTags: ['Driver'],
+    }),
+
+    createStripeConnectAccountLink: builder.mutation<
+      ApiResponse<DriverStripeConnectStatus>,
+      { returnUrl?: string; refreshUrl?: string } | void
+    >({
+      query: body => ({
+        url: '/drivers/stripe/connect-account',
+        method: 'POST',
+        body: body ?? {},
+      }),
+      invalidatesTags: ['Driver'],
+    }),
+
+    getDriverStripeConnectStatus: builder.query<ApiResponse<DriverStripeConnectStatus>, void>({
+      query: () => ({
+        url: '/drivers/stripe/connect-status',
         method: 'GET',
       }),
       providesTags: ['Driver'],
@@ -97,6 +126,8 @@ export const driverApi = api.injectEndpoints({
 
 export const {
   useGetMyDriverProfileQuery,
+  useCreateStripeConnectAccountLinkMutation,
+  useGetDriverStripeConnectStatusQuery,
   useUpdateDriverAvailabilityMutation,
   useGetAvailableJobsQuery,
   useGetMyDriverJobsQuery,

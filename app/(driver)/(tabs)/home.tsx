@@ -25,6 +25,7 @@ import {
   useAcceptJobMutation,
   useDeclineJobMutation,
   useGetAvailableJobsQuery,
+  useGetDriverStripeConnectStatusQuery,
   useGetMyDriverProfileQuery,
   useGetMyDriverJobsQuery,
   useUpdateDriverAvailabilityMutation,
@@ -278,6 +279,8 @@ export default function HomeScreen() {
   } = useProfileInfoQuery();
   const { data: driverProfileRes, refetch: refetchDriverProfile } =
     useGetMyDriverProfileQuery();
+  const { data: stripeStatusRes, refetch: refetchStripeStatus } =
+    useGetDriverStripeConnectStatusQuery();
   const { data: myJobsRes, refetch: refetchMyJobs } = useGetMyDriverJobsQuery();
   const { data: availableJobsRes, refetch: refetchAvailableJobs } =
     useGetAvailableJobsQuery();
@@ -368,6 +371,11 @@ export default function HomeScreen() {
 
   const capacityLimit = Math.max(1, Number(driverProfile?.capacityLimit ?? 3));
   const isAtCapacity = driverApproved && activeOrders.length >= capacityLimit;
+  const stripeStatus = stripeStatusRes?.data;
+  const isStripeConnected =
+    Boolean(stripeStatus?.detailsSubmitted) &&
+    Boolean(stripeStatus?.payoutsEnabled);
+  const acceptBlocked = isAtCapacity || !isStripeConnected;
 
   const tierNumber = driverProfile?.reputationTier ?? 0;
   const tierText = tierNumber > 0 ? `Tier ${tierNumber}` : "N/A";
@@ -397,6 +405,7 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       refetchDriverProfile();
+      refetchStripeStatus();
       refetchMyJobs();
       refetchAvailableJobs();
       refetch();
@@ -407,6 +416,7 @@ export default function HomeScreen() {
     }, [
       refetchAvailableJobs,
       refetchDriverProfile,
+      refetchStripeStatus,
       refetchDriverRatings,
       refetchMyJobs,
       refetch,
@@ -457,6 +467,7 @@ export default function HomeScreen() {
     setTimeout(() => {
       setRefreshing(false);
       refetchDriverProfile();
+      refetchStripeStatus();
       refetchMyJobs();
       refetchAvailableJobs();
       refetch();
@@ -469,6 +480,7 @@ export default function HomeScreen() {
   }, [
     refetchAvailableJobs,
     refetchDriverProfile,
+    refetchStripeStatus,
     refetchDriverRatings,
     refetchMyJobs,
     refetch,
@@ -498,6 +510,11 @@ export default function HomeScreen() {
       : "ASAP";
 
   const handleAcceptJob = async () => {
+    if (!isStripeConnected) {
+      ShowMessage.error("Please connect Stripe before accepting orders.");
+      return;
+    }
+
     if (isAtCapacity) {
       ShowMessage.error("Capacity full. Finish one active order first.");
       return;
@@ -812,6 +829,17 @@ export default function HomeScreen() {
               </View>
             )}
 
+            {!isStripeConnected && (
+              <View className="mb-4 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3">
+                <Text className="font-semibold text-blue-700">
+                  Stripe connection required
+                </Text>
+                <Text className="mt-1 text-sm text-blue-700">
+                  Connect Stripe from your profile before accepting orders.
+                </Text>
+              </View>
+            )}
+
             {availableOrder.length > 0 ? (
               availableOrder?.slice(0, 2)?.map((job) => (
                 <View
@@ -886,13 +914,17 @@ export default function HomeScreen() {
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={() => {
+                        if (!isStripeConnected) {
+                          ShowMessage.error("Please connect Stripe before accepting orders.");
+                          return;
+                        }
                         if (isAtCapacity) return;
                         setSelectedJobId(job._id);
                         setAcceptModal(true);
                       }}
-                      disabled={isAtCapacity}
+                      disabled={acceptBlocked}
                       className={`flex-1 py-2 rounded-xl ${
-                        isAtCapacity ? "bg-blue-300" : "bg-blue-500"
+                        acceptBlocked ? "bg-blue-300" : "bg-blue-500"
                       }`}
                     >
                       <Text className="text-center text-lg py-1 text-white font-medium">
@@ -1031,13 +1063,15 @@ export default function HomeScreen() {
 
               <TouchableOpacity
                 onPress={handleAcceptJob}
-                disabled={isAcceptingJob || isAtCapacity}
+                disabled={isAcceptingJob || acceptBlocked}
                 className={`flex-1 rounded-xl py-3 ${
-                  isAcceptingJob || isAtCapacity ? "bg-blue-300" : "bg-blue-500"
+                  isAcceptingJob || acceptBlocked ? "bg-blue-300" : "bg-blue-500"
                 }`}
               >
                 <Text className="text-white text-lg text-center font-semibold">
-                  {isAtCapacity
+                  {!isStripeConnected
+                    ? "Connect Stripe"
+                    : isAtCapacity
                     ? "Capacity full"
                     : isAcceptingJob
                       ? "Accepting..."

@@ -66,6 +66,19 @@ export const chatApi = api.injectEndpoints({
       providesTags: (_result, _error, orderId) => [{ type: 'Chat', id: orderId }],
     }),
 
+    getSupportMessages: builder.query<ApiResponse<ChatMessage[]>, { to?: string } | void>({
+      query: arg => {
+        const to = arg && 'to' in arg ? arg.to : undefined;
+
+        return {
+          url: '/chat/support',
+          method: 'GET',
+          params: to ? { to } : undefined,
+        };
+      },
+      providesTags: [{ type: 'Chat', id: 'support' }],
+    }),
+
     sendChatMessage: builder.mutation<
       ApiResponse<ChatMessage>,
       { orderId: string; content: string; to?: string; contentType?: 'TEXT' | 'IMAGE' }
@@ -81,6 +94,21 @@ export const chatApi = api.injectEndpoints({
       invalidatesTags: (_result, _error, arg) => ['Chat', { type: 'Chat', id: arg.orderId }],
     }),
 
+    sendSupportMessage: builder.mutation<
+      ApiResponse<ChatMessage>,
+      { content: string; to?: string; contentType?: 'TEXT' | 'IMAGE' }
+    >({
+      query: body => ({
+        url: '/chat/support',
+        method: 'POST',
+        body: {
+          contentType: 'TEXT',
+          ...body,
+        },
+      }),
+      invalidatesTags: [{ type: 'Chat', id: 'support' }],
+    }),
+
     sendChatImage: builder.mutation<ApiResponse<ChatMessage>, { orderId: string; image: FormData }>({
       query: ({ orderId, image }) => ({
         url: `/chat/order/${orderId}/image`,
@@ -89,12 +117,25 @@ export const chatApi = api.injectEndpoints({
       }),
       invalidatesTags: (_result, _error, arg) => ['Chat', { type: 'Chat', id: arg.orderId }],
     }),
+
+    sendSupportImage: builder.mutation<ApiResponse<ChatMessage>, { image: FormData; to?: string }>({
+      query: ({ image, to }) => ({
+        url: '/chat/support/image',
+        method: 'POST',
+        body: image,
+        params: to ? { to } : undefined,
+      }),
+      invalidatesTags: [{ type: 'Chat', id: 'support' }],
+    }),
   }),
 });
 
 export const {
   useGetChatThreadsQuery,
   useGetChatMessagesQuery,
+  useGetSupportMessagesQuery,
   useSendChatMessageMutation,
+  useSendSupportMessageMutation,
   useSendChatImageMutation,
+  useSendSupportImageMutation,
 } = chatApi;

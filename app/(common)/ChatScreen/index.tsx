@@ -19,8 +19,11 @@ import ShowMessage from "@/constants/toast";
 import * as ImagePicker from "expo-image-picker";
 import {
   useGetChatMessagesQuery,
+  useGetSupportMessagesQuery,
   useSendChatImageMutation,
   useSendChatMessageMutation,
+  useSendSupportImageMutation,
+  useSendSupportMessageMutation,
   type ChatMessage,
 } from "@/src/services/chatApi";
 import { useProfileInfoQuery } from "@/src/services/userApi";
@@ -34,11 +37,14 @@ const getUserId = (value: ChatMessage["from"]) =>
 export default function ChatScreen() {
   const router = useRouter();
   const [pendingImages, setPendingImages] = useState<string[]>([]);
-  const { orderId, name, avatar } = useLocalSearchParams<{
+  const { orderId, name, avatar, support, to } = useLocalSearchParams<{
     orderId?: string;
     name?: string;
     avatar?: string;
+    support?: string;
+    to?: string;
   }>();
+  const isSupportChat = support === "true";
   const [message, setMessage] = useState("");
   const flatListRef = useRef<FlatList>(null);
 
@@ -46,15 +52,36 @@ export default function ChatScreen() {
   const currentUserId =
     profileInfo && profileInfo.data ? profileInfo.data._id : undefined;
   const { data, isLoading, refetch } = useGetChatMessagesQuery(orderId ?? "", {
-    skip: !orderId,
-    pollingInterval: orderId ? 7000 : 0,
+    skip: isSupportChat || !orderId,
+    pollingInterval: !isSupportChat && orderId ? 7000 : 0,
+  });
+  const {
+    data: supportData,
+    isLoading: isSupportLoading,
+    refetch: refetchSupport,
+  } = useGetSupportMessagesQuery(to ? { to } : undefined, {
+    skip: !isSupportChat,
+    pollingInterval: isSupportChat ? 7000 : 0,
   });
   const [sendChatMessage, { isLoading: isSending }] =
     useSendChatMessageMutation();
+  const [sendSupportMessage, { isLoading: isSendingSupport }] =
+    useSendSupportMessageMutation();
   const [sendChatImage, { isLoading: isUploadingImage }] =
     useSendChatImageMutation();
+  const [sendSupportImage, { isLoading: isUploadingSupportImage }] =
+    useSendSupportImageMutation();
 
-  const messages = data && data.data ? data.data : [];
+  const messages = isSupportChat
+    ? supportData && supportData.data
+      ? supportData.data
+      : []
+    : data && data.data
+      ? data.data
+      : [];
+  const isLoadingMessages = isSupportChat ? isSupportLoading : isLoading;
+  const isSendingAny = isSending || isSendingSupport;
+  const isUploadingAny = isUploadingImage || isUploadingSupportImage;
 
   useEffect(() => {
     if (flatListRef.current) {
@@ -64,12 +91,18 @@ export default function ChatScreen() {
 
   const sendMessage = async () => {
     const content = message.trim();
-    if (!content || !orderId || isSending) return;
+    if (!content || isSendingAny) return;
+    if (!isSupportChat && !orderId) return;
 
     try {
-      await sendChatMessage({ orderId, content }).unwrap();
+      if (isSupportChat) {
+        await sendSupportMessage({ content, to }).unwrap();
+        refetchSupport();
+      } else {
+        await sendChatMessage({ orderId: orderId ?? "", content }).unwrap();
+        refetch();
+      }
       setMessage("");
-      refetch();
     } catch (error: any) {
       ShowMessage.show(
         error && error.data && error.data.message
@@ -100,7 +133,7 @@ export default function ChatScreen() {
     }
   };
   const sendImageMessage = async (imageUri: string) => {
-    if (!orderId) return;
+    if (!isSupportChat && !orderId) return;
 
     // সাথে সাথে UI তে দেখাও
     setPendingImages((prev) => [...prev, imageUri]);
@@ -113,8 +146,13 @@ export default function ChatScreen() {
         type: "image/jpeg",
       } as any);
 
-      await sendChatImage({ orderId, image: formData }).unwrap();
-      refetch();
+      if (isSupportChat) {
+        await sendSupportImage({ image: formData, to }).unwrap();
+        refetchSupport();
+      } else {
+        await sendChatImage({ orderId: orderId ?? "", image: formData }).unwrap();
+        refetch();
+      }
     } catch (error: any) {
       ShowMessage.show(error?.data?.message ?? "Failed to send image");
     } finally {
@@ -239,7 +277,7 @@ export default function ChatScreen() {
     }
   };
 
-  if (!orderId) {
+  if (!isSupportChat && !orderId) {
     return (
       <SafeAreaView className="flex-1 bg-gray-100">
         <View
@@ -289,7 +327,9 @@ export default function ChatScreen() {
               {name ?? "Chat"}
             </Text>
             <Text className="text-white/80 text-sm">
-              Order #{formatOrderNumber(orderId)}
+              {isSupportChat
+                ? "Support"
+                : `Order #${formatOrderNumber(orderId)}`}
             </Text>
           </View>
 
@@ -299,7 +339,7 @@ export default function ChatScreen() {
         </View>
 
         {/* Messages */}
-        {isLoading ? (
+        {isLoadingMessages ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="large" color={Colors.primary} />
           </View>
@@ -379,10 +419,10 @@ export default function ChatScreen() {
 
             <TouchableOpacity
               onPress={pickImage}
-              disabled={isSending || isUploadingImage}
+              disabled={isSendingAny || isUploadingAny}
               style={{ paddingBottom: 12, paddingLeft: 8 }}
             >
-              {isUploadingImage ? (
+              {isUploadingAny ? (
                 <ActivityIndicator size="small" color={Colors.primary} />
               ) : (
                 <Ionicons
@@ -396,7 +436,7 @@ export default function ChatScreen() {
 
           <TouchableOpacity
             onPress={sendMessage}
-            disabled={isSending || !message.trim()}
+            disabled={isSendingAny || !message.trim()}
             style={{ marginLeft: 10, marginBottom: 6 }}
           >
             <Ionicons

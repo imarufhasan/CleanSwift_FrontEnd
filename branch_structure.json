@@ -1,0 +1,21 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "khaled",
+    "main",
+    "maruf",
+    "master"
+  ],
+  "parent": {
+    "khaled": "main",
+    "main": null,
+    "maruf": "main",
+    "master": "main"
+  },
+  "order": [
+    "main",
+    "khaled",
+    "maruf",
+    "master"
+  ]
+}

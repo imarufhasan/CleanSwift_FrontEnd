@@ -240,7 +240,9 @@ export default function DeliveryStep({ order, onStartOutForDelivery }: Props) {
               }
             }}
             disabled={!canStartOutForDelivery || isButtonWaiting}
-            style={{ backgroundColor: Colors.primary }}
+            style={{
+              backgroundColor: isButtonWaiting ? "gray" : Colors.primary,
+            }}
             className="gap-2 rounded-2xl py-4 flex-row justify-center items-center"
           >
             <Ionicons name="car-outline" size={20} color="#fff" />

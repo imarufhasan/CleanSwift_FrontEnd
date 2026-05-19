@@ -34,6 +34,21 @@ const fallbackAvatar = require("@/assets/images/profile.png");
 const getUserId = (value: ChatMessage["from"]) =>
   typeof value === "string" ? value : value ? value._id : undefined;
 
+const getUser = (value: ChatMessage["from"]) =>
+  typeof value === "string" ? undefined : value;
+
+const formatSenderName = (value?: ReturnType<typeof getUser>) => {
+  const name = value?.name?.trim();
+  if (!name) return "";
+
+  const role = value?.role
+    ?.replaceAll("_", " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
+  return role ? `${name} - ${role}` : name;
+};
+
 export default function ChatScreen() {
   const router = useRouter();
   const [pendingImages, setPendingImages] = useState<string[]>([]);
@@ -200,6 +215,9 @@ export default function ChatScreen() {
 
   const renderItem = ({ item }: { item: ChatMessage }) => {
     const isUser = getUserId(item.from) === currentUserId;
+    const sender = getUser(item.from);
+    const senderName = formatSenderName(sender);
+    const senderAvatar = sender?.image || (avatar ? String(avatar) : undefined);
 
     return (
       <View
@@ -208,12 +226,18 @@ export default function ChatScreen() {
         {/* Receiver avatar */}
         {!isUser && (
           <Image
-            source={avatar ? { uri: String(avatar) } : fallbackAvatar}
+            source={senderAvatar ? { uri: senderAvatar } : fallbackAvatar}
             className="w-8 h-8 rounded-full mr-2 mb-1"
           />
         )}
 
         <View className={`max-w-[72%]`}>
+          {!isUser && senderName ? (
+            <Text className="mb-1 ml-1 text-[11px] font-semibold text-gray-500">
+              {senderName}
+            </Text>
+          ) : null}
+
           {/* Bubble */}
           <View
             className={`px-4 py-3 ${

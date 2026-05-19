@@ -8,12 +8,14 @@ import type { Order } from "@/src/services/orderApi";
 type Props = {
   order?: Order;
   isUpdating?: boolean;
+  readOnly?: boolean;
   onCompletePickup: (bagCount: number) => Promise<boolean | void> | boolean | void;
 };
 
 export default function PickupStep({
   order,
   isUpdating,
+  readOnly = false,
   onCompletePickup,
 }: Props) {
   const [bags, setBags] = useState(
@@ -58,7 +60,8 @@ export default function PickupStep({
 
         <View className="flex-row justify-center items-center">
           <TouchableOpacity
-            onPress={() => bags > 0 && setBags(bags - 1)}
+            onPress={() => !readOnly && bags > 0 && setBags(bags - 1)}
+            disabled={readOnly}
             className="w-[45px] h-[45px] bg-gray-200 rounded-full justify-center items-center"
           >
             <FontAwesome6 name="minus" size={16} color="black" />
@@ -70,8 +73,9 @@ export default function PickupStep({
           </View>
 
           <TouchableOpacity
-            onPress={() => setBags(bags + 1)}
-            style={{ backgroundColor: Colors.primary }}
+            onPress={() => !readOnly && setBags(bags + 1)}
+            disabled={readOnly}
+            style={{ backgroundColor: readOnly ? "gray" : Colors.primary }}
             className="w-[45px] h-[45px] rounded-full justify-center items-center"
           >
             <FontAwesome6 name="add" size={18} color="white" />
@@ -82,8 +86,8 @@ export default function PickupStep({
       <View className="pb-6 mt-[50px]">
         <TouchableOpacity
           onPress={() => onCompletePickup(bags)}
-          disabled={isUpdating}
-          style={{ backgroundColor: Colors.primary }}
+          disabled={isUpdating || readOnly}
+          style={{ backgroundColor: readOnly ? "gray" : Colors.primary }}
           className="py-4 rounded-xl flex-row justify-center items-center"
         >
           {isUpdating ? (
@@ -92,7 +96,7 @@ export default function PickupStep({
             <>
               <Ionicons name="checkmark-circle-outline" size={18} color="white" />
               <Text className="text-white font-semibold ml-2">
-                Confirm Pickup Complete
+                {readOnly ? "Order Completed" : "Confirm Pickup Complete"}
               </Text>
             </>
           )}

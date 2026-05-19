@@ -128,12 +128,19 @@ export default function LiveTrackScreenDriverMain() {
     (Number(displayTotal ?? 0) * Number(driverEarningPercentage)) / 100;
   const isLoading = isFetchingOrder || isFetchingJobs;
   const currentOrderStep = getStepFromOrder(activeOrder);
+  const isOrderLocked =
+    activeOrder?.status === "COMPLETED" || activeOrder?.status === "CANCELED";
 
   const handleStageUpdate = async (
     stage: DriverStage,
     nextStep: number,
     bagCount?: number,
   ): Promise<boolean> => {
+    if (isOrderLocked) {
+      ShowMessage.show("This order is already completed.");
+      return false;
+    }
+
     if (!activeOrder || !activeOrder._id) {
       ShowMessage.error("No active order found");
       return false;
@@ -277,6 +284,7 @@ export default function LiveTrackScreenDriverMain() {
           <PickupStep
             order={activeOrder}
             isUpdating={isUpdatingStage}
+            readOnly={isOrderLocked}
             onCompletePickup={(bagCount) =>
               handleStageUpdate("PICKUP", 1, bagCount)
             }
@@ -286,6 +294,7 @@ export default function LiveTrackScreenDriverMain() {
           <WashingStep
             order={activeOrder}
             isUpdating={isUpdatingStage}
+            readOnly={isOrderLocked}
             onStartWashing={() => handleStageUpdate("WASHING", 2)}
           />
         )}
@@ -293,6 +302,7 @@ export default function LiveTrackScreenDriverMain() {
           <DryingStep
             order={activeOrder}
             isUpdating={isUpdatingStage}
+            readOnly={isOrderLocked}
             onStartDrying={() => handleStageUpdate("DRYING", 3)}
           />
         )}
@@ -300,12 +310,14 @@ export default function LiveTrackScreenDriverMain() {
           <FoldingStep
             order={activeOrder}
             isUpdating={isUpdatingStage}
+            readOnly={isOrderLocked}
             onStartDelivery={() => handleStageUpdate("FOLDING", 4)}
           />
         )}
         {activeStep === 4 && (
           <DeliveryStep
             order={activeOrder}
+            readOnly={isOrderLocked}
             onStartOutForDelivery={() => handleStageUpdate("DELIVERY", 4)}
           />
         )}

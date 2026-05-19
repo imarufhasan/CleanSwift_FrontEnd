@@ -9,6 +9,7 @@ import { formatOrderNumber } from "@/src/utils/orderNumber";
 type Props = {
   order?: Order;
   isUpdating?: boolean;
+  readOnly?: boolean;
   onStartWashing: () => Promise<boolean | void> | boolean | void;
 };
 
@@ -24,6 +25,7 @@ const formatDateTime = (value?: string) => {
 export default function WashingStep({
   order,
   isUpdating,
+  readOnly = false,
   onStartWashing,
 }: Props) {
   const customer = order ? order.customer : undefined;
@@ -85,8 +87,8 @@ export default function WashingStep({
       <View className="pb-6 mt-[50px]">
         <TouchableOpacity
           onPress={onStartWashing}
-          disabled={isUpdating}
-          style={{ backgroundColor: Colors.primary }}
+          disabled={isUpdating || readOnly}
+          style={{ backgroundColor: readOnly ? "gray" : Colors.primary }}
           className="py-4 rounded-xl flex-row justify-center items-center gap-3"
         >
           {isUpdating ? (
@@ -94,7 +96,7 @@ export default function WashingStep({
           ) : (
             <>
               <Text className="text-white font-semibold ml-2">
-                Start Washing
+                {readOnly ? "Order Completed" : "Start Washing"}
               </Text>
               <FontAwesome6 name="arrow-right-long" size={18} color="white" />
             </>

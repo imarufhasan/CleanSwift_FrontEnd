@@ -19,10 +19,15 @@ const getOrderDriverEarningPercentage = (
 
 type Props = {
   order?: Order;
+  readOnly?: boolean;
   onStartOutForDelivery: () => Promise<boolean | void> | boolean | void;
 };
 
-export default function DeliveryStep({ order, onStartOutForDelivery }: Props) {
+export default function DeliveryStep({
+  order,
+  readOnly = false,
+  onStartOutForDelivery,
+}: Props) {
   const [isWaitingForConfirmation, setIsWaitingForConfirmation] = useState(
     order?.status === "OUT_FOR_DELIVERY",
   );
@@ -36,7 +41,7 @@ export default function DeliveryStep({ order, onStartOutForDelivery }: Props) {
         )
       : undefined);
   const driverEarningPercentage = getOrderDriverEarningPercentage(activeJob);
-  const isCompleted = activeJob?.status === "COMPLETED";
+  const isCompleted = readOnly || activeJob?.status === "COMPLETED";
   const canStartOutForDelivery = activeJob?.status === "FOLDING";
   const isButtonWaiting =
     !isCompleted &&
@@ -239,6 +244,7 @@ export default function DeliveryStep({ order, onStartOutForDelivery }: Props) {
         <View className="px-5 mb-6">
           <TouchableOpacity
             onPress={async () => {
+              if (readOnly) return;
               if (!canStartOutForDelivery) return;
               const result = await onStartOutForDelivery();
               if (result !== false) {

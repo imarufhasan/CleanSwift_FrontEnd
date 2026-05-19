@@ -113,8 +113,10 @@ export default function Index() {
 
               <TouchableOpacity
                 onPress={() => {
-                  console.log('recet_item: ', order);
-                  router.push('/(common)/OrderDetailsDriver');
+                  router.push({
+                    pathname: '/(common)/OrderDetailsDriver' as any,
+                    params: { id: order.id },
+                  });
                 }}
                 className="my-2"
               >

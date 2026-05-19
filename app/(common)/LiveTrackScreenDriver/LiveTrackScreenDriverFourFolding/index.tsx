@@ -8,6 +8,7 @@ import type { Order } from "@/src/services/orderApi";
 type Props = {
   order?: Order;
   isUpdating?: boolean;
+  readOnly?: boolean;
   onStartDelivery: () => Promise<boolean | void> | boolean | void;
 };
 
@@ -23,6 +24,7 @@ const formatDateTime = (value?: string) => {
 export default function FoldingStep({
   order,
   isUpdating,
+  readOnly = false,
   onStartDelivery,
 }: Props) {
   const customer = order ? order.customer : undefined;
@@ -102,8 +104,8 @@ export default function FoldingStep({
       <View className="pb-6 mt-[50px]">
         <TouchableOpacity
           onPress={onStartDelivery}
-          disabled={isUpdating}
-          style={{ backgroundColor: Colors.primary }}
+          disabled={isUpdating || readOnly}
+          style={{ backgroundColor: readOnly ? "gray" : Colors.primary }}
           className="py-4 rounded-xl flex-row justify-center items-center gap-3"
         >
           {isUpdating ? (
@@ -111,7 +113,7 @@ export default function FoldingStep({
           ) : (
             <>
               <Text className="text-white font-semibold ml-2">
-                Start Folding
+                {readOnly ? "Order Completed" : "Start Folding"}
               </Text>
               <FontAwesome6 name="arrow-right-long" size={18} color="white" />
             </>

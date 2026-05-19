@@ -40,6 +40,7 @@ export default function DeliveredSuccessScreen() {
   const [paymentMethodModal, setPaymentMethodModal] = useState(false);
   const [cardComplete, setCardComplete] = useState(false);
   const [cardDetails, setCardDetails] = useState<any>(null);
+  const [isPaymentComplete, setIsPaymentComplete] = useState(false);
   const [cardInputMessage, setCardInputMessage] = useState(
     "Enter card number, expiry date, and CVC.",
   );
@@ -137,6 +138,11 @@ export default function DeliveredSuccessScreen() {
   };
 
   const handleCompletePayment = async () => {
+    if (isPaymentComplete) {
+      setConfirmPaymentModal(true);
+      return;
+    }
+
     if (!orderId) {
       ShowMessage.error("Order not found");
       return;
@@ -149,6 +155,7 @@ export default function DeliveredSuccessScreen() {
       }).unwrap();
       console.log("payment res data: ", res);
       ShowMessage.success(res?.message);
+      setIsPaymentComplete(true);
       setConfirmPaymentModal(true);
     } catch (error: any) {
       console.log(
@@ -392,8 +399,11 @@ export default function DeliveredSuccessScreen() {
           {/* Button */}
           <TouchableOpacity
             onPress={handleCompletePayment}
-            disabled={isLoading}
-            className="bg-[#0A8CFF] py-4 rounded-2xl mb-[50px] flex-row items-center justify-center"
+            disabled={isLoading || isPaymentComplete}
+            className="py-4 rounded-2xl mb-[50px] flex-row items-center justify-center"
+            style={{
+              backgroundColor: isPaymentComplete ? "#16A34A" : "#0A8CFF",
+            }}
           >
             <Ionicons
               name="checkmark-circle-outline"
@@ -402,9 +412,11 @@ export default function DeliveredSuccessScreen() {
               className="mx-2"
             />
             <Text className="text-white text-center font-bold text-lg">
-              {isLoading
-                ? "Processing..."
-                : `Complete Payment $${total.toFixed(2)}`}
+              {isPaymentComplete
+                ? `Payment Confirmed $${total.toFixed(2)}`
+                : isLoading
+                  ? "Processing..."
+                  : `Complete Payment $${total.toFixed(2)}`}
             </Text>
           </TouchableOpacity>
         </View>

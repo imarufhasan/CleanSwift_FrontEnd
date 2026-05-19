@@ -143,10 +143,12 @@ export default function DeliveredSuccessScreen() {
     }
 
     try {
-      await confirmPayment({
+     const res =   await confirmPayment({
         orderId: String(orderId),
         tipAmount,
       }).unwrap();
+      console.log("payment res data: ", res);
+      ShowMessage.success(res?.message);
       setConfirmPaymentModal(true);
     } catch (error: any) {
       console.log(
@@ -468,6 +470,7 @@ export default function DeliveredSuccessScreen() {
               <TouchableOpacity
                 onPress={() => {
                   setConfirmPaymentModal(false);
+                  router.replace("/(customer)/(tabs)/home");
                 }}
                 style={{ backgroundColor: Colors.primary }}
                 className="w-full py-3 rounded-2xl mb-4 flex-row items-center justify-center"

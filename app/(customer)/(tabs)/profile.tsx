@@ -261,7 +261,7 @@ export default function Profile() {
                 if (item.label === "Profile Setting") {
                   router.push("/profileSettings");
                 } else if (item.label === "Payment Methods") {
-                  ShowMessage.show("Payment Methods is coming soon!");
+                  router.push("/(common)/PaymentMethods" as any);
                 } else if (item.label === "Change password") {
                   router.push("/changePassword");
                 } else if (item.label === "Be a Driver") {

@@ -45,7 +45,28 @@ export const cardApi = api.injectEndpoints({
       }),
       invalidatesTags: ['Card', 'Payment'],
     }),
+
+    setDefaultCard: builder.mutation<ApiResponse<SavedCard>, string>({
+      query: id => ({
+        url: `/cards/${id}/default`,
+        method: 'PATCH',
+      }),
+      invalidatesTags: ['Card', 'Payment'],
+    }),
+
+    deleteCard: builder.mutation<ApiResponse<SavedCard>, string>({
+      query: id => ({
+        url: `/cards/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Card', 'Payment'],
+    }),
   }),
 });
 
-export const { useAttachCardMutation, useGetSavedCardsQuery } = cardApi;
+export const {
+  useAttachCardMutation,
+  useDeleteCardMutation,
+  useGetSavedCardsQuery,
+  useSetDefaultCardMutation,
+} = cardApi;

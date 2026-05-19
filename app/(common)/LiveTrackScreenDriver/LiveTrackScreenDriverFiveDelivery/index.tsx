@@ -36,9 +36,11 @@ export default function DeliveryStep({ order, onStartOutForDelivery }: Props) {
         )
       : undefined);
   const driverEarningPercentage = getOrderDriverEarningPercentage(activeJob);
+  const isCompleted = activeJob?.status === "COMPLETED";
   const canStartOutForDelivery = activeJob?.status === "FOLDING";
   const isButtonWaiting =
-    isWaitingForConfirmation || activeJob?.status === "OUT_FOR_DELIVERY";
+    !isCompleted &&
+    (isWaitingForConfirmation || activeJob?.status === "OUT_FOR_DELIVERY");
 
   useEffect(() => {
     setIsWaitingForConfirmation(
@@ -154,9 +156,13 @@ export default function DeliveryStep({ order, onStartOutForDelivery }: Props) {
                   {formatOrderNumber(activeJob ? activeJob._id : undefined)}
                 </Text>
               </View>
-              <View className="bg-blue-50 px-3 py-1.5 rounded-full">
-                <Text className="text-blue-600 text-xs font-semibold">
-                  Active
+              <View
+                className={`px-3 py-1.5 rounded-full ${isCompleted ? "bg-green-50" : "bg-blue-50"}`}
+              >
+                <Text
+                  className={`text-xs font-semibold ${isCompleted ? "text-green-600" : "text-blue-600"}`}
+                >
+                  {isCompleted ? "Completed" : "Active"}
                 </Text>
               </View>
             </View>
@@ -239,17 +245,27 @@ export default function DeliveryStep({ order, onStartOutForDelivery }: Props) {
                 setIsWaitingForConfirmation(true);
               }
             }}
-            disabled={!canStartOutForDelivery || isButtonWaiting}
+            disabled={isCompleted || !canStartOutForDelivery || isButtonWaiting}
             style={{
-              backgroundColor: isButtonWaiting ? "gray" : Colors.primary,
+              backgroundColor: isCompleted
+                ? "#16A34A"
+                : isButtonWaiting
+                  ? "gray"
+                  : Colors.primary,
             }}
             className="gap-2 rounded-2xl py-4 flex-row justify-center items-center"
           >
-            <Ionicons name="car-outline" size={20} color="#fff" />
+            <Ionicons
+              name={isCompleted ? "checkmark-circle-outline" : "car-outline"}
+              size={20}
+              color="#fff"
+            />
             <Text className="text-white text-base font-bold">
-              {isButtonWaiting
-                ? "Waiting for Customer Confirmation"
-                : "Out for Delivery"}
+              {isCompleted
+                ? "Payment Confirmed"
+                : isButtonWaiting
+                  ? "Waiting for Customer Confirmation"
+                  : "Out for Delivery"}
             </Text>
           </TouchableOpacity>
         </View>

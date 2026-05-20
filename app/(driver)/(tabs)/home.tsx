@@ -390,7 +390,7 @@ export default function HomeScreen() {
     0,
   );
 
-  console.log("myJobsRes: ", myJobsRes?.data?.length);
+ // console.log("myJobsRes: ", myJobsRes?.data?.length);
 
   const refreshJobs = useCallback(() => {
     refetchAvailableJobs();

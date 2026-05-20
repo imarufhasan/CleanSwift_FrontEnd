@@ -1,23 +1,23 @@
-import { api } from './api';
+import { api } from "./api";
 
 export type OrderStatus =
-  | 'REQUESTED'
-  | 'DRIVER_ASSIGNED'
-  | 'PICKED_UP'
-  | 'WASHING_DRYING'
-  | 'DRYING'
-  | 'FOLDING'
-  | 'OUT_FOR_DELIVERY'
-  | 'DELIVERED'
-  | 'COMPLETED'
-  | 'CANCELED';
+  | "REQUESTED"
+  | "DRIVER_ASSIGNED"
+  | "PICKED_UP"
+  | "WASHING_DRYING"
+  | "DRYING"
+  | "FOLDING"
+  | "OUT_FOR_DELIVERY"
+  | "DELIVERED"
+  | "COMPLETED"
+  | "CANCELED";
 
 export type Order = {
   _id: string;
   customer?: any;
   driver?: any;
-  serviceType: 'WASH_DRY' | 'DRY_CLEAN';
-  pickupType: 'ASAP' | 'SCHEDULED';
+  serviceType: "WASH_DRY" | "DRY_CLEAN";
+  pickupType: "ASAP" | "SCHEDULED";
   scheduledPickupAt?: string;
   bags: number;
   specialInstructions?: string;
@@ -51,50 +51,82 @@ type ApiResponse<T> = {
 };
 
 export const orderApi = api.injectEndpoints({
-  endpoints: builder => ({
+  endpoints: (builder) => ({
     createOrder: builder.mutation<
       ApiResponse<Order>,
       {
-        serviceType: 'WASH_DRY' | 'DRY_CLEAN';
-        pickupType: 'ASAP' | 'SCHEDULED';
+        serviceType: "WASH_DRY" | "DRY_CLEAN";
+        pickupType: "ASAP" | "SCHEDULED";
         scheduledPickupAt?: string;
         bags: number;
         specialInstructions?: string;
       }
     >({
-      query: body => ({
-        url: '/orders',
-        method: 'POST',
+      query: (body) => ({
+        url: "/orders",
+        method: "POST",
         body,
       }),
-      invalidatesTags: ['Order'],
+      invalidatesTags: ["Order"],
     }),
 
     getMyOrders: builder.query<ApiResponse<Order[]>, void>({
       query: () => ({
-        url: '/orders',
-        method: 'GET',
+        url: "/orders",
+        method: "GET",
       }),
-      providesTags: ['Order'],
+      providesTags: ["Order"],
     }),
 
     getOrderById: builder.query<ApiResponse<Order>, string>({
-      query: id => ({
+      query: (id) => ({
         url: `/orders/${id}`,
-        method: 'GET',
+        method: "GET",
       }),
-      providesTags: (_result, _error, id) => [{ type: 'Order', id }],
+      providesTags: (_result, _error, id) => [{ type: "Order", id }],
     }),
 
-    markOrderDelivered: builder.mutation<ApiResponse<Order>, { orderId: string }>({
+    markOrderDelivered: builder.mutation<
+      ApiResponse<Order>,
+      { orderId: string }
+    >({
       query: ({ orderId }) => ({
         url: `/orders/${orderId}/stage/delivery/complete`,
-        method: 'POST',
+        method: "POST",
       }),
-      invalidatesTags: ['Order'],
+      invalidatesTags: ["Order"],
     }),
 
+    // {{baseUrl}}/orders/:id/cancel
+    cancelOrder: builder.mutation<ApiResponse<Order>, { orderId: string }>({
+      query: ({ orderId }) => ({
+        url: `/orders/${orderId}/cancel`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Order"],
+    }),
+
+    //{{baseUrl}}/ratings
+    createRating: builder.mutation<
+      ApiResponse<any>,
+      {
+        orderId: string;
+        driverId: string;
+        rating: number;
+        feedback?: string;
+      }
+    >({
+      query: (body) => ({
+        url: "/ratings",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Order"],
+    }),
+
+
   }),
+
 });
 
 export const {
@@ -102,4 +134,6 @@ export const {
   useGetMyOrdersQuery,
   useGetOrderByIdQuery,
   useMarkOrderDeliveredMutation,
+  useCancelOrderMutation,
+  useCreateRatingMutation,
 } = orderApi;

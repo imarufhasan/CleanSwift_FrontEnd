@@ -17,10 +17,16 @@ import Colors from "@/constants/color";
 import RatingStars from "@/components/home/RatingStars";
 import { useFocusEffect, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useGetMyOrdersQuery, type Order } from "@/src/services/orderApi";
+import {
+  useCancelOrderMutation,
+  useGetMyOrdersQuery,
+  type Order,
+} from "@/src/services/orderApi";
 import { useOrderSocket } from "@/src/hooks/useOrderSocket";
 import { useLocalSearchParams } from "expo-router";
 import { formatOrderNumber } from "@/src/utils/orderNumber";
+import ShowMessage from "@/constants/toast";
+import AppLoader from "@/components/shared/AppLoader";
 
 const buildSteps = (order?: Order) => {
   const current = !order
@@ -79,8 +85,14 @@ const getEffectiveBagCount = (order?: Order) =>
 export default function LiveTrackingScreen() {
   const router = useRouter();
   const { orderId } = useLocalSearchParams<{ orderId?: string }>();
+ // console.log("orderId: ", orderId);
+
+  const [cancelOrder, { isLoading: isCancelReqLoading }] =
+    useCancelOrderMutation();
+
   const { data: ordersRes, refetch } = useGetMyOrdersQuery();
   const orders = ordersRes?.data ?? [];
+
   const clickedOrder = orderId
     ? orders.find((o) => o._id === orderId)
     : undefined;
@@ -91,6 +103,8 @@ export default function LiveTrackingScreen() {
       );
 
   const driver = activeOrder?.driver ?? null;
+  //console.log("driver: ", driver);
+
   const driverName =
     activeOrder && typeof activeOrder.driver === "object" && activeOrder.driver
       ? (activeOrder.driver.name ?? "Driver")
@@ -100,10 +114,60 @@ export default function LiveTrackingScreen() {
       ? (activeOrder.driver.image ?? "")
       : "";
 
-  const status = {
+  const status2 = {
     label: activeOrder?.status?.replaceAll("_", " ") ?? "No active order",
     etaMinutes: activeOrder?.scheduledPickupAt ? 12 : 0,
   };
+
+  const getEtaMinutes2 = (order?: Order) => {
+    if (!order) return 12;
+
+    if (order.scheduledPickupAt) {
+      const diff = new Date(order.scheduledPickupAt).getTime() - Date.now();
+      const minutes = Math.round(diff / 60000);
+
+      // clamp between 5–60 mins
+      return Math.max(5, Math.min(minutes, 60));
+    }
+
+    return 12;
+  };
+  const getEtaMinutes = (order?: Order) => {
+    if (!order) return null;
+   // console.log("order.scheduledPickupAt: ", order.scheduledPickupAt);
+
+    if (order.scheduledPickupAt) {
+      const diff = new Date(order.scheduledPickupAt).getTime() - Date.now();
+      const mins = Math.round(diff / 60000);
+
+      return Math.max(1, Math.min(mins, 60));
+    } else {
+      return "ASAP";
+    }
+
+    // switch (order.status) {
+    //   case "OUT_FOR_DELIVERY":
+    //     return 5;
+    //   case "PICKED_UP":
+    //     return 10;
+    //   case "DRIVER_ASSIGNED":
+    //     return 15;
+    //   case "WASHING_DRYING":
+    //   case "DRYING":
+    //   case "FOLDING":
+    //     return 30;
+    //   default:
+    //     return null;
+    // }
+  };
+
+  //console.log("activeOrder?.status: ", activeOrder?.status);
+
+  const status = {
+    label: activeOrder?.status?.replaceAll("_", " ") ?? "No active order",
+    etaMinutes: getEtaMinutes(activeOrder),
+  };
+ // console.log("getEtaMinutes(activeOrder): ", getEtaMinutes(activeOrder));
 
   const orderDetails = {
     service: activeOrder?.serviceType
@@ -120,6 +184,8 @@ export default function LiveTrackingScreen() {
       tip: 0,
     },
   };
+
+ // console.log("orderDetails activeOrder: ", activeOrder);
 
   const total =
     orderDetails.pricing.bags * orderDetails.pricing.bagPrice +
@@ -145,6 +211,38 @@ export default function LiveTrackingScreen() {
     activeOrder && typeof activeOrder.driver === "object" && activeOrder.driver
       ? (activeOrder.driver.phone ?? "")
       : "";
+
+  const handleCancelRequest = async () => {
+    try {
+      const res = await cancelOrder({ orderId: activeOrder?._id! }).unwrap();
+      if (res?.success) {
+        ShowMessage.show(res?.message || "Order cancelled successfully");
+        router.back();
+      } else {
+        ShowMessage.error(res?.message || "Order cancelled fail");
+      }
+    } catch (error: unknown) {
+      const err = error as any;
+      if (
+        err?.status === "FETCH_ERROR" ||
+        err?.message === "Network request failed"
+      ) {
+        ShowMessage.error(
+          "Server is not reachable. Please check your internet or try again later.",
+        );
+        return;
+      }
+      if (err?.status === "PARSING_ERROR") {
+        ShowMessage.error("Server response error. Please try again.");
+        return;
+      }
+      ShowMessage.error(
+        err?.data?.message ||
+          "An error occurred while updating. Please try again.",
+      );
+      return false;
+    }
+  };
 
   return (
     <View className="flex-1 bg-[#F6F9FF]">
@@ -286,11 +384,26 @@ export default function LiveTrackingScreen() {
                   Estimated Ready Time
                 </Text>
                 <Text className="font-bold text-3xl text-gray-900 mt-1">
-                  {status.etaMinutes ? `${status.etaMinutes}` : "--"}
+                  {/* {status.etaMinutes ? `${status.etaMinutes}` : "--"} */}
+                  {/* {status.etaMinutes === null || status.etaMinutes === undefined
+                    ? "ASAP"
+                    : status.etaMinutes}
                   <Text className="text-base font-semibold text-gray-500">
                     {" "}
                     mins
-                  </Text>
+                  </Text> */}
+                  {status.etaMinutes == null ? (
+                    <Text className="font-bold text-3xl text-gray-900 mt-1">
+                      ASAP
+                    </Text>
+                  ) : (
+                    <Text className="font-bold text-3xl text-gray-900 mt-1">
+                      {status.etaMinutes}
+                      <Text className="text-base font-semibold text-gray-500">
+                        {status.etaMinutes !== "ASAP" && " mins"}
+                      </Text>
+                    </Text>
+                  )}
                 </Text>
               </View>
               <View className="bg-blue-50 w-14 h-14 rounded-2xl items-center justify-center">
@@ -660,6 +773,7 @@ export default function LiveTrackingScreen() {
                   pathname: "/(common)/DeliveredSuccessScreen" as any,
                   params: {
                     orderId: String(activeOrder?._id ?? ""),
+                    driverId: String(activeOrder?.driver?._id ?? ""),
                     name: driver?.name ?? "Driver",
                     image: driver?.image ?? "",
                     service: orderDetails.service,
@@ -687,6 +801,41 @@ export default function LiveTrackingScreen() {
           </View>
         )}
 
+        {(activeOrder?.status === "REQUESTED" ||
+          activeOrder?.status === "DRIVER_ASSIGNED") && (
+          <View className="px-5 mb-6 mt-8">
+            <TouchableOpacity
+              onPress={handleCancelRequest}
+              activeOpacity={0.85}
+              className="bg-red-500 rounded-2xl py-4 px-5 flex-row items-center justify-center"
+              style={{
+                shadowColor: "#ef4444",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.25,
+                shadowRadius: 10,
+                elevation: 5,
+              }}
+            >
+              <View className="w-10 h-10 rounded-full bg-white/20 items-center justify-center mr-3">
+                <Ionicons name="close-circle-outline" size={22} color="#fff" />
+              </View>
+
+              <View className="flex-1">
+                <Text className="text-white font-bold text-base">
+                  Cancel Request
+                </Text>
+
+                <Text className="text-red-100 text-xs mt-0.5">
+                  You can cancel before pickup starts
+                </Text>
+              </View>
+
+              <Feather name="chevron-right" size={20} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        )}
+
+        <AppLoader visible={isCancelReqLoading} />
         <SafeAreaView edges={["bottom"]} />
       </ScrollView>
     </View>

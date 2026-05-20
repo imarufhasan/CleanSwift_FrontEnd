@@ -20,9 +20,14 @@ import {
   useGetMyDriverJobsQuery,
   useUpdateDriverJobStageMutation,
 } from "@/src/services/driverApi";
-import { useGetOrderByIdQuery, type Order } from "@/src/services/orderApi";
+import {
+  useCancelOrderMutation,
+  useGetOrderByIdQuery,
+  type Order,
+} from "@/src/services/orderApi";
 import { useOrderSocket } from "@/src/hooks/useOrderSocket";
 import { formatOrderNumber } from "@/src/utils/orderNumber";
+import AppLoader from "@/components/shared/AppLoader";
 
 type DriverStage = "PICKUP" | "WASHING" | "DRYING" | "FOLDING" | "DELIVERY";
 
@@ -30,10 +35,14 @@ const inactiveStatuses = ["DELIVERED", "COMPLETED", "CANCELED"];
 const steps = ["Pickup", "Washing", "Drying", "Folding", "Delivery"];
 
 const getEffectiveBagCount = (order?: Order) =>
-  Math.max(0, order?.bagCountAtDelivery ?? order?.bagCountAtPickup ?? order?.bags ?? 0);
+  Math.max(
+    0,
+    order?.bagCountAtDelivery ?? order?.bagCountAtPickup ?? order?.bags ?? 0,
+  );
 
-const getOrderDriverEarningPercentage = (order?: Pick<Order, "driverEarningPercentage">) =>
-  Number(order?.driverEarningPercentage ?? 70);
+const getOrderDriverEarningPercentage = (
+  order?: Pick<Order, "driverEarningPercentage">,
+) => Number(order?.driverEarningPercentage ?? 70);
 
 const getStepFromOrder = (order?: Order) => {
   if (!order) return 0;
@@ -67,6 +76,10 @@ export default function LiveTrackScreenDriverMain() {
   } = useGetMyDriverJobsQuery();
   const [updateDriverJobStage, { isLoading: isUpdatingStage }] =
     useUpdateDriverJobStageMutation();
+
+  const [cancelOrder, { isLoading: isCancelReqLoading }] =
+    useCancelOrderMutation();
+
   const [activeStep, setActiveStep] = useState(0);
 
   const refreshDriverOrder = useCallback(() => {
@@ -115,15 +128,12 @@ export default function LiveTrackScreenDriverMain() {
   ]);
 
   const driverEarningPercentage = getOrderDriverEarningPercentage(activeOrder);
-  const displayBags = activeOrder
-    ? getEffectiveBagCount(activeOrder)
-    : 0;
+  const displayBags = activeOrder ? getEffectiveBagCount(activeOrder) : 0;
   const displayPricePerBag =
     activeOrder && activeOrder.pricePerBag !== undefined
       ? activeOrder.pricePerBag
       : 0;
-  const displayTotal =
-    displayBags * Number(displayPricePerBag);
+  const displayTotal = displayBags * Number(displayPricePerBag);
   const driverEarning =
     (Number(displayTotal ?? 0) * Number(driverEarningPercentage)) / 100;
   const isLoading = isFetchingOrder || isFetchingJobs;
@@ -191,6 +201,38 @@ export default function LiveTrackScreenDriverMain() {
       </SafeAreaView>
     );
   }
+
+  const onCancelRequest = async () => {
+    try {
+      const res = await cancelOrder({ orderId: activeOrder?._id! }).unwrap();
+      if (res?.success) {
+        ShowMessage.show(res?.message || "Order cancelled successfully");
+        router.back();
+      } else {
+        ShowMessage.show(res?.message || "Order cancelled fail");
+      }
+    } catch (error: unknown) {
+      const err = error as any;
+      if (
+        err?.status === "FETCH_ERROR" ||
+        err?.message === "Network request failed"
+      ) {
+        ShowMessage.error(
+          "Server is not reachable. Please check your internet or try again later.",
+        );
+        return;
+      }
+      if (err?.status === "PARSING_ERROR") {
+        ShowMessage.error("Server response error. Please try again.");
+        return;
+      }
+      ShowMessage.error(
+        err?.data?.message ||
+          "An error occurred while updating. Please try again.",
+      );
+      return false;
+    }
+  };
 
   return (
     <SafeAreaView edges={["bottom"]} className="flex-1 bg-white">
@@ -288,6 +330,8 @@ export default function LiveTrackScreenDriverMain() {
             onCompletePickup={(bagCount) =>
               handleStageUpdate("PICKUP", 1, bagCount)
             }
+            onCancelRequest={onCancelRequest}
+            isCancelling={false}
           />
         )}
         {activeStep === 1 && (
@@ -322,6 +366,8 @@ export default function LiveTrackScreenDriverMain() {
           />
         )}
       </ScrollView>
+
+      <AppLoader visible={isCancelReqLoading} />
     </SafeAreaView>
   );
 }

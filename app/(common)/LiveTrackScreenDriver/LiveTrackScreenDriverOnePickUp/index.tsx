@@ -9,7 +9,11 @@ type Props = {
   order?: Order;
   isUpdating?: boolean;
   readOnly?: boolean;
-  onCompletePickup: (bagCount: number) => Promise<boolean | void> | boolean | void;
+  onCompletePickup: (
+    bagCount: number,
+  ) => Promise<boolean | void> | boolean | void;
+  onCancelRequest?: () => Promise<boolean | void> | boolean | void;
+  isCancelling?: boolean;
 };
 
 export default function PickupStep({
@@ -17,15 +21,20 @@ export default function PickupStep({
   isUpdating,
   readOnly = false,
   onCompletePickup,
+  onCancelRequest,
+  isCancelling,
 }: Props) {
   const [bags, setBags] = useState(
-    order ? order.bagCountAtPickup ?? order.bags ?? 1 : 1,
+    order ? (order.bagCountAtPickup ?? order.bags ?? 1) : 1,
   );
   const customer = order ? order.customer : undefined;
 
   useEffect(() => {
-    setBags(order ? order.bagCountAtPickup ?? order.bags ?? 1 : 1);
-  }, [order ? order.bagCountAtPickup : undefined, order ? order.bags : undefined]);
+    setBags(order ? (order.bagCountAtPickup ?? order.bags ?? 1) : 1);
+  }, [
+    order ? order.bagCountAtPickup : undefined,
+    order ? order.bags : undefined,
+  ]);
 
   return (
     <View className="bg-white mb-6 px-4">
@@ -55,7 +64,8 @@ export default function PickupStep({
       <View className="bg-white rounded-2xl p-4 shadow-sm mb-6">
         <Text className="font-bold text-2xl mb-1">Confirm Bag Count</Text>
         <Text className="text-sm text-gray-500 mb-4">
-          Expected {order ? order.bags ?? 0 : 0} bags. Update it if pickup count differs.
+          Expected {order ? (order.bags ?? 0) : 0} bags. Update it if pickup
+          count differs.
         </Text>
 
         <View className="flex-row justify-center items-center">
@@ -94,7 +104,11 @@ export default function PickupStep({
             <ActivityIndicator color="white" />
           ) : (
             <>
-              <Ionicons name="checkmark-circle-outline" size={18} color="white" />
+              <Ionicons
+                name="checkmark-circle-outline"
+                size={18}
+                color="white"
+              />
               <Text className="text-white font-semibold ml-2">
                 {readOnly ? "Order Completed" : "Confirm Pickup Complete"}
               </Text>
@@ -102,6 +116,35 @@ export default function PickupStep({
           )}
         </TouchableOpacity>
       </View>
+
+      {onCancelRequest && (
+        <View className="pb-6 mt-4">
+          <TouchableOpacity
+            onPress={() => onCancelRequest()}
+            disabled={isUpdating || isCancelling || readOnly}
+            activeOpacity={0.85}
+            className="py-4 rounded-xl flex-row justify-center items-center border border-red-500"
+            style={{
+              backgroundColor: readOnly ? "#9CA3AF" : "white",
+            }}
+          >
+            {isCancelling ? (
+              <ActivityIndicator color="#EF4444" />
+            ) : (
+              <>
+                <Ionicons
+                  name="close-circle-outline"
+                  size={18}
+                  color="#EF4444"
+                />
+                <Text className="text-red-500 font-semibold ml-2">
+                  Cancel Request
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }

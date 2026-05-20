@@ -21,13 +21,15 @@ import {
 } from "@/src/services/cardApi";
 import { formatOrderNumber } from "@/src/utils/orderNumber";
 import { STRIPE_PUBLISHABLE_KEY } from "@/src/constants/api";
+import { useCreateRatingMutation } from "@/src/services/orderApi";
 
 export default function DeliveredSuccessScreen() {
-  const { name, image, orderId, service, bags, bagPrice, tip } =
+  const { name, image, orderId, driverId, service, bags, bagPrice, tip } =
     useLocalSearchParams<{
       name?: string;
       image?: string;
       orderId?: string;
+      driverId?: string;
       service?: string;
       bags?: string;
       bagPrice?: string;
@@ -46,6 +48,8 @@ export default function DeliveredSuccessScreen() {
   );
   const [rating, setRating] = useState(0);
   const { createPaymentMethod } = useStripe();
+  const [createRating, { isLoading: isCreateRatingLoading }] =
+    useCreateRatingMutation();
   const [confirmPayment, { isLoading }] = useConfirmPaymentMutation();
   const [attachCard, { isLoading: isSavingCard }] = useAttachCardMutation();
   const { data: cardsRes } = useGetSavedCardsQuery();
@@ -138,6 +142,81 @@ export default function DeliveredSuccessScreen() {
   };
 
   const handleCompletePayment = async () => {
+    console.log("click complete payment");
+    if (!orderId) {
+      ShowMessage.error("Order not found");
+      return;
+    }
+
+    try {
+      // 1. If already paid → show modal only
+      if (isPaymentComplete) {
+        setConfirmPaymentModal(true);
+        return;
+      }
+
+      // 2. Validate rating
+      if (!rating || rating === 0) {
+        ShowMessage.error("Please give a rating before payment");
+        return;
+      }
+
+      // 3. STEP 1: Confirm Payment
+      const paymentRes = await confirmPayment({
+        orderId: String(orderId),
+        tipAmount,
+      }).unwrap();
+
+      console.log("payment res:", paymentRes);
+      if (paymentRes?.success) {
+        setIsPaymentComplete(true);
+        console.log("paymentRes 1: ", paymentRes);
+
+        // 4. STEP 2: Create Rating AFTER payment success
+        const ratingRes = await createRating({
+          orderId: String(orderId),
+          driverId: String(driverId), // adjust if your API differs
+          rating,
+          feedback: "", // optional (you can add input later)
+        }).unwrap();
+        if (ratingRes?.success) {
+          console.log("ratingRes 1:", ratingRes);
+          ShowMessage.success("Payment & rating submitted successfully");
+          setConfirmPaymentModal(true);
+        } else {
+          console.log("ratingRes 12:", ratingRes);
+          ShowMessage.success("Payment & rating submitted fail");
+          setConfirmPaymentModal(false);
+        }
+      } else {
+        setIsPaymentComplete(false);
+        console.log("paymentRes 2: ", paymentRes);
+        ShowMessage.success("success: " + paymentRes?.message);
+      }
+    } catch (error: unknown) {
+      const err = error as any;
+      if (
+        err?.status === "FETCH_ERROR" ||
+        err?.message === "Network request failed"
+      ) {
+        ShowMessage.error(
+          "Server is not reachable. Please check your internet or try again later.",
+        );
+        return;
+      }
+      if (err?.status === "PARSING_ERROR") {
+        ShowMessage.error("Server response error. Please try again.");
+        return;
+      }
+      ShowMessage.error(
+        err?.data?.message ||
+          "An error occurred while updating. Please try again.",
+      );
+      return false;
+    }
+  };
+
+  const handleCompletePayment2 = async () => {
     if (isPaymentComplete) {
       setConfirmPaymentModal(true);
       return;
@@ -149,7 +228,7 @@ export default function DeliveredSuccessScreen() {
     }
 
     try {
-     const res =   await confirmPayment({
+      const res = await confirmPayment({
         orderId: String(orderId),
         tipAmount,
       }).unwrap();
@@ -399,7 +478,7 @@ export default function DeliveredSuccessScreen() {
           {/* Button */}
           <TouchableOpacity
             onPress={handleCompletePayment}
-            disabled={isLoading || isPaymentComplete}
+            disabled={isLoading || isPaymentComplete || isCreateRatingLoading}
             className="py-4 rounded-2xl mb-[50px] flex-row items-center justify-center"
             style={{
               backgroundColor: isPaymentComplete ? "#16A34A" : "#0A8CFF",
@@ -414,7 +493,7 @@ export default function DeliveredSuccessScreen() {
             <Text className="text-white text-center font-bold text-lg">
               {isPaymentComplete
                 ? `Payment Confirmed $${total.toFixed(2)}`
-                : isLoading
+                : isLoading || isCreateRatingLoading
                   ? "Processing..."
                   : `Complete Payment $${total.toFixed(2)}`}
             </Text>

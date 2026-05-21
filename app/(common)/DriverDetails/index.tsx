@@ -4,7 +4,7 @@ import { AntDesign, Feather, Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/color';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import RatingStars from '@/components/home/RatingStars';
-import { useGetMyOrdersQuery } from '@/src/services/orderApi';
+import { useGetOrderByIdQuery } from '@/src/services/orderApi';
 
 export default function DriverDetails() {
   const router = useRouter();
@@ -17,17 +17,22 @@ export default function DriverDetails() {
     orderId?: string;
   }>();
 
-  const { data: ordersRes } = useGetMyOrdersQuery();
-  const order =
-    ordersRes?.data?.find(item => item._id === orderId) ||
-    ordersRes?.data?.find(item => !['DELIVERED', 'COMPLETED', 'CANCELED'].includes(item.status));
+  const { data: orderRes } = useGetOrderByIdQuery(String(orderId ?? ''), {
+    skip: !orderId,
+  });
+  const order = orderRes?.data;
   const driver = order?.driver;
 
   const displayName = name || driver?.name || 'Driver';
   const displayImage = image || driver?.image || '';
-  const displayRating = Number(rating || 4.9);
-  const displayTrips = Number(trips || 0);
-  const displayVehicle = vehicle || 'Vehicle info unavailable';
+  const displayRating = Number(
+    order?.driverRating ?? order?.driverRatingSummary?.avg ?? rating ?? 0,
+  );
+  const displayTrips = Number(order?.driverTrips ?? trips ?? 0);
+  const displayVehicle =
+    order?.driverVehicleText || vehicle || 'Vehicle info unavailable';
+  const driverStatus = order?.driverProfile?.status || order?.status;
+  const safety = order?.driverSafety;
 
   return (
     <ScrollView className="flex-1 bg-gray-100">
@@ -81,7 +86,7 @@ export default function DriverDetails() {
             >
               <Text className="text-black">Current Status</Text>
               <Text className="mt-2 font-bold text-green-400">
-                {order?.status?.replaceAll('_', ' ') || 'Handling Your Order'}
+                {driverStatus?.replaceAll('_', ' ') || 'Handling Your Order'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -98,7 +103,11 @@ export default function DriverDetails() {
             </View>
             <View className="ml-3">
               <Text className="text-lg font-semibold">Verified Driver</Text>
-              <Text className="text-sm">Background Check Completed</Text>
+              <Text className="text-sm">
+                {safety?.verifiedDriver
+                  ? 'Background Check Completed'
+                  : 'Background Check Pending'}
+              </Text>
             </View>
           </View>
 
@@ -108,7 +117,11 @@ export default function DriverDetails() {
             </View>
             <View className="ml-3">
               <Text className="text-lg font-semibold">Insured Vehicle</Text>
-              <Text className="text-sm">Full coverage insurance</Text>
+              <Text className="text-sm">
+                {safety?.insuredVehicle
+                  ? 'Full coverage insurance'
+                  : 'Insurance details unavailable'}
+              </Text>
             </View>
           </View>
 
@@ -118,7 +131,11 @@ export default function DriverDetails() {
             </View>
             <View className="ml-3">
               <Text className="text-lg font-semibold">Top Rated</Text>
-              <Text className="text-sm">Excellent customer feedback</Text>
+              <Text className="text-sm">
+                {safety?.topRated
+                  ? 'Excellent customer feedback'
+                  : 'Rating history unavailable'}
+              </Text>
             </View>
           </View>
         </View>

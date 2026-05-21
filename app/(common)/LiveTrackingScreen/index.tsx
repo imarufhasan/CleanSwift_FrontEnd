@@ -590,9 +590,15 @@ export default function LiveTrackingScreen() {
                       orderId: String(activeOrder?._id ?? ""),
                       name: driver?.name ?? "Driver",
                       image: driverImage,
-                      rating: "4.9",
-                      trips: "0",
-                      vehicle: "Vehicle info unavailable",
+                      rating: String(
+                        activeOrder?.driverRating ??
+                          activeOrder?.driverRatingSummary?.avg ??
+                          0,
+                      ),
+                      trips: String(activeOrder?.driverTrips ?? 0),
+                      vehicle:
+                        activeOrder?.driverVehicleText ??
+                        "Vehicle info unavailable",
                     },
                   })
                 }

@@ -1,23 +1,23 @@
-import { api } from "./api";
+import { api } from './api';
 
 export type OrderStatus =
-  | "REQUESTED"
-  | "DRIVER_ASSIGNED"
-  | "PICKED_UP"
-  | "WASHING_DRYING"
-  | "DRYING"
-  | "FOLDING"
-  | "OUT_FOR_DELIVERY"
-  | "DELIVERED"
-  | "COMPLETED"
-  | "CANCELED";
+  | 'REQUESTED'
+  | 'DRIVER_ASSIGNED'
+  | 'PICKED_UP'
+  | 'WASHING_DRYING'
+  | 'DRYING'
+  | 'FOLDING'
+  | 'OUT_FOR_DELIVERY'
+  | 'DELIVERED'
+  | 'COMPLETED'
+  | 'CANCELED';
 
 export type Order = {
   _id: string;
   customer?: any;
   driver?: any;
-  serviceType: "WASH_DRY" | "DRY_CLEAN";
-  pickupType: "ASAP" | "SCHEDULED";
+  serviceType: 'WASH_DRY' | 'DRY_CLEAN';
+  pickupType: 'ASAP' | 'SCHEDULED';
   scheduledPickupAt?: string;
   bags: number;
   specialInstructions?: string;
@@ -25,6 +25,45 @@ export type Order = {
   status: OrderStatus;
   pricePerBag: number;
   driverEarningPercentage?: number;
+  driverProfile?: {
+    _id?: string;
+    user?: string;
+    stripeConnectedAccountId?: string;
+    licenseImageUrl?: string;
+    selfieImageUrl?: string;
+    identity?: any;
+    isAvailable?: boolean;
+    insurance?: {
+      provider?: string;
+      policyNumber?: string;
+      expiration?: string;
+      documentImageUrl?: string;
+    };
+    vehicle?: {
+      make?: string;
+      model?: string;
+      year?: number;
+      plate?: string;
+    };
+    backgroundCheckStatus?: 'PENDING' | 'APPROVED' | 'FAILED';
+    reputationTier?: number;
+    capacityLimit?: number;
+    status?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
+  };
+  driverRatingSummary?: {
+    _id?: string;
+    count?: number;
+    avg?: number;
+  };
+  driverRating?: number;
+  driverRatingCount?: number;
+  driverTrips?: number;
+  driverVehicleText?: string;
+  driverSafety?: {
+    verifiedDriver?: boolean;
+    insuredVehicle?: boolean;
+    topRated?: boolean;
+  };
   total: number;
   bagCountAtPickup?: number;
   bagCountAtDelivery?: number;
@@ -51,59 +90,56 @@ type ApiResponse<T> = {
 };
 
 export const orderApi = api.injectEndpoints({
-  endpoints: (builder) => ({
+  endpoints: builder => ({
     createOrder: builder.mutation<
       ApiResponse<Order>,
       {
-        serviceType: "WASH_DRY" | "DRY_CLEAN";
-        pickupType: "ASAP" | "SCHEDULED";
+        serviceType: 'WASH_DRY' | 'DRY_CLEAN';
+        pickupType: 'ASAP' | 'SCHEDULED';
         scheduledPickupAt?: string;
         bags: number;
         specialInstructions?: string;
       }
     >({
-      query: (body) => ({
-        url: "/orders",
-        method: "POST",
+      query: body => ({
+        url: '/orders',
+        method: 'POST',
         body,
       }),
-      invalidatesTags: ["Order"],
+      invalidatesTags: ['Order'],
     }),
 
     getMyOrders: builder.query<ApiResponse<Order[]>, void>({
       query: () => ({
-        url: "/orders",
-        method: "GET",
+        url: '/orders',
+        method: 'GET',
       }),
-      providesTags: ["Order"],
+      providesTags: ['Order'],
     }),
 
     getOrderById: builder.query<ApiResponse<Order>, string>({
-      query: (id) => ({
+      query: id => ({
         url: `/orders/${id}`,
-        method: "GET",
+        method: 'GET',
       }),
-      providesTags: (_result, _error, id) => [{ type: "Order", id }],
+      providesTags: (_result, _error, id) => [{ type: 'Order', id }],
     }),
 
-    markOrderDelivered: builder.mutation<
-      ApiResponse<Order>,
-      { orderId: string }
-    >({
+    markOrderDelivered: builder.mutation<ApiResponse<Order>, { orderId: string }>({
       query: ({ orderId }) => ({
         url: `/orders/${orderId}/stage/delivery/complete`,
-        method: "POST",
+        method: 'POST',
       }),
-      invalidatesTags: ["Order"],
+      invalidatesTags: ['Order'],
     }),
 
     // {{baseUrl}}/orders/:id/cancel
     cancelOrder: builder.mutation<ApiResponse<Order>, { orderId: string }>({
       query: ({ orderId }) => ({
         url: `/orders/${orderId}/cancel`,
-        method: "POST",
+        method: 'POST',
       }),
-      invalidatesTags: ["Order"],
+      invalidatesTags: ['Order'],
     }),
 
     //{{baseUrl}}/ratings
@@ -116,17 +152,14 @@ export const orderApi = api.injectEndpoints({
         feedback?: string;
       }
     >({
-      query: (body) => ({
-        url: "/ratings",
-        method: "POST",
+      query: body => ({
+        url: '/ratings',
+        method: 'POST',
         body,
       }),
-      invalidatesTags: ["Order"],
+      invalidatesTags: ['Order'],
     }),
-
-
   }),
-
 });
 
 export const {

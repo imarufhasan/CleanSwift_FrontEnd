@@ -164,6 +164,7 @@ export default function OrderDetails() {
   const total = Number(order.total ?? 0);
 
   const subTotal = (order.bags ?? 0) * (order.pricePerBag ?? 0);
+  const driver = order.driver;
 
   const handleCall = async () => {
     try {
@@ -336,10 +337,16 @@ export default function OrderDetails() {
                     pathname: "/(common)/DriverDetails" as any,
                     params: {
                       orderId: order._id,
-                      name: targetUser?.name ?? "",
-                      image: targetUser?.image ?? "",
-                      rating: "4.9",
-                      trips: "0",
+                      name: driver.name ?? "Driver",
+                      image: driver.image ?? "",
+                      rating: String(
+                        order.driverRating ??
+                          order.driverRatingSummary?.avg ??
+                          0,
+                      ),
+                      trips: String(order.driverTrips ?? 0),
+                      vehicle:
+                        order.driverVehicleText ?? "Vehicle info unavailable",
                     },
                   })
                 }

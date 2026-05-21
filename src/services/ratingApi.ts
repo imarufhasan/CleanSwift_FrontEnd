@@ -22,6 +22,17 @@ type DriverRatingsResponse = {
   }>;
 };
 
+export type MyOrderRating = {
+  _id: string;
+  order: string;
+  customer: string;
+  driver: string;
+  rating: number;
+  feedback?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export const ratingApi = api.injectEndpoints({
   endpoints: builder => ({
     getDriverRatings: builder.query<ApiResponse<DriverRatingsResponse>, string>({
@@ -30,7 +41,13 @@ export const ratingApi = api.injectEndpoints({
         method: 'GET',
       }),
     }),
+    getMyOrderRating: builder.query<ApiResponse<MyOrderRating | null>, string>({
+      query: orderId => ({
+        url: `/ratings/order/${orderId}/me`,
+        method: 'GET',
+      }),
+    }),
   }),
 });
 
-export const { useGetDriverRatingsQuery } = ratingApi;
+export const { useGetDriverRatingsQuery, useGetMyOrderRatingQuery } = ratingApi;

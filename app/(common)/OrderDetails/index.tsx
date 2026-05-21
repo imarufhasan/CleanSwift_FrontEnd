@@ -1,58 +1,49 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Image,
   ScrollView,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
   Dimensions,
   Linking,
-} from "react-native";
-import { AntDesign, Ionicons } from "@expo/vector-icons";
-import Colors from "@/constants/color";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import RatingStars from "@/components/home/RatingStars";
-import { useGetOrderByIdQuery } from "@/src/services/orderApi";
-import { formatOrderNumber } from "@/src/utils/orderNumber";
-import SkeletonPlaceholder from "@/components/common/SkeletonPlaceholder";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { USER } from "@/src/services/storage/tokenStorage";
+} from 'react-native';
+import { AntDesign, FontAwesome, Ionicons } from '@expo/vector-icons';
+import Colors from '@/constants/color';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import RatingStars from '@/components/home/RatingStars';
+import { useCreateRatingMutation, useGetOrderByIdQuery } from '@/src/services/orderApi';
+import { useGetMyOrderRatingQuery } from '@/src/services/ratingApi';
+import { useCreateInvoiceDownloadLinkMutation, useGetInvoiceByOrderIdQuery } from '@/src/services/invoiceApi';
+import { formatOrderNumber } from '@/src/utils/orderNumber';
+import SkeletonPlaceholder from '@/components/common/SkeletonPlaceholder';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { USER } from '@/src/services/storage/tokenStorage';
+import ShowMessage from '@/constants/toast';
 
-const { width } = Dimensions.get("window");
+const { width } = Dimensions.get('window');
 
 const serviceLabel: Record<string, string> = {
-  WASH_DRY: "Washing & Drying",
-  DRY_CLEAN: "Dry Cleaning",
+  WASH_DRY: 'Washing & Drying',
+  DRY_CLEAN: 'Dry Cleaning',
 };
 
-const userImage = (image?: string) =>
-  image ? { uri: image } : require("@/assets/images/profile.png");
+const userImage = (image?: string) => (image ? { uri: image } : require('@/assets/images/profile.png'));
 
 /* ---------------- SKELETON ---------------- */
 const OrderDetailsSkeleton = () => {
   return (
     <View className="flex-1 bg-[#F8FAFC]">
       {/* HEADER */}
-      <View
-        className="pb-8 rounded-b-[30px]"
-        style={{ backgroundColor: Colors.primary }}
-      >
+      <View className="pb-8 rounded-b-[30px]" style={{ backgroundColor: Colors.primary }}>
         <View className="flex-row items-center px-5 pt-14">
           <SkeletonPlaceholder>
-            <SkeletonPlaceholder.Item
-              width={40}
-              height={40}
-              borderRadius={20}
-              marginRight={14}
-            />
+            <SkeletonPlaceholder.Item width={40} height={40} borderRadius={20} marginRight={14} />
           </SkeletonPlaceholder>
 
           <SkeletonPlaceholder>
-            <SkeletonPlaceholder.Item
-              width={180}
-              height={24}
-              borderRadius={8}
-            />
+            <SkeletonPlaceholder.Item width={180} height={24} borderRadius={8} />
           </SkeletonPlaceholder>
         </View>
       </View>
@@ -60,23 +51,14 @@ const OrderDetailsSkeleton = () => {
       {/* CARD */}
       <View className="px-5 mt-6">
         <View className="bg-white rounded-3xl p-5">
-          {[1, 2, 3, 4].map((i) => (
+          {[1, 2, 3, 4].map(i => (
             <View key={i} className="mb-5">
               <SkeletonPlaceholder>
-                <SkeletonPlaceholder.Item
-                  width={100}
-                  height={14}
-                  borderRadius={6}
-                  marginBottom={8}
-                />
+                <SkeletonPlaceholder.Item width={100} height={14} borderRadius={6} marginBottom={8} />
               </SkeletonPlaceholder>
 
               <SkeletonPlaceholder>
-                <SkeletonPlaceholder.Item
-                  width={width - 80}
-                  height={20}
-                  borderRadius={8}
-                />
+                <SkeletonPlaceholder.Item width={width - 80} height={20} borderRadius={8} />
               </SkeletonPlaceholder>
             </View>
           ))}
@@ -94,13 +76,30 @@ export default function OrderDetails() {
 
   const [userInfo, setUserInfo] = useState<any>(null);
 
-  const { data, isLoading, isError } = useGetOrderByIdQuery(id ?? "", {
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch: refetchOrder,
+  } = useGetOrderByIdQuery(id ?? '', {
     skip: !id,
   });
+  const { data: myRatingRes, refetch: refetchMyRating } = useGetMyOrderRatingQuery(id ?? '', {
+    skip: !id || userInfo?.role !== 'CUSTOMER',
+  });
+  const [createRating, { isLoading: isSubmittingRating }] = useCreateRatingMutation();
+  const { data: invoiceRes } = useGetInvoiceByOrderIdQuery(id ?? '', {
+    skip: !id || !['DELIVERED', 'COMPLETED'].includes(data?.data?.status ?? ''),
+  });
+  const [createInvoiceDownloadLink, { isLoading: isInvoiceDownloading }] =
+    useCreateInvoiceDownloadLinkMutation();
+  const [selectedRating, setSelectedRating] = useState(0);
+  const [feedback, setFeedback] = useState('');
 
   const order = data?.data;
-  console.log("order details: ", data);
-  
+  const myRating = myRatingRes?.data;
+  const invoice = invoiceRes?.data;
+  console.log('order details: ', data);
 
   /* ---------------- GET LOCAL USER ---------------- */
 
@@ -114,12 +113,19 @@ export default function OrderDetails() {
           setUserInfo(parsedUser);
         }
       } catch (error) {
-        console.log("Local user error:", error);
+        console.log('Local user error:', error);
       }
     };
 
     getLocalUser();
   }, []);
+
+  useEffect(() => {
+    if (!myRating) return;
+
+    setSelectedRating(Number(myRating.rating ?? 0));
+    setFeedback(myRating.feedback ?? '');
+  }, [myRating]);
 
   /* ---------------- SET TARGET USER ---------------- */
 
@@ -127,12 +133,12 @@ export default function OrderDetails() {
     if (!order || !userInfo) return null;
 
     // If logged user is CUSTOMER → show DRIVER
-    if (userInfo?.role === "CUSTOMER") {
+    if (userInfo?.role === 'CUSTOMER') {
       return order?.driver;
     }
 
     // If logged user is DRIVER → show CUSTOMER
-    if (userInfo?.role === "DRIVER") {
+    if (userInfo?.role === 'DRIVER') {
       return order?.customer;
     }
 
@@ -146,9 +152,7 @@ export default function OrderDetails() {
       <View className="flex-1 items-center justify-center bg-white px-6">
         <Ionicons name="document-text-outline" size={70} color="#D1D5DB" />
 
-        <Text className="text-xl font-bold text-gray-700 mt-4">
-          Order not found
-        </Text>
+        <Text className="text-xl font-bold text-gray-700 mt-4">Order not found</Text>
 
         <TouchableOpacity
           onPress={() => router.back()}
@@ -165,14 +169,19 @@ export default function OrderDetails() {
 
   const subTotal = (order.bags ?? 0) * (order.pricePerBag ?? 0);
   const driver = order.driver;
+  const canReview =
+    userInfo?.role === 'CUSTOMER' && driver?._id && ['DELIVERED', 'COMPLETED'].includes(order.status);
+  const displayDriverRating = Number(order.driverRating ?? order.driverRatingSummary?.avg ?? 0);
+  const displayDriverRatingCount = Number(order.driverRatingCount ?? order.driverRatingSummary?.count ?? 0);
+  const customerRating = order.customerRating;
+  const customerReviewRating = Number(customerRating?.rating ?? 0);
 
   const handleCall = async () => {
     try {
-      const phone =
-        targetUser?.phone || targetUser?.phoneNumber || targetUser?.mobile;
+      const phone = targetUser?.phone || targetUser?.phoneNumber || targetUser?.mobile;
 
       if (!phone) {
-        console.log("Phone number not found");
+        console.log('Phone number not found');
         return;
       }
 
@@ -183,23 +192,58 @@ export default function OrderDetails() {
       if (supported) {
         await Linking.openURL(url);
       } else {
-        console.log("Dialer not supported");
+        console.log('Dialer not supported');
       }
     } catch (error) {
-      console.log("Call error:", error);
+      console.log('Call error:', error);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!canReview || !driver?._id) return;
+
+    if (!selectedRating) {
+      ShowMessage.error('Please select a rating');
+      return;
+    }
+
+    try {
+      await createRating({
+        orderId: order._id,
+        driverId: driver._id,
+        rating: selectedRating,
+        feedback,
+      }).unwrap();
+
+      await Promise.all([refetchMyRating(), refetchOrder()]);
+      ShowMessage.show(myRating ? 'Review updated' : 'Review submitted');
+    } catch (error) {
+      console.log('Review submit error:', error);
+      ShowMessage.error('Failed to save review');
+    }
+  };
+
+  const handleDownloadInvoice = async () => {
+    if (!order?._id) return;
+
+    try {
+      const res = await createInvoiceDownloadLink(order._id).unwrap();
+
+      if (!res.data?.downloadUrl) {
+        ShowMessage.error('Invoice download link not available');
+        return;
+      }
+
+      await Linking.openURL(res.data.downloadUrl);
+    } catch (error: any) {
+      ShowMessage.error(error?.data?.message ?? 'Invoice is not ready yet. Please try again.');
     }
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-[#F8FAFC]"
-      showsVerticalScrollIndicator={false}
-    >
+    <ScrollView className="flex-1 bg-[#F8FAFC]" showsVerticalScrollIndicator={false}>
       {/* HEADER */}
-      <View
-        className="pb-10 rounded-b-[32px]"
-        style={{ backgroundColor: Colors.primary }}
-      >
+      <View className="pb-10 rounded-b-[32px]" style={{ backgroundColor: Colors.primary }}>
         <View className="flex-row items-center justify-between px-5 pt-14">
           <TouchableOpacity
             onPress={() => router.back()}
@@ -219,7 +263,7 @@ export default function OrderDetails() {
         <View
           className="bg-white rounded-3xl p-5"
           style={{
-            shadowColor: "#000",
+            shadowColor: '#000',
             shadowOpacity: 0.05,
             shadowRadius: 10,
             shadowOffset: { width: 0, height: 4 },
@@ -230,9 +274,7 @@ export default function OrderDetails() {
           <View className="mb-5">
             <Text className="text-gray-400 text-sm mb-1">Order ID</Text>
 
-            <Text className="text-xl font-bold text-black">
-              #{formatOrderNumber(order._id)}
-            </Text>
+            <Text className="text-xl font-bold text-black">#{formatOrderNumber(order._id)}</Text>
           </View>
 
           {/* STATUS */}
@@ -240,18 +282,13 @@ export default function OrderDetails() {
             <View>
               <Text className="text-gray-400 text-sm mb-1">Status</Text>
 
-              <Text
-                className="font-semibold capitalize"
-                style={{ color: Colors.primary }}
-              >
-                {order.status?.replaceAll("_", " ")}
+              <Text className="font-semibold capitalize" style={{ color: Colors.primary }}>
+                {order.status?.replaceAll('_', ' ')}
               </Text>
             </View>
 
             <View className="bg-green-100 px-3 py-2 rounded-full">
-              <Text className="text-green-700 font-semibold text-xs">
-                Active Order
-              </Text>
+              <Text className="text-green-700 font-semibold text-xs">Active Order</Text>
             </View>
           </View>
 
@@ -269,18 +306,16 @@ export default function OrderDetails() {
             <Text className="text-gray-400 text-sm mb-1">Pickup Address</Text>
 
             <Text className="font-semibold text-black leading-6">
-              {order.address || "No address available"}
+              {order.address || 'No address available'}
             </Text>
           </View>
 
           {/* NOTES */}
           <View className="mb-5">
-            <Text className="text-gray-400 text-sm mb-1">
-              Special Instructions
-            </Text>
+            <Text className="text-gray-400 text-sm mb-1">Special Instructions</Text>
 
             <Text className="font-semibold text-black leading-6">
-              {order.specialInstructions || "No special instructions"}
+              {order.specialInstructions || 'No special instructions'}
             </Text>
           </View>
 
@@ -299,10 +334,7 @@ export default function OrderDetails() {
             <View className="flex-row justify-between">
               <Text className="font-bold text-lg">Total</Text>
 
-              <Text
-                className="font-bold text-xl"
-                style={{ color: Colors.primary }}
-              >
+              <Text className="font-bold text-xl" style={{ color: Colors.primary }}>
                 ${total.toFixed(2)}
               </Text>
             </View>
@@ -310,12 +342,48 @@ export default function OrderDetails() {
         </View>
       </View>
 
+      {userInfo?.role === 'DRIVER' && ['DELIVERED', 'COMPLETED'].includes(order.status) && (
+        <View className="px-5 mt-6">
+          <View
+            className="bg-white rounded-3xl p-5"
+            style={{
+              shadowColor: '#000',
+              shadowOpacity: 0.05,
+              shadowRadius: 10,
+              shadowOffset: { width: 0, height: 4 },
+              elevation: 3,
+            }}
+          >
+            <Text className="text-lg font-bold text-black mb-1">Customer Review For You</Text>
+            <Text className="text-gray-500 text-sm mb-4">
+              This is the feedback this customer gave for this delivery.
+            </Text>
+
+            {customerRating ? (
+              <>
+                <View className="flex-row items-center mb-3">
+                  <RatingStars rating={customerReviewRating} size={20} />
+                  <Text className="ml-2 font-semibold text-black">{customerReviewRating.toFixed(1)}</Text>
+                </View>
+                <Text className="text-gray-600 leading-5">
+                  {customerRating.feedback || 'No written feedback'}
+                </Text>
+              </>
+            ) : (
+              <View className="bg-gray-50 rounded-2xl p-4">
+                <Text className="text-gray-500">Customer has not reviewed this delivery yet.</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      )}
+
       {/* USER CARD */}
       <View className="px-5 mt-6">
         <View
           className="bg-white rounded-3xl p-5"
           style={{
-            shadowColor: "#000",
+            shadowColor: '#000',
             shadowOpacity: 0.05,
             shadowRadius: 10,
             shadowOffset: { width: 0, height: 4 },
@@ -325,36 +393,26 @@ export default function OrderDetails() {
           {/* HEADER */}
           <View className="flex-row items-center justify-between mb-4">
             <Text className="text-lg font-bold text-black">
-              {userInfo?.role === "CUSTOMER"
-                ? "Driver Information"
-                : "Customer Information"}
+              {userInfo?.role === 'CUSTOMER' ? 'Driver Information' : 'Customer Information'}
             </Text>
 
-            {userInfo?.role !== "DRIVER" && (
+            {userInfo?.role !== 'DRIVER' && (
               <TouchableOpacity
                 onPress={() =>
                   router.push({
-                    pathname: "/(common)/DriverDetails" as any,
+                    pathname: '/(common)/DriverDetails' as any,
                     params: {
                       orderId: order._id,
-                      name: driver.name ?? "Driver",
-                      image: driver.image ?? "",
-                      rating: String(
-                        order.driverRating ??
-                          order.driverRatingSummary?.avg ??
-                          0,
-                      ),
+                      name: driver.name ?? 'Driver',
+                      image: driver.image ?? '',
+                      rating: String(order.driverRating ?? order.driverRatingSummary?.avg ?? 0),
                       trips: String(order.driverTrips ?? 0),
-                      vehicle:
-                        order.driverVehicleText ?? "Vehicle info unavailable",
+                      vehicle: order.driverVehicleText ?? 'Vehicle info unavailable',
                     },
                   })
                 }
               >
-                <Text
-                  className="font-semibold"
-                  style={{ color: Colors.primary }}
-                >
+                <Text className="font-semibold" style={{ color: Colors.primary }}>
                   View Details
                 </Text>
               </TouchableOpacity>
@@ -363,29 +421,26 @@ export default function OrderDetails() {
 
           {/* USER INFO */}
           <View className="flex-row items-center">
-            <Image
-              source={userImage(targetUser?.image)}
-              className="w-16 h-16 rounded-full"
-            />
+            <Image source={userImage(targetUser?.image)} className="w-16 h-16 rounded-full" />
 
             <View className="ml-4 flex-1">
-              <Text className="text-lg font-bold text-black">
-                {targetUser?.name ?? "No User Found"}
-              </Text>
+              <Text className="text-lg font-bold text-black">{targetUser?.name ?? 'No User Found'}</Text>
 
-              <Text className="text-gray-500 mt-1">
-                {targetUser?.email ?? "No Email"}
-              </Text>
+              <Text className="text-gray-500 mt-1">{targetUser?.email ?? 'No Email'}</Text>
 
-              <View className="flex-row items-center mt-2">
-                <RatingStars rating={4.9} size={16} />
+              {userInfo?.role === 'CUSTOMER' ? (
+                <View className="flex-row items-center mt-2">
+                  <RatingStars rating={displayDriverRating} size={16} />
 
-                <Text className="ml-2 text-sm text-gray-500">
-                  {userInfo?.role === "CUSTOMER"
-                    ? "Assigned Driver"
-                    : "Customer"}
-                </Text>
-              </View>
+                  <Text className="ml-2 text-sm text-gray-500">
+                    {displayDriverRatingCount > 0
+                      ? `${displayDriverRating.toFixed(1)} (${displayDriverRatingCount} reviews)`
+                      : 'No reviews yet'}
+                  </Text>
+                </View>
+              ) : (
+                <Text className="text-gray-500 mt-2">Customer</Text>
+              )}
             </View>
           </View>
 
@@ -396,27 +451,24 @@ export default function OrderDetails() {
               <TouchableOpacity
                 className="flex-row items-center justify-center rounded-2xl py-4 w-[48%]"
                 style={{
-                  backgroundColor: "#EEF6FF",
+                  backgroundColor: '#EEF6FF',
                   borderWidth: 1,
                   borderColor: Colors.primary,
                 }}
                 onPress={() => {
                   router.push({
-                    pathname: "/(common)/ChatScreen" as any,
+                    pathname: '/(common)/ChatScreen' as any,
                     params: {
                       orderId: order._id,
-                      name: targetUser?.name ?? "",
-                      avatar: targetUser?.image ?? "",
+                      name: targetUser?.name ?? '',
+                      avatar: targetUser?.image ?? '',
                     },
                   });
                 }}
               >
                 <AntDesign name="message" size={18} color={Colors.primary} />
 
-                <Text
-                  className="ml-2 font-semibold"
-                  style={{ color: Colors.primary }}
-                >
+                <Text className="ml-2 font-semibold" style={{ color: Colors.primary }}>
                   Message
                 </Text>
               </TouchableOpacity>
@@ -425,22 +477,15 @@ export default function OrderDetails() {
               <TouchableOpacity
                 className="flex-row items-center justify-center rounded-2xl py-4 w-[48%]"
                 style={{
-                  backgroundColor: "#EEF6FF",
+                  backgroundColor: '#EEF6FF',
                   borderWidth: 1,
                   borderColor: Colors.primary,
                 }}
                 onPress={handleCall}
               >
-                <Ionicons
-                  name="call-outline"
-                  size={18}
-                  color={Colors.primary}
-                />
+                <Ionicons name="call-outline" size={18} color={Colors.primary} />
 
-                <Text
-                  className="ml-2 font-semibold"
-                  style={{ color: Colors.primary }}
-                >
+                <Text className="ml-2 font-semibold" style={{ color: Colors.primary }}>
                   Call
                 </Text>
               </TouchableOpacity>
@@ -448,6 +493,106 @@ export default function OrderDetails() {
           )}
         </View>
       </View>
+
+      {canReview && (
+        <View className="px-5 mt-6">
+          <View
+            className="bg-white rounded-3xl p-5"
+            style={{
+              shadowColor: '#000',
+              shadowOpacity: 0.05,
+              shadowRadius: 10,
+              shadowOffset: { width: 0, height: 4 },
+              elevation: 3,
+            }}
+          >
+            <Text className="text-lg font-bold text-black mb-1">
+              {myRating ? 'Your Review' : 'Rate This Delivery'}
+            </Text>
+            <Text className="text-gray-500 text-sm mb-4">
+              {myRating ? 'You can update your feedback anytime.' : 'Share your experience with this driver.'}
+            </Text>
+
+            <View className="flex-row mb-4">
+              {[1, 2, 3, 4, 5].map(star => (
+                <TouchableOpacity key={star} onPress={() => setSelectedRating(star)} activeOpacity={0.75}>
+                  <FontAwesome
+                    name={star <= selectedRating ? 'star' : 'star-o'}
+                    size={34}
+                    color="#FACC15"
+                    style={{ marginRight: 8 }}
+                  />
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TextInput
+              value={feedback}
+              onChangeText={setFeedback}
+              placeholder="Write feedback (optional)"
+              multiline
+              textAlignVertical="top"
+              className="border border-gray-200 rounded-2xl p-4 min-h-[100px] text-black"
+            />
+
+            <TouchableOpacity
+              onPress={handleSubmitReview}
+              disabled={isSubmittingRating}
+              className="rounded-2xl py-4 mt-4"
+              style={{
+                backgroundColor: isSubmittingRating ? '#93C5FD' : Colors.primary,
+              }}
+            >
+              <Text className="text-white text-center font-bold text-base">
+                {isSubmittingRating ? 'Saving...' : myRating ? 'Update Review' : 'Submit Review'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {['DELIVERED', 'COMPLETED'].includes(order.status) && (
+        <View className="px-5 mt-6">
+          <View
+            className="bg-white rounded-3xl p-5"
+            style={{
+              shadowColor: '#000',
+              shadowOpacity: 0.05,
+              shadowRadius: 10,
+              shadowOffset: { width: 0, height: 4 },
+              elevation: 3,
+            }}
+          >
+            <View className="flex-row items-center justify-between mb-4">
+              <View>
+                <Text className="text-lg font-bold text-black">Invoice</Text>
+                <Text className="text-gray-500 text-sm mt-1">
+                  {invoice?.invoiceNumber ? `#${invoice.invoiceNumber}` : 'Download your payment invoice'}
+                </Text>
+              </View>
+              {invoice?.paid ? (
+                <View className="bg-green-100 px-3 py-1 rounded-full">
+                  <Text className="text-green-700 text-xs font-semibold">Paid</Text>
+                </View>
+              ) : null}
+            </View>
+
+            <TouchableOpacity
+              onPress={handleDownloadInvoice}
+              disabled={isInvoiceDownloading}
+              className="flex-row items-center justify-center rounded-2xl py-4"
+              style={{
+                backgroundColor: isInvoiceDownloading ? '#93C5FD' : Colors.primary,
+              }}
+            >
+              <Ionicons name="download-outline" size={20} color="#fff" />
+              <Text className="text-white font-bold ml-2">
+                {isInvoiceDownloading ? 'Preparing Invoice...' : 'Download Invoice'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       <View className="h-24" />
     </ScrollView>

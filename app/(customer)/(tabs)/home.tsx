@@ -192,7 +192,8 @@ const mapOrderToRecent = (order: Order) => ({
       0,
       order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0,
     ) * Number(order.pricePerBag ?? 0),
-  rating: 5,
+  rating: Number(order.myRating?.rating ?? 0),
+  hasReview: Boolean(order.myRating?.rating),
   status: order.status.replaceAll("_", " "),
   date: order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "",
 });

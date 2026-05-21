@@ -11,6 +11,7 @@ type Order = {
   quantity: number;
   price: number;
   rating: number;
+  hasReview?: boolean;
   status: string;
   date: string;
 };
@@ -54,8 +55,14 @@ export default function RecentOrdersList({ orders, onOrderPress }: Props) {
 
           <View className="items-end justify-center">
             <View className="flex-row items-center">
-              <Ionicons name="star" size={14} color="#FACC15" />
-              <Text className="ml-1 text-sm">{order.rating.toFixed(2)}</Text>
+              <Ionicons
+                name={order.hasReview ? "star" : "star-outline"}
+                size={14}
+                color="#FACC15"
+              />
+              <Text className="ml-1 text-sm">
+                {order.hasReview ? order.rating.toFixed(1) : "Review"}
+              </Text>
             </View>
 
             <TouchableOpacity

@@ -1,8 +1,8 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, RefreshControl, Modal } from 'react-native';
 import { AntDesign, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import Colors from '@/constants/color';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import Toast from '@/constants/toast';
 import ShowMessage from '@/constants/toast';
 import { useUserInfo } from '@/src/core/store/userInfo';
@@ -20,6 +20,9 @@ import {
 } from '@/src/services/driverApi';
 import { useGetDriverRatingsQuery } from '@/src/services/ratingApi';
 import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
+
+WebBrowser.maybeCompleteAuthSession();
 const menuItems = [
   { label: 'Profile Setting', icon: 'person-outline' },
   { label: 'Connect Stripe', icon: 'card-outline' },
@@ -33,6 +36,10 @@ const menuItems = [
 
 export default function Profile() {
   const router = useRouter();
+  const { stripeConnect, stripeConnectCheckedAt } = useLocalSearchParams<{
+    stripeConnect?: string;
+    stripeConnectCheckedAt?: string;
+  }>();
   const { data: profileInfo, error, isLoading } = useProfileInfoQuery();
   const { data: driverProfileRes, refetch: refetchDriverProfile } = useGetMyDriverProfileQuery();
   const { data: stripeStatusRes, refetch: refetchStripeStatus } = useGetDriverStripeConnectStatusQuery();
@@ -43,22 +50,27 @@ export default function Profile() {
 
   const [refreshing, setRefreshing] = useState(false);
   const [logoutModal, setLogoutModal] = useState(false);
+  const [stripeSuccessModal, setStripeSuccessModal] = useState(false);
   const clearUser = useUserInfo(state => state.clearAuth);
 
   const driverProfile = driverProfileRes?.data;
-  const { data: driverRatingsRes, refetch: refetchDriverRatings } = useGetDriverRatingsQuery(driverProfile?.user ?? '', {
-    skip: !driverProfile?.user,
-  });
+  const { data: driverRatingsRes, refetch: refetchDriverRatings } = useGetDriverRatingsQuery(
+    driverProfile?.user ?? '',
+    {
+      skip: !driverProfile?.user,
+    },
+  );
   const myJobs = myJobsRes?.data ?? [];
   const completedJobs = myJobs.filter(job => ['DELIVERED', 'COMPLETED'].includes(job.status));
   const successRate = myJobs.length ? Math.round((completedJobs.length / myJobs.length) * 100) : 0;
   const tierNumber = driverProfile?.reputationTier ?? 0;
   const tierText = tierNumber > 0 ? `Tier ${tierNumber}` : 'N/A';
   const performanceText = driverProfile?.status ?? 'PENDING';
-  const ratingText = driverRatingsRes?.data?.summary?.count ? Number(driverRatingsRes.data.summary.avg ?? 0).toFixed(1) : 'N/A';
+  const ratingText = driverRatingsRes?.data?.summary?.count
+    ? Number(driverRatingsRes.data.summary.avg ?? 0).toFixed(1)
+    : 'N/A';
   const stripeStatus = stripeStatusRes?.data;
-  const isStripeConnected =
-    Boolean(stripeStatus?.detailsSubmitted) || Boolean(stripeStatus?.payoutsEnabled);
+  const isStripeConnected = Boolean(stripeStatus?.detailsSubmitted) || Boolean(stripeStatus?.payoutsEnabled);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -72,25 +84,78 @@ export default function Profile() {
     }, 1500);
   }, [refetchDriverProfile, refetchDriverRatings, refetchMyJobs, refetchStripeStatus]);
 
+  const refreshStripeConnection = useCallback(async () => {
+    dispatch(api.util.invalidateTags(['Driver']));
+    await Promise.all([refetchDriverProfile(), refetchStripeStatus()]);
+  }, [dispatch, refetchDriverProfile, refetchStripeStatus]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshStripeConnection();
+    }, [refreshStripeConnection]),
+  );
+
+  useEffect(() => {
+    if (!stripeConnectCheckedAt) return;
+
+    refreshStripeConnection();
+
+    const timers = [1200, 3000].map(delay =>
+      setTimeout(() => {
+        refreshStripeConnection();
+      }, delay),
+    );
+
+    if (stripeConnect === 'success') {
+      setStripeSuccessModal(true);
+    } else if (stripeConnect === 'refresh') {
+      ShowMessage.show('Stripe session refreshed. Please continue onboarding.');
+    }
+
+    return () => {
+      timers.forEach(clearTimeout);
+    };
+  }, [
+    refreshStripeConnection,
+    stripeConnect,
+    stripeConnectCheckedAt,
+  ]);
+
   const handleConnectStripe = async () => {
     try {
-      console.log("stripe started");
-      
-      const res = await createStripeConnectAccountLink().unwrap();
-      console.log("res stripe: ", res);
-      
+      const appReturnUrl = Linking.createURL('/stripe-connect-return', {
+        queryParams: { stripeConnect: 'return' },
+      });
+      const appRefreshUrl = Linking.createURL('/stripe-connect-return', {
+        queryParams: { stripeConnect: 'refresh' },
+      });
+
+      const res = await createStripeConnectAccountLink({
+        returnUrl: appReturnUrl,
+        refreshUrl: appRefreshUrl,
+      }).unwrap();
+
       if (!res.data.onboardingUrl) {
         ShowMessage.error('Stripe onboarding link not available');
         return;
       }
 
-      await WebBrowser.openBrowserAsync(res.data.onboardingUrl);
-      refetchDriverProfile();
-      refetchStripeStatus();
+      const browserResult = await WebBrowser.openAuthSessionAsync(res.data.onboardingUrl, appReturnUrl);
+
+      if (browserResult.type === 'success' && browserResult.url.includes('stripeConnect=refresh')) {
+        const retry = await createStripeConnectAccountLink({
+          returnUrl: appReturnUrl,
+          refreshUrl: appRefreshUrl,
+        }).unwrap();
+
+        if (retry.data.onboardingUrl) {
+          await WebBrowser.openAuthSessionAsync(retry.data.onboardingUrl, appReturnUrl);
+        }
+      }
+
+      await Promise.all([refetchDriverProfile(), refetchStripeStatus()]);
     } catch (error: any) {
-      ShowMessage.error(
-        error?.data?.message ?? 'Failed to start Stripe onboarding',
-      );
+      ShowMessage.error(error?.data?.message ?? 'Failed to start Stripe onboarding');
     }
   };
 
@@ -179,7 +244,6 @@ export default function Profile() {
           </View>
         </View>
 
-
         {/*In future coming this feature */}
 
         {/* <TouchableOpacity
@@ -259,9 +323,7 @@ export default function Profile() {
             >
               <Ionicons name={item.icon as any} size={20} color={'black'} />
               <Text className="ml-3 flex-1 font-medium">
-                {item.label === 'Connect Stripe' && isConnectingStripe
-                  ? 'Opening Stripe...'
-                  : item.label}
+                {item.label === 'Connect Stripe' && isConnectingStripe ? 'Opening Stripe...' : item.label}
               </Text>
               {item.label === 'Connect Stripe' && isStripeConnected ? (
                 <Text className="mr-2 text-xs font-semibold text-green-600">Connected</Text>
@@ -308,6 +370,39 @@ export default function Profile() {
                   <Text className="text-white text-[20px] text-center font-semibold">Yes</Text>
                 </TouchableOpacity>
               </View>
+            </View>
+          </View>
+        </Modal>
+      )}
+
+      {stripeSuccessModal && (
+        <Modal
+          transparent
+          visible={stripeSuccessModal}
+          animationType="fade"
+          onRequestClose={() => setStripeSuccessModal(false)}
+        >
+          <View className="flex-1 justify-center items-center bg-black/50 px-5">
+            <View className="bg-white rounded-2xl p-8 w-full">
+              <View className="self-center w-16 h-16 rounded-full bg-green-100 items-center justify-center mb-4">
+                <Ionicons name="checkmark-circle" size={44} color="#22C55E" />
+              </View>
+
+              <Text className="text-black text-[22px] font-bold text-center">
+                Stripe Connected
+              </Text>
+              <Text className="text-gray-500 text-center mt-2 leading-5">
+                Your Stripe onboarding has been completed. Your profile has been refreshed.
+              </Text>
+
+              <TouchableOpacity
+                onPress={() => setStripeSuccessModal(false)}
+                className="bg-[#01A1FF] rounded-2xl py-4 mt-6"
+              >
+                <Text className="text-white text-center text-[18px] font-semibold">
+                  Done
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
         </Modal>

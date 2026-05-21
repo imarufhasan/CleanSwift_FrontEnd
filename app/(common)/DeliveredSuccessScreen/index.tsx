@@ -8,6 +8,7 @@ import {
   TextInput,
   Modal,
   ActivityIndicator,
+  Linking,
 } from "react-native";
 import { Ionicons, AntDesign, FontAwesome } from "@expo/vector-icons";
 import { CardField, useStripe } from "@stripe/stripe-react-native";
@@ -22,6 +23,7 @@ import {
 import { formatOrderNumber } from "@/src/utils/orderNumber";
 import { STRIPE_PUBLISHABLE_KEY } from "@/src/constants/api";
 import { useCreateRatingMutation } from "@/src/services/orderApi";
+import { useCreateInvoiceDownloadLinkMutation } from "@/src/services/invoiceApi";
 
 export default function DeliveredSuccessScreen() {
   const { name, image, orderId, driverId, service, bags, bagPrice, tip } =
@@ -47,11 +49,14 @@ export default function DeliveredSuccessScreen() {
     "Enter card number, expiry date, and CVC.",
   );
   const [rating, setRating] = useState(0);
+  const [submittedRating, setSubmittedRating] = useState(0);
   const { createPaymentMethod } = useStripe();
   const [createRating, { isLoading: isCreateRatingLoading }] =
     useCreateRatingMutation();
   const [confirmPayment, { isLoading }] = useConfirmPaymentMutation();
   const [attachCard, { isLoading: isSavingCard }] = useAttachCardMutation();
+  const [createInvoiceDownloadLink, { isLoading: isInvoiceDownloading }] =
+    useCreateInvoiceDownloadLinkMutation();
   const { data: cardsRes } = useGetSavedCardsQuery();
 
   const bagsCount = Number(bags ?? 0);
@@ -180,6 +185,7 @@ export default function DeliveredSuccessScreen() {
           feedback: "", // optional (you can add input later)
         }).unwrap();
         if (ratingRes?.success) {
+          setSubmittedRating(rating);
           console.log("ratingRes 1:", ratingRes);
           ShowMessage.success("Payment & rating submitted successfully");
           setConfirmPaymentModal(true);
@@ -252,6 +258,28 @@ export default function DeliveredSuccessScreen() {
     }
   };
 
+  const handleDownloadInvoice = async () => {
+    if (!orderId) {
+      ShowMessage.error("Order not found");
+      return;
+    }
+
+    try {
+      const res = await createInvoiceDownloadLink(String(orderId)).unwrap();
+
+      if (!res.data?.downloadUrl) {
+        ShowMessage.error("Invoice download link not available");
+        return;
+      }
+
+      await Linking.openURL(res.data.downloadUrl);
+    } catch (error: any) {
+      ShowMessage.error(
+        error?.data?.message ?? "Invoice is not ready yet. Please try again.",
+      );
+    }
+  };
+
   return (
     <View className="flex-1 bg-white">
       {/* Content */}
@@ -304,10 +332,15 @@ export default function DeliveredSuccessScreen() {
 
               <View className="flex-row items-center mt-1">
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <AntDesign key={i} name="star" size={14} color="#FACC15" />
+                  <FontAwesome
+                    key={i}
+                    name={i <= rating ? "star" : "star-o"}
+                    size={14}
+                    color="#FACC15"
+                  />
                 ))}
                 <Text className="text-gray-400 text-xs ml-2">
-                  4.9 (234 trips)
+                  {rating ? `${rating}.0 selected` : "Rate your experience"}
                 </Text>
               </View>
             </View>
@@ -533,9 +566,9 @@ export default function DeliveredSuccessScreen() {
                 </Text>
                 <View className="flex-row mt-2">
                   {[1, 2, 3, 4, 5].map((i) => (
-                    <AntDesign
+                    <FontAwesome
                       key={i}
-                      name="star"
+                      name={i <= (submittedRating || rating) ? "star" : "star-o"}
                       size={30}
                       color="#FACC15"
                       className="mr-2"
@@ -543,13 +576,18 @@ export default function DeliveredSuccessScreen() {
                   ))}
                 </View>
                 <Text className="text-gray-400 text-sm mb-4 mt-1">
-                  You rated {name ?? "Driver"} 5 stars
+                  You rated {name ?? "Driver"} {submittedRating || rating} star
+                  {(submittedRating || rating) === 1 ? "" : "s"}
                 </Text>
               </View>
 
-              <View className="flex-row items-center mb-4 border bg-blue-100 border-blue-500 rounded-xl px-4 py-3 w-full justify-center">
+              <TouchableOpacity
+                onPress={handleDownloadInvoice}
+                disabled={isInvoiceDownloading}
+                className="flex-row items-center mb-4 border bg-blue-100 border-blue-500 rounded-xl px-4 py-3 w-full justify-center"
+              >
                 <Text className="text-[#0A8CFF] font-semibold">
-                  Download Invoice
+                  {isInvoiceDownloading ? "Preparing Invoice..." : "Download Invoice"}
                 </Text>
                 <Ionicons
                   name="download-outline"
@@ -557,7 +595,7 @@ export default function DeliveredSuccessScreen() {
                   color={Colors.primary}
                   className="ml-2"
                 />
-              </View>
+              </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => {
                   setConfirmPaymentModal(false);

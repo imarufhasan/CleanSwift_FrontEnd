@@ -4,7 +4,11 @@ import { AntDesign, Ionicons } from "@expo/vector-icons";
 import Colors from "@/constants/color";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import RatingStars from "@/components/home/RatingStars";
-import { useGetMyOrdersQuery, type Order } from "@/src/services/orderApi";
+import {
+  useGetMyOrdersQuery,
+  useGetOrderByIdQuery,
+  type Order,
+} from "@/src/services/orderApi";
 import { useOrderSocket } from "@/src/hooks/useOrderSocket";
 import { formatOrderNumber } from "@/src/utils/orderNumber";
 import {
@@ -95,6 +99,19 @@ export default function OrderTrackingForCustomer() {
         (order) =>
           !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
       );
+  const { data: orderByIdRes } = useGetOrderByIdQuery(
+    activeOrderFromApi?._id ?? "",
+    { skip: !activeOrderFromApi?._id },
+  );
+  const enrichedOrder = orderByIdRes?.data ?? activeOrderFromApi;
+  const driverRating = Number(
+    enrichedOrder?.driverRating ?? enrichedOrder?.driverRatingSummary?.avg ?? 0,
+  );
+  const driverRatingCount = Number(
+    enrichedOrder?.driverRatingCount ??
+      enrichedOrder?.driverRatingSummary?.count ??
+      0,
+  );
 
   useOrderSocket({
     role: "CUSTOMER",
@@ -110,7 +127,8 @@ export default function OrderTrackingForCustomer() {
       quantity: order.bags,
       price: order.total,
       status: statusLabel(order.status),
-      rating: 5,
+      rating: Number(order.myRating?.rating ?? 0),
+      hasReview: Boolean(order.myRating?.rating),
       date: order.createdAt
         ? new Date(order.createdAt).toLocaleDateString()
         : "",
@@ -297,9 +315,13 @@ export default function OrderTrackingForCustomer() {
                 {driver && driver.name ? driver.name : "Driver not assigned"}
               </Text>
               <View className="flex-row items-center mt-1">
-                <RatingStars rating={driver ? 4.9 : 0} size={14} />
+                <RatingStars rating={driver ? driverRating : 0} size={14} />
                 <Text className="text-sm ml-1 text-gray-600">
-                  {driver ? "Assigned driver" : "No driver yet"}
+                  {driver
+                    ? driverRatingCount > 0
+                      ? `${driverRating.toFixed(1)} (${driverRatingCount} reviews)`
+                      : "No reviews yet"
+                    : "No driver yet"}
                 </Text>
               </View>
             </View>

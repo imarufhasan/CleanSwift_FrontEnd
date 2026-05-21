@@ -74,8 +74,11 @@ export default function Profile() {
 
   const handleConnectStripe = async () => {
     try {
+      console.log("stripe started");
+      
       const res = await createStripeConnectAccountLink().unwrap();
-
+      console.log("res stripe: ", res);
+      
       if (!res.data.onboardingUrl) {
         ShowMessage.error('Stripe onboarding link not available');
         return;

@@ -49,6 +49,12 @@ export const driverApi = api.injectEndpoints({
       query: body => ({
         url: '/drivers/stripe/connect-account',
         method: 'POST',
+        params: body
+          ? {
+              returnUrl: body.returnUrl,
+              refreshUrl: body.refreshUrl,
+            }
+          : undefined,
         body: body ?? {},
       }),
       invalidatesTags: ['Driver'],

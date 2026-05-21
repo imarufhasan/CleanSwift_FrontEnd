@@ -66,7 +66,9 @@ export default function Index() {
       quantity: getEffectiveBagCount(order),
       total: getEffectiveOrderTotal(order),
       earning: getDriverEarning(order),
-      rating: 5,
+      rating: Number(order.customerRating?.rating ?? 0),
+      hasReview: Boolean(order.customerRating?.rating),
+      feedback: order.customerRating?.feedback ?? "",
       status: order.status.replaceAll("_", " "),
       date: order.createdAt
         ? new Date(order.createdAt).toLocaleDateString()
@@ -261,9 +263,14 @@ export default function Index() {
             <RatingStars rating={item.rating} />
 
             <Text className="ml-1 text-sm font-semibold">
-              {item.rating.toFixed(1)}
+              {item.hasReview ? item.rating.toFixed(1) : "No review"}
             </Text>
           </View>
+          {item.feedback ? (
+            <Text className="text-gray-400 text-xs mt-1" numberOfLines={1}>
+              {item.feedback}
+            </Text>
+          ) : null}
 
           <Text
             style={{ color: Colors.primary }}

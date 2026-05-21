@@ -35,6 +35,8 @@ type JobCardData = {
   distance: string;
   pickupTypeLabel: string;
   quantity: number;
+  rating: number;
+  hasReview: boolean;
   status: string;
   driverEarningPercentage: number;
 };
@@ -68,6 +70,8 @@ const mapOrderToJob = (order: Order): JobCardData => ({
   distance: order.pickupType === "ASAP" ? "ASAP" : "Scheduled",
   pickupTypeLabel: order.pickupType === "ASAP" ? "ASAP" : "Scheduled",
   quantity: order.bags,
+  rating: Number(order.customerRating?.rating ?? 0),
+  hasReview: Boolean(order.customerRating?.rating),
   status: order.status,
   driverEarningPercentage: getOrderDriverEarningPercentage(order),
 });
@@ -547,7 +551,8 @@ export default function JobsScreen() {
             id: job.id,
             quantity: job.quantity,
             price: Number(job.price.replace("$", "")),
-            rating: 5,
+            rating: job.rating,
+            hasReview: job.hasReview,
             status: formatStatus(job.status),
             date: job.time,
           }))}

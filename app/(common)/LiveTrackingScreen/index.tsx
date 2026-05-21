@@ -214,9 +214,14 @@ export default function LiveTrackingScreen() {
 
   const handleCancelRequest = async () => {
     try {
-      const res = await cancelOrder({ orderId: activeOrder?._id! }).unwrap();
+      const res = await cancelOrder({
+        orderId: activeOrder?._id!,
+        reason: "Canceled by customer before pickup",
+      }).unwrap();
       if (res?.success) {
-        ShowMessage.show(res?.message || "Order cancelled successfully");
+        ShowMessage.show(
+          res?.message || "Driver assignment cancelled successfully",
+        );
         router.back();
       } else {
         ShowMessage.error(res?.message || "Order cancelled fail");
@@ -807,8 +812,7 @@ export default function LiveTrackingScreen() {
           </View>
         )}
 
-        {(activeOrder?.status === "REQUESTED" ||
-          activeOrder?.status === "DRIVER_ASSIGNED") && (
+        {activeOrder?.status === "DRIVER_ASSIGNED" && (
           <View className="px-5 mb-6 mt-8">
             <TouchableOpacity
               onPress={handleCancelRequest}
@@ -832,7 +836,7 @@ export default function LiveTrackingScreen() {
                 </Text>
 
                 <Text className="text-red-100 text-xs mt-0.5">
-                  You can cancel before pickup starts
+                  Cancel before pickup and send this order back to drivers
                 </Text>
               </View>
 

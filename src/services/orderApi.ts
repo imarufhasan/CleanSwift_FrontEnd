@@ -134,10 +134,14 @@ export const orderApi = api.injectEndpoints({
     }),
 
     // {{baseUrl}}/orders/:id/cancel
-    cancelOrder: builder.mutation<ApiResponse<Order>, { orderId: string }>({
-      query: ({ orderId }) => ({
+    cancelOrder: builder.mutation<
+      ApiResponse<Order>,
+      { orderId: string; reason?: string }
+    >({
+      query: ({ orderId, reason }) => ({
         url: `/orders/${orderId}/cancel`,
         method: 'POST',
+        body: reason ? { reason } : {},
       }),
       invalidatesTags: ['Order'],
     }),

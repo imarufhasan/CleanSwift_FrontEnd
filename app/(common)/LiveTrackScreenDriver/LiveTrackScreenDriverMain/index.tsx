@@ -204,9 +204,14 @@ export default function LiveTrackScreenDriverMain() {
 
   const onCancelRequest = async () => {
     try {
-      const res = await cancelOrder({ orderId: activeOrder?._id! }).unwrap();
+      const res = await cancelOrder({
+        orderId: activeOrder?._id!,
+        reason: "Canceled by driver before pickup",
+      }).unwrap();
       if (res?.success) {
-        ShowMessage.show(res?.message || "Order cancelled successfully");
+        ShowMessage.show(
+          res?.message || "Order sent back to available jobs",
+        );
         router.back();
       } else {
         ShowMessage.show(res?.message || "Order cancelled fail");
@@ -330,8 +335,12 @@ export default function LiveTrackScreenDriverMain() {
             onCompletePickup={(bagCount) =>
               handleStageUpdate("PICKUP", 1, bagCount)
             }
-            onCancelRequest={onCancelRequest}
-            isCancelling={false}
+            onCancelRequest={
+              activeOrder.status === "DRIVER_ASSIGNED"
+                ? onCancelRequest
+                : undefined
+            }
+            isCancelling={isCancelReqLoading}
           />
         )}
         {activeStep === 1 && (

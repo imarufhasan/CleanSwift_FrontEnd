@@ -1,19 +1,19 @@
 import React, { useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import ShowMessage from '@/constants/toast';
 
 export default function StripeConnectReturn() {
   const { stripeConnect } = useLocalSearchParams<{ stripeConnect?: string }>();
 
   useEffect(() => {
-    if (stripeConnect === 'refresh') {
-      ShowMessage.show('Stripe session refreshed. Please continue onboarding.');
-    } else {
-      ShowMessage.show('Checking Stripe connection...');
-    }
-
-    router.replace('/(driver)/(tabs)/profile' as any);
+    router.replace({
+      pathname: '/(driver)/(tabs)/profile' as any,
+      params: {
+        stripeConnect:
+          stripeConnect === 'refresh' ? 'refresh' : 'success',
+        stripeConnectCheckedAt: String(Date.now()),
+      },
+    });
   }, [stripeConnect]);
 
   return (

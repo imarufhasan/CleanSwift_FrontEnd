@@ -1,8 +1,8 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, RefreshControl, Modal } from 'react-native';
 import { AntDesign, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import Colors from '@/constants/color';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import Toast from '@/constants/toast';
 import ShowMessage from '@/constants/toast';
 import { useUserInfo } from '@/src/core/store/userInfo';
@@ -36,6 +36,10 @@ const menuItems = [
 
 export default function Profile() {
   const router = useRouter();
+  const { stripeConnect, stripeConnectCheckedAt } = useLocalSearchParams<{
+    stripeConnect?: string;
+    stripeConnectCheckedAt?: string;
+  }>();
   const { data: profileInfo, error, isLoading } = useProfileInfoQuery();
   const { data: driverProfileRes, refetch: refetchDriverProfile } = useGetMyDriverProfileQuery();
   const { data: stripeStatusRes, refetch: refetchStripeStatus } = useGetDriverStripeConnectStatusQuery();
@@ -46,6 +50,7 @@ export default function Profile() {
 
   const [refreshing, setRefreshing] = useState(false);
   const [logoutModal, setLogoutModal] = useState(false);
+  const [stripeSuccessModal, setStripeSuccessModal] = useState(false);
   const clearUser = useUserInfo(state => state.clearAuth);
 
   const driverProfile = driverProfileRes?.data;
@@ -78,6 +83,27 @@ export default function Profile() {
       ShowMessage.show('updated');
     }, 1500);
   }, [refetchDriverProfile, refetchDriverRatings, refetchMyJobs, refetchStripeStatus]);
+
+  useEffect(() => {
+    if (!stripeConnectCheckedAt) return;
+
+    const refreshStripeConnection = async () => {
+      await Promise.all([refetchDriverProfile(), refetchStripeStatus()]);
+
+      if (stripeConnect === 'success') {
+        setStripeSuccessModal(true);
+      } else if (stripeConnect === 'refresh') {
+        ShowMessage.show('Stripe session refreshed. Please continue onboarding.');
+      }
+    };
+
+    refreshStripeConnection();
+  }, [
+    refetchDriverProfile,
+    refetchStripeStatus,
+    stripeConnect,
+    stripeConnectCheckedAt,
+  ]);
 
   const handleConnectStripe = async () => {
     try {
@@ -328,6 +354,39 @@ export default function Profile() {
                   <Text className="text-white text-[20px] text-center font-semibold">Yes</Text>
                 </TouchableOpacity>
               </View>
+            </View>
+          </View>
+        </Modal>
+      )}
+
+      {stripeSuccessModal && (
+        <Modal
+          transparent
+          visible={stripeSuccessModal}
+          animationType="fade"
+          onRequestClose={() => setStripeSuccessModal(false)}
+        >
+          <View className="flex-1 justify-center items-center bg-black/50 px-5">
+            <View className="bg-white rounded-2xl p-8 w-full">
+              <View className="self-center w-16 h-16 rounded-full bg-green-100 items-center justify-center mb-4">
+                <Ionicons name="checkmark-circle" size={44} color="#22C55E" />
+              </View>
+
+              <Text className="text-black text-[22px] font-bold text-center">
+                Stripe Connected
+              </Text>
+              <Text className="text-gray-500 text-center mt-2 leading-5">
+                Your Stripe onboarding has been completed. Your profile has been refreshed.
+              </Text>
+
+              <TouchableOpacity
+                onPress={() => setStripeSuccessModal(false)}
+                className="bg-[#01A1FF] rounded-2xl py-4 mt-6"
+              >
+                <Text className="text-white text-center text-[18px] font-semibold">
+                  Done
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
         </Modal>

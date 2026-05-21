@@ -20,6 +20,9 @@ import {
 } from '@/src/services/driverApi';
 import { useGetDriverRatingsQuery } from '@/src/services/ratingApi';
 import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
+
+WebBrowser.maybeCompleteAuthSession();
 const menuItems = [
   { label: 'Profile Setting', icon: 'person-outline' },
   { label: 'Connect Stripe', icon: 'card-outline' },
@@ -74,16 +77,46 @@ export default function Profile() {
 
   const handleConnectStripe = async () => {
     try {
-      const res = await createStripeConnectAccountLink().unwrap();
+      const returnUrl = Linking.createURL('/stripe-connect-return', {
+        queryParams: { stripeConnect: 'return' },
+      });
+      const refreshUrl = Linking.createURL('/stripe-connect-return', {
+        queryParams: { stripeConnect: 'refresh' },
+      });
+
+      const res = await createStripeConnectAccountLink({
+        returnUrl,
+        refreshUrl,
+      }).unwrap();
 
       if (!res.data.onboardingUrl) {
         ShowMessage.error('Stripe onboarding link not available');
         return;
       }
 
-      await WebBrowser.openBrowserAsync(res.data.onboardingUrl);
-      refetchDriverProfile();
-      refetchStripeStatus();
+      const browserResult = await WebBrowser.openAuthSessionAsync(
+        res.data.onboardingUrl,
+        returnUrl,
+      );
+
+      if (
+        browserResult.type === 'success' &&
+        browserResult.url.includes('stripeConnect=refresh')
+      ) {
+        const retry = await createStripeConnectAccountLink({
+          returnUrl,
+          refreshUrl,
+        }).unwrap();
+
+        if (retry.data.onboardingUrl) {
+          await WebBrowser.openAuthSessionAsync(
+            retry.data.onboardingUrl,
+            returnUrl,
+          );
+        }
+      }
+
+      await Promise.all([refetchDriverProfile(), refetchStripeStatus()]);
     } catch (error: any) {
       ShowMessage.error(
         error?.data?.message ?? 'Failed to start Stripe onboarding',

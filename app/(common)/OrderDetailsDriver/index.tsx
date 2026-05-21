@@ -26,6 +26,8 @@ export default function OrderDetailsDriver() {
   });
 
   const order = data?.data;
+  console.log("order info: ", order);
+  
   const customer = order?.customer;
 
   if (isLoading) {

@@ -42,12 +42,16 @@ export default function CustomerCard({
         </View>
 
         <TouchableOpacity
-          onPress={() =>
+          onPress={() => {
+            // router.push({
+            //   pathname: "/(common)/OrderDetailsDriver" as any,
+            //   params: orderId ? { id: orderId } : undefined,
+            // });
             router.push({
-              pathname: "/(common)/OrderDetailsDriver" as any,
-              params: orderId ? { id: orderId } : undefined,
-            })
-          }
+              pathname: "/(common)/OrderDetails",
+              params: { id: String(orderId) },
+            });
+          }}
         >
           <Text
             style={{ color: Colors.primary }}

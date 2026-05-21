@@ -77,12 +77,15 @@ export default function Profile() {
 
   const handleConnectStripe = async () => {
     try {
-      const returnUrl = Linking.createURL('/stripe-connect-return', {
+      const appReturnUrl = Linking.createURL('/stripe-connect-return', {
         queryParams: { stripeConnect: 'return' },
       });
-      const refreshUrl = Linking.createURL('/stripe-connect-return', {
+      const appRefreshUrl = Linking.createURL('/stripe-connect-return', {
         queryParams: { stripeConnect: 'refresh' },
       });
+      const webReturnBase = 'https://khaled-siddique.vercel.app/stripe-connect-return';
+      const returnUrl = `${webReturnBase}?stripeConnect=return&appReturnUrl=${encodeURIComponent(appReturnUrl)}`;
+      const refreshUrl = `${webReturnBase}?stripeConnect=refresh&appReturnUrl=${encodeURIComponent(appRefreshUrl)}`;
 
       const res = await createStripeConnectAccountLink({
         returnUrl,
@@ -96,7 +99,7 @@ export default function Profile() {
 
       const browserResult = await WebBrowser.openAuthSessionAsync(
         res.data.onboardingUrl,
-        returnUrl,
+        appReturnUrl,
       );
 
       if (
@@ -111,7 +114,7 @@ export default function Profile() {
         if (retry.data.onboardingUrl) {
           await WebBrowser.openAuthSessionAsync(
             retry.data.onboardingUrl,
-            returnUrl,
+            appReturnUrl,
           );
         }
       }

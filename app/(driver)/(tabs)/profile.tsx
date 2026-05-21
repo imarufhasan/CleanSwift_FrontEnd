@@ -21,7 +21,6 @@ import {
 import { useGetDriverRatingsQuery } from '@/src/services/ratingApi';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
-import { BASE_URL } from '@/src/constants/api';
 
 WebBrowser.maybeCompleteAuthSession();
 const menuItems = [
@@ -84,13 +83,10 @@ export default function Profile() {
       const appRefreshUrl = Linking.createURL('/stripe-connect-return', {
         queryParams: { stripeConnect: 'refresh' },
       });
-      const webReturnBase = `${BASE_URL}/drivers/stripe/connect-return`;
-      const returnUrl = `${webReturnBase}?stripeConnect=return&appReturnUrl=${encodeURIComponent(appReturnUrl)}`;
-      const refreshUrl = `${webReturnBase}?stripeConnect=refresh&appReturnUrl=${encodeURIComponent(appRefreshUrl)}`;
 
       const res = await createStripeConnectAccountLink({
-        returnUrl,
-        refreshUrl,
+        returnUrl: appReturnUrl,
+        refreshUrl: appRefreshUrl,
       }).unwrap();
 
       if (!res.data.onboardingUrl) {
@@ -108,8 +104,8 @@ export default function Profile() {
         browserResult.url.includes('stripeConnect=refresh')
       ) {
         const retry = await createStripeConnectAccountLink({
-          returnUrl,
-          refreshUrl,
+          returnUrl: appReturnUrl,
+          refreshUrl: appRefreshUrl,
         }).unwrap();
 
         if (retry.data.onboardingUrl) {

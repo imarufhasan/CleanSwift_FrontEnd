@@ -25,11 +25,8 @@
     "android": {
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.ayonghosh.sudsygo",
-      "permissions": [
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
-      ]
+      "package": "com.aliamin.sudsygo",
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"]
     },
     "web": {
       "bundler": "metro",
@@ -50,10 +47,7 @@
       "@react-native-community/datetimepicker",
       "expo-secure-store",
       "expo-web-browser",
-      [
-        "@stripe/stripe-react-native",
-        {}
-      ]
+      ["@stripe/stripe-react-native", {}]
     ],
     "experiments": {
       "typedRoutes": true

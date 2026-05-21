@@ -3,20 +3,26 @@ import {
   Image,
   ScrollView,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
   Dimensions,
   Linking,
 } from "react-native";
-import { AntDesign, Ionicons } from "@expo/vector-icons";
+import { AntDesign, FontAwesome, Ionicons } from "@expo/vector-icons";
 import Colors from "@/constants/color";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import RatingStars from "@/components/home/RatingStars";
-import { useGetOrderByIdQuery } from "@/src/services/orderApi";
+import {
+  useCreateRatingMutation,
+  useGetOrderByIdQuery,
+} from "@/src/services/orderApi";
+import { useGetMyOrderRatingQuery } from "@/src/services/ratingApi";
 import { formatOrderNumber } from "@/src/utils/orderNumber";
 import SkeletonPlaceholder from "@/components/common/SkeletonPlaceholder";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { USER } from "@/src/services/storage/tokenStorage";
+import ShowMessage from "@/constants/toast";
 
 const { width } = Dimensions.get("window");
 
@@ -94,11 +100,23 @@ export default function OrderDetails() {
 
   const [userInfo, setUserInfo] = useState<any>(null);
 
-  const { data, isLoading, isError } = useGetOrderByIdQuery(id ?? "", {
-    skip: !id,
+  const { data, isLoading, isError, refetch: refetchOrder } =
+    useGetOrderByIdQuery(id ?? "", {
+      skip: !id,
+    });
+  const {
+    data: myRatingRes,
+    refetch: refetchMyRating,
+  } = useGetMyOrderRatingQuery(id ?? "", {
+    skip: !id || userInfo?.role !== "CUSTOMER",
   });
+  const [createRating, { isLoading: isSubmittingRating }] =
+    useCreateRatingMutation();
+  const [selectedRating, setSelectedRating] = useState(0);
+  const [feedback, setFeedback] = useState("");
 
   const order = data?.data;
+  const myRating = myRatingRes?.data;
   console.log("order details: ", data);
   
 
@@ -120,6 +138,13 @@ export default function OrderDetails() {
 
     getLocalUser();
   }, []);
+
+  useEffect(() => {
+    if (!myRating) return;
+
+    setSelectedRating(Number(myRating.rating ?? 0));
+    setFeedback(myRating.feedback ?? "");
+  }, [myRating]);
 
   /* ---------------- SET TARGET USER ---------------- */
 
@@ -165,6 +190,16 @@ export default function OrderDetails() {
 
   const subTotal = (order.bags ?? 0) * (order.pricePerBag ?? 0);
   const driver = order.driver;
+  const canReview =
+    userInfo?.role === "CUSTOMER" &&
+    driver?._id &&
+    ["DELIVERED", "COMPLETED"].includes(order.status);
+  const displayDriverRating = Number(
+    order.driverRating ?? order.driverRatingSummary?.avg ?? 0,
+  );
+  const displayDriverRatingCount = Number(
+    order.driverRatingCount ?? order.driverRatingSummary?.count ?? 0,
+  );
 
   const handleCall = async () => {
     try {
@@ -187,6 +222,30 @@ export default function OrderDetails() {
       }
     } catch (error) {
       console.log("Call error:", error);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!canReview || !driver?._id) return;
+
+    if (!selectedRating) {
+      ShowMessage.error("Please select a rating");
+      return;
+    }
+
+    try {
+      await createRating({
+        orderId: order._id,
+        driverId: driver._id,
+        rating: selectedRating,
+        feedback,
+      }).unwrap();
+
+      await Promise.all([refetchMyRating(), refetchOrder()]);
+      ShowMessage.show(myRating ? "Review updated" : "Review submitted");
+    } catch (error) {
+      console.log("Review submit error:", error);
+      ShowMessage.error("Failed to save review");
     }
   };
 
@@ -378,11 +437,13 @@ export default function OrderDetails() {
               </Text>
 
               <View className="flex-row items-center mt-2">
-                <RatingStars rating={4.9} size={16} />
+                <RatingStars rating={displayDriverRating} size={16} />
 
                 <Text className="ml-2 text-sm text-gray-500">
                   {userInfo?.role === "CUSTOMER"
-                    ? "Assigned Driver"
+                    ? displayDriverRatingCount > 0
+                      ? `${displayDriverRating.toFixed(1)} (${displayDriverRatingCount} reviews)`
+                      : "No reviews yet"
                     : "Customer"}
                 </Text>
               </View>
@@ -448,6 +509,73 @@ export default function OrderDetails() {
           )}
         </View>
       </View>
+
+      {canReview && (
+        <View className="px-5 mt-6">
+          <View
+            className="bg-white rounded-3xl p-5"
+            style={{
+              shadowColor: "#000",
+              shadowOpacity: 0.05,
+              shadowRadius: 10,
+              shadowOffset: { width: 0, height: 4 },
+              elevation: 3,
+            }}
+          >
+            <Text className="text-lg font-bold text-black mb-1">
+              {myRating ? "Your Review" : "Rate This Delivery"}
+            </Text>
+            <Text className="text-gray-500 text-sm mb-4">
+              {myRating
+                ? "You can update your feedback anytime."
+                : "Share your experience with this driver."}
+            </Text>
+
+            <View className="flex-row mb-4">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <TouchableOpacity
+                  key={star}
+                  onPress={() => setSelectedRating(star)}
+                  activeOpacity={0.75}
+                >
+                  <FontAwesome
+                    name={star <= selectedRating ? "star" : "star-o"}
+                    size={34}
+                    color="#FACC15"
+                    style={{ marginRight: 8 }}
+                  />
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TextInput
+              value={feedback}
+              onChangeText={setFeedback}
+              placeholder="Write feedback (optional)"
+              multiline
+              textAlignVertical="top"
+              className="border border-gray-200 rounded-2xl p-4 min-h-[100px] text-black"
+            />
+
+            <TouchableOpacity
+              onPress={handleSubmitReview}
+              disabled={isSubmittingRating}
+              className="rounded-2xl py-4 mt-4"
+              style={{
+                backgroundColor: isSubmittingRating ? "#93C5FD" : Colors.primary,
+              }}
+            >
+              <Text className="text-white text-center font-bold text-base">
+                {isSubmittingRating
+                  ? "Saving..."
+                  : myRating
+                    ? "Update Review"
+                    : "Submit Review"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       <View className="h-24" />
     </ScrollView>

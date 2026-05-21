@@ -47,6 +47,7 @@ export default function DeliveredSuccessScreen() {
     "Enter card number, expiry date, and CVC.",
   );
   const [rating, setRating] = useState(0);
+  const [submittedRating, setSubmittedRating] = useState(0);
   const { createPaymentMethod } = useStripe();
   const [createRating, { isLoading: isCreateRatingLoading }] =
     useCreateRatingMutation();
@@ -180,6 +181,7 @@ export default function DeliveredSuccessScreen() {
           feedback: "", // optional (you can add input later)
         }).unwrap();
         if (ratingRes?.success) {
+          setSubmittedRating(rating);
           console.log("ratingRes 1:", ratingRes);
           ShowMessage.success("Payment & rating submitted successfully");
           setConfirmPaymentModal(true);
@@ -533,9 +535,9 @@ export default function DeliveredSuccessScreen() {
                 </Text>
                 <View className="flex-row mt-2">
                   {[1, 2, 3, 4, 5].map((i) => (
-                    <AntDesign
+                    <FontAwesome
                       key={i}
-                      name="star"
+                      name={i <= (submittedRating || rating) ? "star" : "star-o"}
                       size={30}
                       color="#FACC15"
                       className="mr-2"
@@ -543,7 +545,8 @@ export default function DeliveredSuccessScreen() {
                   ))}
                 </View>
                 <Text className="text-gray-400 text-sm mb-4 mt-1">
-                  You rated {name ?? "Driver"} 5 stars
+                  You rated {name ?? "Driver"} {submittedRating || rating} star
+                  {(submittedRating || rating) === 1 ? "" : "s"}
                 </Text>
               </View>
 

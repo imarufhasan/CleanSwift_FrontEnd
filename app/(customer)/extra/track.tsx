@@ -4,7 +4,10 @@ import { Ionicons, Feather } from "@expo/vector-icons";
 import Colors from "@/constants/color";
 import RatingStars from "@/components/home/RatingStars";
 import { useRouter } from "expo-router";
-import { useGetMyOrdersQuery } from "@/src/services/orderApi";
+import {
+  useGetMyOrdersQuery,
+  useGetOrderByIdQuery,
+} from "@/src/services/orderApi";
 import { useOrderSocket } from "@/src/hooks/useOrderSocket";
 import { formatOrderNumber } from "@/src/utils/orderNumber";
 
@@ -13,6 +16,18 @@ export default function Track() {
   const { data: ordersRes, refetch } = useGetMyOrdersQuery();
   const activeOrder = ordersRes?.data?.find(
     order => !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
+  );
+  const { data: orderByIdRes } = useGetOrderByIdQuery(activeOrder?._id ?? "", {
+    skip: !activeOrder?._id,
+  });
+  const enrichedOrder = orderByIdRes?.data ?? activeOrder;
+  const driverRating = Number(
+    enrichedOrder?.driverRating ?? enrichedOrder?.driverRatingSummary?.avg ?? 0,
+  );
+  const driverRatingCount = Number(
+    enrichedOrder?.driverRatingCount ??
+      enrichedOrder?.driverRatingSummary?.count ??
+      0,
   );
   const driver = activeOrder?.driver ?? null;
   const driverName =
@@ -132,9 +147,13 @@ export default function Track() {
           <View className="flex-1 ml-2">
             <Text className="font-semibold text-base">{driverName}</Text>
             <View className="flex-row items-center mt-1">
-              <RatingStars rating={driverImage || driverName !== 'Driver' ? 4.9 : 0} />
+              <RatingStars rating={driverImage || driverName !== 'Driver' ? driverRating : 0} />
               <Text className="text-sm ml-1 text-gray-600">
-                {driverImage || driverName !== 'Driver' ? 'Assigned driver' : 'No driver yet'}
+                {driverImage || driverName !== 'Driver'
+                  ? driverRatingCount > 0
+                    ? `${driverRating.toFixed(1)} (${driverRatingCount} reviews)`
+                    : 'No reviews yet'
+                  : 'No driver yet'}
               </Text>
             </View>
           </View>

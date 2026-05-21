@@ -332,10 +332,15 @@ export default function DeliveredSuccessScreen() {
 
               <View className="flex-row items-center mt-1">
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <AntDesign key={i} name="star" size={14} color="#FACC15" />
+                  <FontAwesome
+                    key={i}
+                    name={i <= rating ? "star" : "star-o"}
+                    size={14}
+                    color="#FACC15"
+                  />
                 ))}
                 <Text className="text-gray-400 text-xs ml-2">
-                  4.9 (234 trips)
+                  {rating ? `${rating}.0 selected` : "Rate your experience"}
                 </Text>
               </View>
             </View>

@@ -210,6 +210,8 @@ export default function OrderDetails() {
   const displayDriverRatingCount = Number(
     order.driverRatingCount ?? order.driverRatingSummary?.count ?? 0,
   );
+  const customerRating = order.customerRating;
+  const customerReviewRating = Number(customerRating?.rating ?? 0);
 
   const handleCall = async () => {
     try {
@@ -465,17 +467,19 @@ export default function OrderDetails() {
                 {targetUser?.email ?? "No Email"}
               </Text>
 
-              <View className="flex-row items-center mt-2">
-                <RatingStars rating={displayDriverRating} size={16} />
+              {userInfo?.role === "CUSTOMER" ? (
+                <View className="flex-row items-center mt-2">
+                  <RatingStars rating={displayDriverRating} size={16} />
 
-                <Text className="ml-2 text-sm text-gray-500">
-                  {userInfo?.role === "CUSTOMER"
-                    ? displayDriverRatingCount > 0
+                  <Text className="ml-2 text-sm text-gray-500">
+                    {displayDriverRatingCount > 0
                       ? `${displayDriverRating.toFixed(1)} (${displayDriverRatingCount} reviews)`
-                      : "No reviews yet"
-                    : "Customer"}
-                </Text>
-              </View>
+                      : "No reviews yet"}
+                  </Text>
+                </View>
+              ) : (
+                <Text className="text-gray-500 mt-2">Customer</Text>
+              )}
             </View>
           </View>
 
@@ -538,6 +542,49 @@ export default function OrderDetails() {
           )}
         </View>
       </View>
+
+      {userInfo?.role === "DRIVER" &&
+        ["DELIVERED", "COMPLETED"].includes(order.status) && (
+          <View className="px-5 mt-6">
+            <View
+              className="bg-white rounded-3xl p-5"
+              style={{
+                shadowColor: "#000",
+                shadowOpacity: 0.05,
+                shadowRadius: 10,
+                shadowOffset: { width: 0, height: 4 },
+                elevation: 3,
+              }}
+            >
+              <Text className="text-lg font-bold text-black mb-1">
+                Customer Review For You
+              </Text>
+              <Text className="text-gray-500 text-sm mb-4">
+                This is the feedback this customer gave for this delivery.
+              </Text>
+
+              {customerRating ? (
+                <>
+                  <View className="flex-row items-center mb-3">
+                    <RatingStars rating={customerReviewRating} size={20} />
+                    <Text className="ml-2 font-semibold text-black">
+                      {customerReviewRating.toFixed(1)}
+                    </Text>
+                  </View>
+                  <Text className="text-gray-600 leading-5">
+                    {customerRating.feedback || "No written feedback"}
+                  </Text>
+                </>
+              ) : (
+                <View className="bg-gray-50 rounded-2xl p-4">
+                  <Text className="text-gray-500">
+                    Customer has not reviewed this delivery yet.
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
 
       {canReview && (
         <View className="px-5 mt-6">

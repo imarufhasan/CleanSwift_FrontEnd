@@ -15,6 +15,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.aliamin.sudsygo",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "sudsygo needs your location to find nearby cleaning services.",
         "NSLocationAlwaysUsageDescription": "sudsygo needs your location to provide location-based services.",
@@ -25,7 +26,7 @@
     "android": {
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.ayonghosh.sudsygo",
+      "package": "com.aliamin.sudsygo",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"

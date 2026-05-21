@@ -8,6 +8,7 @@ import {
   TextInput,
   Modal,
   ActivityIndicator,
+  Linking,
 } from "react-native";
 import { Ionicons, AntDesign, FontAwesome } from "@expo/vector-icons";
 import { CardField, useStripe } from "@stripe/stripe-react-native";
@@ -22,6 +23,7 @@ import {
 import { formatOrderNumber } from "@/src/utils/orderNumber";
 import { STRIPE_PUBLISHABLE_KEY } from "@/src/constants/api";
 import { useCreateRatingMutation } from "@/src/services/orderApi";
+import { useCreateInvoiceDownloadLinkMutation } from "@/src/services/invoiceApi";
 
 export default function DeliveredSuccessScreen() {
   const { name, image, orderId, driverId, service, bags, bagPrice, tip } =
@@ -53,6 +55,8 @@ export default function DeliveredSuccessScreen() {
     useCreateRatingMutation();
   const [confirmPayment, { isLoading }] = useConfirmPaymentMutation();
   const [attachCard, { isLoading: isSavingCard }] = useAttachCardMutation();
+  const [createInvoiceDownloadLink, { isLoading: isInvoiceDownloading }] =
+    useCreateInvoiceDownloadLinkMutation();
   const { data: cardsRes } = useGetSavedCardsQuery();
 
   const bagsCount = Number(bags ?? 0);
@@ -250,6 +254,28 @@ export default function DeliveredSuccessScreen() {
         error && error.data && error.data.message
           ? error.data.message
           : "Failed to complete payment",
+      );
+    }
+  };
+
+  const handleDownloadInvoice = async () => {
+    if (!orderId) {
+      ShowMessage.error("Order not found");
+      return;
+    }
+
+    try {
+      const res = await createInvoiceDownloadLink(String(orderId)).unwrap();
+
+      if (!res.data?.downloadUrl) {
+        ShowMessage.error("Invoice download link not available");
+        return;
+      }
+
+      await Linking.openURL(res.data.downloadUrl);
+    } catch (error: any) {
+      ShowMessage.error(
+        error?.data?.message ?? "Invoice is not ready yet. Please try again.",
       );
     }
   };
@@ -550,9 +576,13 @@ export default function DeliveredSuccessScreen() {
                 </Text>
               </View>
 
-              <View className="flex-row items-center mb-4 border bg-blue-100 border-blue-500 rounded-xl px-4 py-3 w-full justify-center">
+              <TouchableOpacity
+                onPress={handleDownloadInvoice}
+                disabled={isInvoiceDownloading}
+                className="flex-row items-center mb-4 border bg-blue-100 border-blue-500 rounded-xl px-4 py-3 w-full justify-center"
+              >
                 <Text className="text-[#0A8CFF] font-semibold">
-                  Download Invoice
+                  {isInvoiceDownloading ? "Preparing Invoice..." : "Download Invoice"}
                 </Text>
                 <Ionicons
                   name="download-outline"
@@ -560,7 +590,7 @@ export default function DeliveredSuccessScreen() {
                   color={Colors.primary}
                   className="ml-2"
                 />
-              </View>
+              </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => {
                   setConfirmPaymentModal(false);

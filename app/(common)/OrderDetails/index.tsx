@@ -18,6 +18,10 @@ import {
   useGetOrderByIdQuery,
 } from "@/src/services/orderApi";
 import { useGetMyOrderRatingQuery } from "@/src/services/ratingApi";
+import {
+  useCreateInvoiceDownloadLinkMutation,
+  useGetInvoiceByOrderIdQuery,
+} from "@/src/services/invoiceApi";
 import { formatOrderNumber } from "@/src/utils/orderNumber";
 import SkeletonPlaceholder from "@/components/common/SkeletonPlaceholder";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -112,11 +116,17 @@ export default function OrderDetails() {
   });
   const [createRating, { isLoading: isSubmittingRating }] =
     useCreateRatingMutation();
+  const { data: invoiceRes } = useGetInvoiceByOrderIdQuery(id ?? "", {
+    skip: !id || !["DELIVERED", "COMPLETED"].includes(data?.data?.status ?? ""),
+  });
+  const [createInvoiceDownloadLink, { isLoading: isInvoiceDownloading }] =
+    useCreateInvoiceDownloadLinkMutation();
   const [selectedRating, setSelectedRating] = useState(0);
   const [feedback, setFeedback] = useState("");
 
   const order = data?.data;
   const myRating = myRatingRes?.data;
+  const invoice = invoiceRes?.data;
   console.log("order details: ", data);
   
 
@@ -246,6 +256,25 @@ export default function OrderDetails() {
     } catch (error) {
       console.log("Review submit error:", error);
       ShowMessage.error("Failed to save review");
+    }
+  };
+
+  const handleDownloadInvoice = async () => {
+    if (!order?._id) return;
+
+    try {
+      const res = await createInvoiceDownloadLink(order._id).unwrap();
+
+      if (!res.data?.downloadUrl) {
+        ShowMessage.error("Invoice download link not available");
+        return;
+      }
+
+      await Linking.openURL(res.data.downloadUrl);
+    } catch (error: any) {
+      ShowMessage.error(
+        error?.data?.message ?? "Invoice is not ready yet. Please try again.",
+      );
     }
   };
 
@@ -571,6 +600,53 @@ export default function OrderDetails() {
                   : myRating
                     ? "Update Review"
                     : "Submit Review"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {["DELIVERED", "COMPLETED"].includes(order.status) && (
+        <View className="px-5 mt-6">
+          <View
+            className="bg-white rounded-3xl p-5"
+            style={{
+              shadowColor: "#000",
+              shadowOpacity: 0.05,
+              shadowRadius: 10,
+              shadowOffset: { width: 0, height: 4 },
+              elevation: 3,
+            }}
+          >
+            <View className="flex-row items-center justify-between mb-4">
+              <View>
+                <Text className="text-lg font-bold text-black">Invoice</Text>
+                <Text className="text-gray-500 text-sm mt-1">
+                  {invoice?.invoiceNumber
+                    ? `#${invoice.invoiceNumber}`
+                    : "Download your payment invoice"}
+                </Text>
+              </View>
+              {invoice?.paid ? (
+                <View className="bg-green-100 px-3 py-1 rounded-full">
+                  <Text className="text-green-700 text-xs font-semibold">
+                    Paid
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+
+            <TouchableOpacity
+              onPress={handleDownloadInvoice}
+              disabled={isInvoiceDownloading}
+              className="flex-row items-center justify-center rounded-2xl py-4"
+              style={{
+                backgroundColor: isInvoiceDownloading ? "#93C5FD" : Colors.primary,
+              }}
+            >
+              <Ionicons name="download-outline" size={20} color="#fff" />
+              <Text className="text-white font-bold ml-2">
+                {isInvoiceDownloading ? "Preparing Invoice..." : "Download Invoice"}
               </Text>
             </TouchableOpacity>
           </View>

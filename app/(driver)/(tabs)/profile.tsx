@@ -49,19 +49,23 @@ export default function Profile() {
   const clearUser = useUserInfo(state => state.clearAuth);
 
   const driverProfile = driverProfileRes?.data;
-  const { data: driverRatingsRes, refetch: refetchDriverRatings } = useGetDriverRatingsQuery(driverProfile?.user ?? '', {
-    skip: !driverProfile?.user,
-  });
+  const { data: driverRatingsRes, refetch: refetchDriverRatings } = useGetDriverRatingsQuery(
+    driverProfile?.user ?? '',
+    {
+      skip: !driverProfile?.user,
+    },
+  );
   const myJobs = myJobsRes?.data ?? [];
   const completedJobs = myJobs.filter(job => ['DELIVERED', 'COMPLETED'].includes(job.status));
   const successRate = myJobs.length ? Math.round((completedJobs.length / myJobs.length) * 100) : 0;
   const tierNumber = driverProfile?.reputationTier ?? 0;
   const tierText = tierNumber > 0 ? `Tier ${tierNumber}` : 'N/A';
   const performanceText = driverProfile?.status ?? 'PENDING';
-  const ratingText = driverRatingsRes?.data?.summary?.count ? Number(driverRatingsRes.data.summary.avg ?? 0).toFixed(1) : 'N/A';
+  const ratingText = driverRatingsRes?.data?.summary?.count
+    ? Number(driverRatingsRes.data.summary.avg ?? 0).toFixed(1)
+    : 'N/A';
   const stripeStatus = stripeStatusRes?.data;
-  const isStripeConnected =
-    Boolean(stripeStatus?.detailsSubmitted) || Boolean(stripeStatus?.payoutsEnabled);
+  const isStripeConnected = Boolean(stripeStatus?.detailsSubmitted) || Boolean(stripeStatus?.payoutsEnabled);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -94,33 +98,22 @@ export default function Profile() {
         return;
       }
 
-      const browserResult = await WebBrowser.openAuthSessionAsync(
-        res.data.onboardingUrl,
-        appReturnUrl,
-      );
+      const browserResult = await WebBrowser.openAuthSessionAsync(res.data.onboardingUrl, appReturnUrl);
 
-      if (
-        browserResult.type === 'success' &&
-        browserResult.url.includes('stripeConnect=refresh')
-      ) {
+      if (browserResult.type === 'success' && browserResult.url.includes('stripeConnect=refresh')) {
         const retry = await createStripeConnectAccountLink({
           returnUrl: appReturnUrl,
           refreshUrl: appRefreshUrl,
         }).unwrap();
 
         if (retry.data.onboardingUrl) {
-          await WebBrowser.openAuthSessionAsync(
-            retry.data.onboardingUrl,
-            appReturnUrl,
-          );
+          await WebBrowser.openAuthSessionAsync(retry.data.onboardingUrl, appReturnUrl);
         }
       }
 
       await Promise.all([refetchDriverProfile(), refetchStripeStatus()]);
     } catch (error: any) {
-      ShowMessage.error(
-        error?.data?.message ?? 'Failed to start Stripe onboarding',
-      );
+      ShowMessage.error(error?.data?.message ?? 'Failed to start Stripe onboarding');
     }
   };
 
@@ -209,7 +202,6 @@ export default function Profile() {
           </View>
         </View>
 
-
         {/*In future coming this feature */}
 
         {/* <TouchableOpacity
@@ -289,9 +281,7 @@ export default function Profile() {
             >
               <Ionicons name={item.icon as any} size={20} color={'black'} />
               <Text className="ml-3 flex-1 font-medium">
-                {item.label === 'Connect Stripe' && isConnectingStripe
-                  ? 'Opening Stripe...'
-                  : item.label}
+                {item.label === 'Connect Stripe' && isConnectingStripe ? 'Opening Stripe...' : item.label}
               </Text>
               {item.label === 'Connect Stripe' && isStripeConnected ? (
                 <Text className="mr-2 text-xs font-semibold text-green-600">Connected</Text>

@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, RefreshControl, Modal } from 'react-native';
 import { AntDesign, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import Colors from '@/constants/color';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import Toast from '@/constants/toast';
 import ShowMessage from '@/constants/toast';
 import { useUserInfo } from '@/src/core/store/userInfo';
@@ -84,23 +84,39 @@ export default function Profile() {
     }, 1500);
   }, [refetchDriverProfile, refetchDriverRatings, refetchMyJobs, refetchStripeStatus]);
 
+  const refreshStripeConnection = useCallback(async () => {
+    dispatch(api.util.invalidateTags(['Driver']));
+    await Promise.all([refetchDriverProfile(), refetchStripeStatus()]);
+  }, [dispatch, refetchDriverProfile, refetchStripeStatus]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshStripeConnection();
+    }, [refreshStripeConnection]),
+  );
+
   useEffect(() => {
     if (!stripeConnectCheckedAt) return;
 
-    const refreshStripeConnection = async () => {
-      await Promise.all([refetchDriverProfile(), refetchStripeStatus()]);
-
-      if (stripeConnect === 'success') {
-        setStripeSuccessModal(true);
-      } else if (stripeConnect === 'refresh') {
-        ShowMessage.show('Stripe session refreshed. Please continue onboarding.');
-      }
-    };
-
     refreshStripeConnection();
+
+    const timers = [1200, 3000].map(delay =>
+      setTimeout(() => {
+        refreshStripeConnection();
+      }, delay),
+    );
+
+    if (stripeConnect === 'success') {
+      setStripeSuccessModal(true);
+    } else if (stripeConnect === 'refresh') {
+      ShowMessage.show('Stripe session refreshed. Please continue onboarding.');
+    }
+
+    return () => {
+      timers.forEach(clearTimeout);
+    };
   }, [
-    refetchDriverProfile,
-    refetchStripeStatus,
+    refreshStripeConnection,
     stripeConnect,
     stripeConnectCheckedAt,
   ]);

@@ -64,6 +64,16 @@ export type Order = {
     insuredVehicle?: boolean;
     topRated?: boolean;
   };
+  myRating?: {
+    _id?: string;
+    order?: string;
+    customer?: string;
+    driver?: string;
+    rating?: number;
+    feedback?: string;
+    createdAt?: string;
+    updatedAt?: string;
+  } | null;
   total: number;
   bagCountAtPickup?: number;
   bagCountAtDelivery?: number;

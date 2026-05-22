@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 {
   "expo": {
     "name": "sudsygo",
@@ -65,73 +64,3 @@
     }
   }
 }
-=======
-{
-  "expo": {
-    "name": "sudsygo",
-    "slug": "sudsygo",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/images/AppIcon.png",
-    "splash": {
-      "image": "./assets/images/transparent.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "scheme": "sudsygo",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "ios": {
-      "supportsTablet": true,
-      "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "sudsygo needs your location to find nearby cleaning services.",
-        "NSLocationAlwaysUsageDescription": "sudsygo needs your location to provide location-based services.",
-        "UIStatusBarStyle": "UIStatusBarStyleLightContent",
-        "UIViewControllerBasedStatusBarAppearance": false
-      }
-    },
-    "android": {
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
-      "package": "com.ayonghosh.sudsygo",
-      "permissions": [
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
-      ]
-    },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/AppIcon.png"
-    },
-    "plugins": [
-      "expo-router",
-      [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "Allow sudsygo to use your location to find nearby cleaning services.",
-          "locationAlwaysPermission": "Allow sudsygo to use your location.",
-          "locationWhenInUsePermission": "Allow sudsygo to use your location to find nearby cleaning services.",
-          "isAndroidBackgroundLocationEnabled": false
-        }
-      ],
-      "@react-native-community/datetimepicker",
-      "expo-secure-store",
-      "expo-web-browser",
-      [
-        "@stripe/stripe-react-native",
-        {}
-      ]
-    ],
-    "experiments": {
-      "typedRoutes": true
-    },
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "2eb126c4-54c2-47e6-9f31-4ed7c2f26f44"
-      }
-    }
-  }
-}
->>>>>>> 25364d925ff04c412040c14db6219116fb4d10a5

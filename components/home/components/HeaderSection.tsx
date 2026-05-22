@@ -77,7 +77,7 @@ export default function HeaderSection({
                 <Text className="text-white font-semibold">{location.title}</Text>
                 <Text className="text-white text-lg">{location.street}</Text>
                 <Text className="text-white text-sm">
-                  {location?.city}, {location?.state}
+                  {location?.city || "city"} , {location?.state || "state"}
                 </Text>
               </View>
             </View>

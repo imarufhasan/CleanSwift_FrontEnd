@@ -1,4 +1,10 @@
-import { ActivityIndicator, View, Text, TextInput, TouchableOpacity } from "react-native";
+import {
+  ActivityIndicator,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+} from "react-native";
 import React, { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
@@ -39,7 +45,7 @@ export default function ChangeLocation() {
     }
   };
 
-  const handleUseCurrentLocation = async () => {
+  const handleUseCurrentLocation2 = async () => {
     try {
       setIsLocating(true);
       const permission = await ExpoLocation.requestForegroundPermissionsAsync();
@@ -54,17 +60,20 @@ export default function ChangeLocation() {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
       });
+      console.log("current location 1: ", place);
 
-      const formattedAddress = [
-        place?.name,
-        place?.street,
-        place?.city,
-        place?.region,
-        place?.postalCode,
-        place?.country,
-      ]
-        .filter(Boolean)
-        .join(", ");
+      const formattedAddress =
+        place?.formattedAddress && !place.formattedAddress.includes("+")
+          ? place.formattedAddress
+          : [
+              place?.street,
+              place?.city,
+              place?.region,
+              place?.postalCode,
+              place?.country,
+            ]
+              .filter(Boolean)
+              .join(", ");
 
       if (!formattedAddress) {
         ShowMessage.error("Unable to detect address");
@@ -73,6 +82,73 @@ export default function ChangeLocation() {
 
       setAddress(formattedAddress);
     } catch (error) {
+      ShowMessage.error("Unable to get current location");
+    } finally {
+      setIsLocating(false);
+    }
+  };
+
+  const handleUseCurrentLocation = async () => {
+    try {
+      setIsLocating(true);
+
+      const permission = await ExpoLocation.requestForegroundPermissionsAsync();
+
+      if (permission.status !== "granted") {
+        ShowMessage.error("Location permission required");
+        return;
+      }
+
+      const position = await ExpoLocation.getCurrentPositionAsync({
+        accuracy: ExpoLocation.Accuracy.High,
+      });
+
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+
+      console.log("Latitude:", latitude);
+      console.log("Longitude:", longitude);
+
+      // OpenStreetMap Reverse Geocoding
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&accept-language=en`,
+        {
+          headers: {
+            Accept: "application/json",
+            "User-Agent": "sudsygo-app",
+          },
+        },
+      );
+
+      const text = await response.text();
+
+      console.log("RAW RESPONSE:", text);
+
+      const data = JSON.parse(text);
+
+      console.log("OSM Location Data:", data);
+
+      if (!data || !data.display_name) {
+        ShowMessage.error("Unable to detect address");
+        return;
+      }
+
+      // Full detailed address
+      const addressParts = [
+        data?.address?.building,
+        data?.address?.house_number,
+        data?.address?.road,
+        data?.address?.suburb,
+        data?.address?.city,
+        data?.address?.postcode,
+        data?.address?.country,
+      ];
+
+      const cleanAddress = addressParts.filter(Boolean).join(", ");
+
+      setAddress(cleanAddress);
+    } catch (error) {
+      console.log(error);
       ShowMessage.error("Unable to get current location");
     } finally {
       setIsLocating(false);

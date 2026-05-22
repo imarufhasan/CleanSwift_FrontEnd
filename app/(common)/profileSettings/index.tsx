@@ -42,7 +42,7 @@ export default function ProfileSettings() {
   const [country, setCountry] = useState("US");
   const phoneUtil = PhoneNumberUtil.getInstance();
   const [countryName, setCountryName] = useState("");
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [updateUserData, { isLoading: updateLoading }] =
     useUpdateUserDataMutation();
   const [countryCode, setCountryCode] = useState("+1");
@@ -50,6 +50,9 @@ export default function ProfileSettings() {
   const [mobileNumber, setMobileNumber] = useState(
     profileInfo?.data?.phone || "",
   );
+
+  console.log("profileInfo?.data?.address: ", profileInfo?.data);
+  
 
   const [address, setAddress] = useState(profileInfo?.data?.address || "");
 
@@ -127,7 +130,7 @@ export default function ProfileSettings() {
     }
   };
 
-  const handleUpdateProfile = async () => {
+  const handleUpdateProfile2 = async () => {
     try {
       if (!fullName.trim()) {
         ShowMessage.error("Full name is required");
@@ -163,6 +166,49 @@ export default function ProfileSettings() {
     } catch (error) {
       console.log("UPDATE ERROR:", error);
       ShowMessage.error("Failed to update profile");
+    }
+  };
+  const handleUpdateProfile = async () => {
+    if (isSubmitting || updateLoading) return;
+
+    try {
+      setIsSubmitting(true);
+
+      if (!fullName.trim()) {
+        ShowMessage.error("Full name is required");
+        return;
+      }
+
+      if (!validatePhone(mobileNumber, country)) {
+        ShowMessage.error("Enter a valid phone number!");
+        return;
+      }
+
+      if (!validatePhoneNumber()) return;
+
+      const body = {
+        name: fullName.trim(),
+        address: address.trim(),
+        phone: mobileNumber,
+      };
+
+      const res = await updateUserData(body).unwrap();
+
+      if (res?.success) {
+        ShowMessage.show(res?.message || "Profile updated");
+
+        // ⚡ IMPORTANT: avoid refetch blocking UX
+        refetch();
+
+        router.back();
+      } else {
+        ShowMessage.error(res?.message || "Failed to update profile");
+      }
+    } catch (error) {
+      console.log("UPDATE ERROR:", error);
+      ShowMessage.error("Failed to update profile");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -305,7 +351,7 @@ export default function ProfileSettings() {
         <View className="px-5 pb-8 pt-3 bg-white">
           <TouchableOpacity
             onPress={handleUpdateProfile}
-            disabled={updateLoading}
+            disabled={isSubmitting || updateLoading}
             className="bg-blue-500 py-4 rounded-xl items-center justify-center"
           >
             {updateLoading ? (

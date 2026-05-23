@@ -14,9 +14,25 @@ const getEffectiveBagCount = (order?: Order) =>
     order?.bagCountAtDelivery ?? order?.bagCountAtPickup ?? order?.bags ?? 0,
   );
 
-const getOrderDriverEarningPercentage = (
-  order?: Pick<Order, "driverEarningPercentage">,
-) => Number(order?.driverEarningPercentage ?? 70);
+// const getOrderDriverEarningPercentage = (
+//   order?: Pick<Order, "driverEarningPercentage">,
+// ) => Number(order?.driverEarningPercentage ?? 70);
+
+const LAUNDRY_OWNER_COST_PER_BAG = 25;
+
+const getOrderDriverEarning = (order?: Order) => {
+  if (!order) return 0;
+
+  const total = Number(order.total ?? 0);
+
+  const percentage = Number(order.driverEarningPercentage ?? 70);
+
+  const totalBag = Number(
+    order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0,
+  );
+
+  return (total * percentage) / 100 - totalBag * LAUNDRY_OWNER_COST_PER_BAG;
+};
 
 type Props = {
   order?: Order;
@@ -42,7 +58,8 @@ export default function DeliveryStep({
             !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
         )
       : undefined);
-  const driverEarningPercentage = getOrderDriverEarningPercentage(activeJob);
+  // const driverEarningPercentage = getOrderDriverEarningPercentage(activeJob);
+  const driverEarning = getOrderDriverEarning(activeJob);
   const isPaymentConfirmed = activeJob?.status === "COMPLETED";
   const isCompleted = readOnly || isPaymentConfirmed;
   const canStartOutForDelivery = activeJob?.status === "FOLDING";
@@ -133,7 +150,7 @@ export default function DeliveryStep({
               <Ionicons name="cash-outline" size={22} color="#fff" />
               <Text className="text-white/70 text-xs mt-1">Earnings</Text>
               <Text className="text-white font-bold text-lg">
-                ${Number((total * driverEarningPercentage) / 100).toFixed(2)}
+                ≈ ${driverEarning.toFixed(2)}
               </Text>
             </View>
           </View>
@@ -237,7 +254,7 @@ export default function DeliveryStep({
                 Your Earnings
               </Text>
               <Text className="font-bold text-2xl text-green-600">
-                ${Number((total * driverEarningPercentage) / 100).toFixed(2)}
+                ≈ ${driverEarning.toFixed(2)}
               </Text>
             </View>
           </View>

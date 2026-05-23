@@ -38,7 +38,8 @@ type JobCardData = {
   rating: number;
   hasReview: boolean;
   status: string;
-  driverEarningPercentage: number;
+  driverEarningPercentage?: number;
+  driverEarning: number;
 };
 
 const formatStatus = (status?: string) => (status ?? "").replaceAll("_", " ");
@@ -57,9 +58,22 @@ const getEffectiveBagCount = (order: Order) =>
 const getEffectiveOrderTotal = (order: Order) =>
   getEffectiveBagCount(order) * Number(order.pricePerBag ?? 0);
 
-const getOrderDriverEarningPercentage = (
-  order: Pick<Order, "driverEarningPercentage">,
-) => Number(order.driverEarningPercentage ?? 70);
+// const getOrderDriverEarningPercentage = (
+//   order: Pick<Order, "driverEarningPercentage">,
+// ) => Number(order.driverEarningPercentage ?? 70);
+const LAUNDRY_OWNER_COST_PER_BAG = 25;
+
+const getOrderDriverEarning = (order: Order) => {
+  const total = Number(order.total ?? 0);
+
+  const percentage = Number(order.driverEarningPercentage ?? 70);
+
+  const totalBag = Number(
+    order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0,
+  );
+
+  return (total * percentage) / 100 - totalBag * LAUNDRY_OWNER_COST_PER_BAG;
+};
 
 const mapOrderToJob = (order: Order): JobCardData => ({
   id: order._id,
@@ -73,8 +87,9 @@ const mapOrderToJob = (order: Order): JobCardData => ({
   rating: Number(order.customerRating?.rating ?? 0),
   hasReview: Boolean(order.customerRating?.rating),
   status: order.status,
-  driverEarningPercentage: getOrderDriverEarningPercentage(order),
+  driverEarning: getOrderDriverEarning(order),
 });
+// driverEarningPercentage: getOrderDriverEarningPercentage(order),
 
 const TopTab = ({
   label,
@@ -101,7 +116,8 @@ const TopTab = ({
 /* -------------------- Job Card -------------------- */
 const JobCard = ({
   item,
-  driverEarningPercentage,
+  // driverEarningPercentage,
+  driverEarning,
   showActions,
   acceptDisabled,
   onAccept,
@@ -109,7 +125,8 @@ const JobCard = ({
   onDetails,
 }: {
   item: JobCardData;
-  driverEarningPercentage: number;
+  // driverEarningPercentage: number;
+  driverEarning: number;
   showActions?: boolean;
   acceptDisabled?: boolean;
   onAccept?: () => void;
@@ -144,7 +161,7 @@ const JobCard = ({
       <View className="items-end">
         <Text className="text-lg font-bold text-green-600">{item.price}</Text>
         <Text className="text-xs text-gray-400">
-          You earn {driverEarningPercentage}%
+          You earn ≈ ${driverEarning.toFixed(2)}
         </Text>
       </View>
     </View>
@@ -358,7 +375,8 @@ export default function JobsScreen() {
     activeJobs.length >= capacityLimit;
   const stripeStatus = stripeStatusRes?.data;
   const isStripeConnected =
-    Boolean(stripeStatus?.detailsSubmitted) && Boolean(stripeStatus?.payoutsEnabled);
+    Boolean(stripeStatus?.detailsSubmitted) &&
+    Boolean(stripeStatus?.payoutsEnabled);
   const acceptBlocked = isAtCapacity || !isStripeConnected;
 
   useEffect(() => {
@@ -488,12 +506,14 @@ export default function JobsScreen() {
             <JobCard
               key={item.id}
               item={item}
-              driverEarningPercentage={item.driverEarningPercentage}
+              driverEarning={item.driverEarning}
               showActions
               acceptDisabled={acceptBlocked}
               onAccept={() => {
                 if (!isStripeConnected) {
-                  ShowMessage.error("Please connect Stripe before accepting orders.");
+                  ShowMessage.error(
+                    "Please connect Stripe before accepting orders.",
+                  );
                   return;
                 }
                 if (isAtCapacity) return;
@@ -523,7 +543,7 @@ export default function JobsScreen() {
             <JobCard
               key={item.id}
               item={item}
-              driverEarningPercentage={item.driverEarningPercentage}
+              driverEarning={item.driverEarning}
               onDetails={() =>
                 router.push({
                   pathname:

@@ -46,9 +46,19 @@ const getEffectiveBagCount = (order: Order) =>
 const getEffectiveOrderTotal = (order: Order) =>
   getEffectiveBagCount(order) * Number(order.pricePerBag ?? 0);
 
-const getOrderDriverEarningPercentage = (
-  order: Pick<Order, "driverEarningPercentage">,
-) => Number(order.driverEarningPercentage ?? 70);
+// const getOrderDriverEarningPercentage = (
+//   order: Pick<Order, "driverEarningPercentage">,
+// ) => Number(order.driverEarningPercentage ?? 70);
+
+const LAUNDRY_OWNER_COST_PER_BAG = 25;
+
+const getOrderDriverEarningPercentage = (order: Order) => {
+  const total = Number(order.total ?? 0);
+  const percentage = Number(order.driverEarningPercentage ?? 0);
+  const totalBag = Number(order.bags ?? 0);
+
+  return (total * percentage) / 100 - totalBag * LAUNDRY_OWNER_COST_PER_BAG;
+};
 
 const getDriverEarning = (order: Order) =>
   (getEffectiveOrderTotal(order) * getOrderDriverEarningPercentage(order)) /
@@ -328,6 +338,9 @@ export default function HomeScreen() {
     (order) => !["DELIVERED", "COMPLETED", "CANCELED"].includes(order.status),
   );
 
+  console.log("activeOrders: ", activeOrders);
+  
+
   const availableOrder = availableJobs;
 
   const completedJobs = myJobs.filter((order) =>
@@ -390,7 +403,7 @@ export default function HomeScreen() {
     0,
   );
 
- // console.log("myJobsRes: ", myJobsRes?.data?.length);
+  // console.log("myJobsRes: ", myJobsRes?.data?.length);
 
   const refreshJobs = useCallback(() => {
     refetchAvailableJobs();
@@ -610,6 +623,11 @@ export default function HomeScreen() {
 
   const showSkeletonFirstTime =
     isLoading && !driverProfileRes?.data && !myJobsRes?.data;
+
+  // console.log(
+  //   "getOrderDriverEarningPercentage: ",
+  //   getOrderDriverEarningPercentage,
+  // );
 
   return (
     <View className="flex-1 bg-blue-50">
@@ -879,8 +897,11 @@ export default function HomeScreen() {
                       <Text className="font-bold text-green-500 text-[24px]">
                         ${Number(job.total ?? 0).toFixed(2)}
                       </Text>
-                      <Text className="font-sm text-gray-500">
-                        You earn {getOrderDriverEarningPercentage(job)}%
+                      {/* <Text className="font-sm text-gray-500">
+                        1 You earn {getOrderDriverEarningPercentage(job)}%
+                      </Text> */}
+                      <Text className="text-sm text-gray-500">
+                        You earn ≈ ${getOrderDriverEarningPercentage(job).toFixed(2)}
                       </Text>
                     </View>
                   </View>
@@ -915,7 +936,9 @@ export default function HomeScreen() {
                     <TouchableOpacity
                       onPress={() => {
                         if (!isStripeConnected) {
-                          ShowMessage.error("Please connect Stripe before accepting orders.");
+                          ShowMessage.error(
+                            "Please connect Stripe before accepting orders.",
+                          );
                           return;
                         }
                         if (isAtCapacity) return;
@@ -1065,17 +1088,19 @@ export default function HomeScreen() {
                 onPress={handleAcceptJob}
                 disabled={isAcceptingJob || acceptBlocked}
                 className={`flex-1 rounded-xl py-3 ${
-                  isAcceptingJob || acceptBlocked ? "bg-blue-300" : "bg-blue-500"
+                  isAcceptingJob || acceptBlocked
+                    ? "bg-blue-300"
+                    : "bg-blue-500"
                 }`}
               >
                 <Text className="text-white text-lg text-center font-semibold">
                   {!isStripeConnected
                     ? "Connect Stripe"
                     : isAtCapacity
-                    ? "Capacity full"
-                    : isAcceptingJob
-                      ? "Accepting..."
-                      : "Yes"}
+                      ? "Capacity full"
+                      : isAcceptingJob
+                        ? "Accepting..."
+                        : "Yes"}
                 </Text>
               </TouchableOpacity>
             </View>

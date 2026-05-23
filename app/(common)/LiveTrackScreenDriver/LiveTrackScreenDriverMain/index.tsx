@@ -40,9 +40,22 @@ const getEffectiveBagCount = (order?: Order) =>
     order?.bagCountAtDelivery ?? order?.bagCountAtPickup ?? order?.bags ?? 0,
   );
 
-const getOrderDriverEarningPercentage = (
-  order?: Pick<Order, "driverEarningPercentage">,
-) => Number(order?.driverEarningPercentage ?? 70);
+// const getOrderDriverEarningPercentage = (
+//   order?: Pick<Order, "driverEarningPercentage">,
+// ) => Number(order?.driverEarningPercentage ?? 70);
+const LAUNDRY_OWNER_COST_PER_BAG = 25;
+
+const getOrderDriverEarning = (order?: Order) => {
+  if (!order) return 0;
+
+  const total = Number(order.total ?? 0);
+  const percentage = Number(order.driverEarningPercentage ?? 0);
+  const totalBag = Number(
+    order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0,
+  );
+
+  return (total * percentage) / 100 - totalBag * LAUNDRY_OWNER_COST_PER_BAG;
+};
 
 const getStepFromOrder = (order?: Order) => {
   if (!order) return 0;
@@ -127,15 +140,19 @@ export default function LiveTrackScreenDriverMain() {
       : undefined,
   ]);
 
-  const driverEarningPercentage = getOrderDriverEarningPercentage(activeOrder);
-  const displayBags = activeOrder ? getEffectiveBagCount(activeOrder) : 0;
-  const displayPricePerBag =
-    activeOrder && activeOrder.pricePerBag !== undefined
-      ? activeOrder.pricePerBag
-      : 0;
-  const displayTotal = displayBags * Number(displayPricePerBag);
-  const driverEarning =
-    (Number(displayTotal ?? 0) * Number(driverEarningPercentage)) / 100;
+  //const driverEarningPercentage = getOrderDriverEarningPercentage(activeOrder);
+  // const displayBags = activeOrder ? getEffectiveBagCount(activeOrder) : 0;
+  // const displayPricePerBag =
+  //   activeOrder && activeOrder.pricePerBag !== undefined
+  //     ? activeOrder.pricePerBag
+  //     : 0;
+  // const displayTotal = displayBags * Number(displayPricePerBag);
+
+  // const driverEarning =
+  //   (Number(displayTotal ?? 0) * Number(driverEarningPercentage)) / 100;
+
+  const driverEarning = getOrderDriverEarning(activeOrder);
+
   const isLoading = isFetchingOrder || isFetchingJobs;
   const currentOrderStep = getStepFromOrder(activeOrder);
   const isOrderLocked =
@@ -209,9 +226,7 @@ export default function LiveTrackScreenDriverMain() {
         reason: "Canceled by driver before pickup",
       }).unwrap();
       if (res?.success) {
-        ShowMessage.show(
-          res?.message || "Order sent back to available jobs",
-        );
+        ShowMessage.show(res?.message || "Order sent back to available jobs");
         router.back();
       } else {
         ShowMessage.show(res?.message || "Order cancelled fail");
@@ -271,7 +286,7 @@ export default function LiveTrackScreenDriverMain() {
           <View className="items-end">
             <Text className="text-blue-100 text-xl">Earnings</Text>
             <Text className="text-white font-bold text-2xl">
-              ${driverEarning.toFixed(2)}
+              ≈ ${driverEarning.toFixed(2)}
             </Text>
           </View>
         </View>

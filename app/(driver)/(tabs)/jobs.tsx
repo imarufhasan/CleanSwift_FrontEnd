@@ -144,7 +144,7 @@ const JobCard = ({
       <View className="items-end">
         <Text className="text-lg font-bold text-green-600">{item.price}</Text>
         <Text className="text-xs text-gray-400">
-          You earn {driverEarningPercentage}%
+          2 You earn {driverEarningPercentage}%
         </Text>
       </View>
     </View>
